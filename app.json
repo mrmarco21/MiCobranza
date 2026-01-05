@@ -24,6 +24,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e18b1fb2-603c-4b05-9727-2ecaea6130f5"
+      }
+    },
+    "owner": "mrmarco64"
   }
 }
