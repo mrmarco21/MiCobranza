@@ -1,16 +1,25 @@
 import { useState, useCallback } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerClientasConSaldo } from '../logic/clientasService';
 import { clearAllData } from '../data/storage';
+import { formatCurrency } from '../utils/helpers';
 import ClientaCard from '../components/ClientaCard';
 import EmptyState from '../components/EmptyState';
 import Header from '../components/Header';
+import CustomModal from '../components/CustomModal';
 
 export default function InicioScreen({ navigation }) {
     const [clientasConDeuda, setClientasConDeuda] = useState([]);
     const [busqueda, setBusqueda] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({});
+
+    const showModal = (config) => {
+        setModalConfig(config);
+        setModalVisible(true);
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -25,22 +34,24 @@ export default function InicioScreen({ navigation }) {
     };
 
     const limpiarDatos = () => {
-        Alert.alert(
-            'Limpiar datos',
-            '¿Estás segura de eliminar TODOS los datos? Esta acción no se puede deshacer.',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar todo',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await clearAllData();
-                        setClientasConDeuda([]);
-                        Alert.alert('Listo', 'Todos los datos han sido eliminados');
-                    }
-                }
-            ]
-        );
+        showModal({
+            type: 'warning',
+            title: 'Limpiar datos',
+            message: '¿Estás segura de eliminar TODOS los datos? Esta acción no se puede deshacer.',
+            confirmText: 'Eliminar todo',
+            cancelText: 'Cancelar',
+            showCancel: true,
+            destructive: true,
+            onConfirm: async () => {
+                await clearAllData();
+                setClientasConDeuda([]);
+                showModal({
+                    type: 'success',
+                    title: 'Listo',
+                    message: 'Todos los datos han sido eliminados',
+                });
+            }
+        });
     };
 
     const clientasFiltradas = clientasConDeuda.filter(c =>
@@ -51,7 +62,7 @@ export default function InicioScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Header title="Inicio" />
+            <Header title="Inicio" showAddButton />
 
             {/* Header con estadísticas mejorado */}
             <View style={styles.header}>
@@ -80,7 +91,7 @@ export default function InicioScreen({ navigation }) {
                             <Ionicons name="cash" size={22} color="#FF6B6B" />
                         </View>
                         <Text style={styles.estadisticaValorDestacado}>
-                            S/ {totalPorCobrar.toFixed(2)}
+                            {formatCurrency(totalPorCobrar)}
                         </Text>
                         <Text style={styles.estadisticaLabelDestacado}>Total por cobrar</Text>
                     </View>
@@ -159,6 +170,12 @@ export default function InicioScreen({ navigation }) {
                 }
                 contentContainerStyle={clientasFiltradas.length === 0 ? styles.emptyContainer : styles.listaContainer}
                 showsVerticalScrollIndicator={false}
+            />
+
+            <CustomModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                {...modalConfig}
             />
         </View>
     );

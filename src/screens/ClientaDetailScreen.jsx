@@ -8,6 +8,7 @@ import { obtenerMovimientosDeCuenta } from '../logic/movimientosService';
 import { formatCurrency } from '../utils/helpers';
 import MovimientoItem from '../components/MovimientoItem';
 import Header from '../components/Header';
+import CustomModal from '../components/CustomModal';
 
 export default function ClientaDetailScreen({ route, navigation }) {
     const { clientaId } = route.params;
@@ -15,6 +16,8 @@ export default function ClientaDetailScreen({ route, navigation }) {
     const [cuentaActiva, setCuentaActiva] = useState(null);
     const [movimientos, setMovimientos] = useState([]);
     const [numCuentasCerradas, setNumCuentasCerradas] = useState(0);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [movimientoSeleccionado, setMovimientoSeleccionado] = useState(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -41,9 +44,31 @@ export default function ClientaDetailScreen({ route, navigation }) {
     };
 
     const handleNuevaCuenta = () => {
-        // Navegar al formulario indicando que es una cuenta nueva
         navigation.navigate('AddMovimiento', { clientaId: clientaId, nuevaCuenta: true, tipo: 'CARGO' });
     };
+
+    const handleMovimientoPress = (movimiento) => {
+        setMovimientoSeleccionado(movimiento);
+        setModalVisible(true);
+    };
+
+    const handleConfirmEdit = () => {
+        if (movimientoSeleccionado) {
+            navigation.navigate('AddMovimiento', {
+                movimientoId: movimientoSeleccionado.id,
+                tipo: movimientoSeleccionado.tipo
+            });
+        }
+    };
+
+    // Calcular totales de la cuenta activa
+    const totalAbonos = movimientos
+        .filter(m => m.tipo === 'ABONO')
+        .reduce((sum, m) => sum + m.monto, 0);
+
+    const totalCargos = movimientos
+        .filter(m => m.tipo === 'CARGO')
+        .reduce((sum, m) => sum + m.monto, 0);
 
     if (!clienta) return null;
 
@@ -64,10 +89,17 @@ export default function ClientaDetailScreen({ route, navigation }) {
                         {clienta.referencia && (
                             <View style={styles.infoRow}>
                                 <Ionicons name="people-outline" size={14} color="#636E72" />
-                                <Text style={styles.dato}>{clienta.referencia}</Text>
+                                <Text style={styles.dato}>Recomendado por {clienta.referencia}</Text>
                             </View>
                         )}
                     </View>
+                    <TouchableOpacity
+                        style={styles.botonEditar}
+                        onPress={() => navigation.navigate('AddClienta', { clientaId })}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="create-outline" size={20} color="#6C5CE7" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -77,12 +109,26 @@ export default function ClientaDetailScreen({ route, navigation }) {
             >
                 {cuentaActiva ? (
                     <>
-                        {/* Deuda simplificada */}
-                        <View style={styles.deudaCard}>
-                            <Text style={styles.deudaLabel}>Deuda actual</Text>
-                            <Text style={styles.deudaMonto}>{formatCurrency(cuentaActiva.saldo)}</Text>
+                        {/* Resumen de cuenta */}
+                        <View style={styles.resumenContainer}>
+                            <View style={styles.resumenCard}>
+                                <View style={styles.resumenIcono}>
+                                    <Ionicons name="trending-down" size={18} color="#FF6B6B" />
+                                </View>
+                                <Text style={styles.resumenLabel}>Deuda actual</Text>
+                                <Text style={styles.resumenMontoDeuda}>{formatCurrency(cuentaActiva.saldo)}</Text>
+                            </View>
+                            <View style={styles.resumenCard}>
+                                <View style={[styles.resumenIcono, styles.resumenIconoAbono]}>
+                                    <Ionicons name="trending-up" size={18} color="#4CAF50" />
+                                </View>
+                                <Text style={styles.resumenLabel}>Total abonado</Text>
+                                <Text style={styles.resumenMontoAbono}>{formatCurrency(totalAbonos)}</Text>
+                            </View>
+                        </View>
 
-                            {/* Botones de acción */}
+                        {/* Botones de acción */}
+                        <View style={styles.accionesCard}>
                             <View style={styles.botonesAccion}>
                                 <TouchableOpacity
                                     style={styles.botonAccion}
@@ -114,7 +160,12 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                 <FlatList
                                     data={movimientos}
                                     keyExtractor={(item) => item.id}
-                                    renderItem={({ item }) => <MovimientoItem movimiento={item} />}
+                                    renderItem={({ item }) => (
+                                        <MovimientoItem
+                                            movimiento={item}
+                                            onPress={() => handleMovimientoPress(item)}
+                                        />
+                                    )}
                                     scrollEnabled={false}
                                 />
                             </View>
@@ -163,6 +214,18 @@ export default function ClientaDetailScreen({ route, navigation }) {
 
                 <View style={styles.espacioFinal} />
             </ScrollView>
+
+            <CustomModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                type="confirm"
+                title="Editar movimiento"
+                message="¿Deseas modificar el monto o la descripción de este movimiento?"
+                confirmText="Sí, editar"
+                cancelText="Cancelar"
+                showCancel
+                onConfirm={handleConfirmEdit}
+            />
         </View>
     );
 }
@@ -199,6 +262,14 @@ const styles = StyleSheet.create({
     headerInfo: {
         flex: 1,
     },
+    botonEditar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F0EBFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     nombre: {
         fontSize: 20,
         fontWeight: '700',
@@ -218,26 +289,56 @@ const styles = StyleSheet.create({
     contenido: {
         flex: 1,
     },
-    deudaCard: {
+    resumenContainer: {
+        flexDirection: 'row',
+        marginHorizontal: 16,
+        marginTop: 16,
+        gap: 12,
+    },
+    resumenCard: {
+        flex: 1,
         backgroundColor: '#FFFFFF',
-        margin: 16,
-        padding: 24,
+        padding: 16,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#F0F0F0',
-        alignItems: "center"
+        alignItems: 'center',
     },
-    deudaLabel: {
-        fontSize: 14,
+    resumenIcono: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#FFE5E5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    resumenIconoAbono: {
+        backgroundColor: '#E8F5E9',
+    },
+    resumenLabel: {
+        fontSize: 12,
         color: '#636E72',
-        marginBottom: 8,
-
+        marginBottom: 4,
     },
-    deudaMonto: {
-        fontSize: 36,
+    resumenMontoDeuda: {
+        fontSize: 20,
         fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: 20,
+        color: '#FF6B6B',
+    },
+    resumenMontoAbono: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#4CAF50',
+    },
+    accionesCard: {
+        backgroundColor: '#FFFFFF',
+        marginHorizontal: 16,
+        marginTop: 12,
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
     },
     botonesAccion: {
         flexDirection: 'row',
@@ -279,6 +380,7 @@ const styles = StyleSheet.create({
     },
     movimientosSection: {
         marginHorizontal: 16,
+        marginTop: 16,
         marginBottom: 16,
     },
     sectionHeader: {

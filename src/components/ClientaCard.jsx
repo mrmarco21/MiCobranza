@@ -31,13 +31,13 @@ export default function ClientaCard({ clienta, onPress }) {
                         <Text style={styles.nombre} numberOfLines={1}>
                             {clienta.nombre}
                         </Text>
-                        {clienta.tieneCuentaActiva && clienta.saldoActual > 0 && (
+                        {/* {clienta.tieneCuentaActiva && clienta.saldoActual > 0 && (
                             <View style={styles.indicadorActivo}>
                                 <View style={styles.puntito} />
                             </View>
-                        )}
+                        )} */}
                     </View>
-                    
+
                     {clienta.referencia ? (
                         <View style={styles.referenciaRow}>
                             <Ionicons name="person-outline" size={13} color="#95A5A6" />

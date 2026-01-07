@@ -54,3 +54,37 @@ export const obtenerAbonosDeLaSemana = async (fecha = new Date()) => {
   fin.setHours(23, 59, 59, 999);
   return await movimientosRepo.getAbonosPorRango(inicio, fin);
 };
+
+export const obtenerMovimientoPorId = async (id) => {
+  return await movimientosRepo.getById(id);
+};
+
+export const editarMovimiento = async (movimientoId, nuevoMonto, nuevoComentario) => {
+  const movimiento = await movimientosRepo.getById(movimientoId);
+  if (!movimiento) {
+    throw new Error('Movimiento no encontrado');
+  }
+
+  const cuenta = await cuentasRepo.getById(movimiento.cuentaId);
+  if (!cuenta) {
+    throw new Error('Cuenta no encontrada');
+  }
+
+  const diferencia = nuevoMonto - movimiento.monto;
+  let nuevoSaldo = cuenta.saldo;
+
+  if (movimiento.tipo === 'CARGO') {
+    nuevoSaldo += diferencia;
+  } else if (movimiento.tipo === 'ABONO') {
+    nuevoSaldo -= diferencia;
+  }
+
+  await movimientosRepo.update(movimientoId, {
+    monto: nuevoMonto,
+    comentario: nuevoComentario?.trim() || ''
+  });
+
+  await cuentasService.actualizarSaldo(movimiento.cuentaId, nuevoSaldo);
+
+  return await movimientosRepo.getById(movimientoId);
+};

@@ -1,37 +1,84 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { registrarMovimiento } from '../logic/movimientosService';
+import { registrarMovimiento, editarMovimiento, obtenerMovimientoPorId } from '../logic/movimientosService';
 import { abrirNuevaCuenta } from '../logic/cuentasService';
 import Header from '../components/Header';
+import CustomModal from '../components/CustomModal';
+import Toast from '../components/Toast';
 
 export default function AddMovimientoScreen({ route, navigation }) {
-    const { cuentaId, clientaId, nuevaCuenta, tipo } = route.params;
+    const { cuentaId, clientaId, nuevaCuenta, tipo, movimientoId } = route.params;
     const [monto, setMonto] = useState('');
     const [comentario, setComentario] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({});
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
+    const esEdicion = !!movimientoId;
     const esCargo = tipo === 'CARGO';
+
+    const showModal = (config) => {
+        setModalConfig(config);
+        setModalVisible(true);
+    };
+
+    const showToast = (message) => {
+        setToastMessage(message);
+        setToastVisible(true);
+    };
+
+    useEffect(() => {
+        if (esEdicion) {
+            cargarMovimiento();
+        }
+    }, [movimientoId]);
+
+    const cargarMovimiento = async () => {
+        const mov = await obtenerMovimientoPorId(movimientoId);
+        if (mov) {
+            setMonto(mov.monto.toString());
+            setComentario(mov.comentario || '');
+        }
+    };
 
     const handleGuardar = async () => {
         const montoNum = parseFloat(monto);
         if (!monto || isNaN(montoNum) || montoNum <= 0) {
-            Alert.alert('Error', 'Ingresa un monto válido');
+            showModal({
+                type: 'error',
+                title: 'Monto inválido',
+                message: 'Ingresa un monto válido mayor a cero',
+            });
             return;
         }
 
+        setLoading(true);
         try {
-            let idCuenta = cuentaId;
+            if (esEdicion) {
+                await editarMovimiento(movimientoId, montoNum, comentario);
+                showToast('Movimiento actualizado correctamente');
+            } else {
+                let idCuenta = cuentaId;
 
-            // Si es nueva cuenta, crearla primero
-            if (nuevaCuenta && clientaId) {
-                const cuenta = await abrirNuevaCuenta(clientaId);
-                idCuenta = cuenta.id;
+                if (nuevaCuenta && clientaId) {
+                    const cuenta = await abrirNuevaCuenta(clientaId);
+                    idCuenta = cuenta.id;
+                }
+
+                await registrarMovimiento(idCuenta, tipo, montoNum, comentario);
+                showToast(esCargo ? 'Cargo registrado correctamente' : 'Abono registrado correctamente');
             }
-
-            await registrarMovimiento(idCuenta, tipo, montoNum, comentario);
-            navigation.goBack();
+            setTimeout(() => navigation.goBack(), 1500);
         } catch (error) {
-            Alert.alert('Error', error.message);
+            showModal({
+                type: 'error',
+                title: 'Error',
+                message: error.message,
+            });
+            setLoading(false);
         }
     };
 
@@ -40,7 +87,7 @@ export default function AddMovimientoScreen({ route, navigation }) {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <Header title={esCargo ? 'Nuevo Cargo' : 'Nuevo Abono'} showBack />
+            <Header title={esEdicion ? 'Editar Movimiento' : (esCargo ? 'Nuevo Cargo' : 'Nuevo Abono')} showBack />
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
@@ -49,14 +96,18 @@ export default function AddMovimientoScreen({ route, navigation }) {
                 <View style={styles.headerInfo}>
                     <View style={[styles.iconoHeader, esCargo ? styles.iconoCargo : styles.iconoAbono]}>
                         <Ionicons
-                            name={esCargo ? "arrow-up" : "arrow-down"}
-                            size={32}
+                            name={esEdicion ? "create-outline" : (esCargo ? "arrow-up" : "arrow-down")}
+                            size={25}
                             color={esCargo ? "#FF6B6B" : "#4CAF50"}
                         />
                     </View>
-                    <Text style={styles.titulo}>{esCargo ? 'Nuevo cargo' : 'Nuevo abono'}</Text>
+                    <Text style={styles.titulo}>
+                        {esEdicion ? 'Editar movimiento' : (esCargo ? 'Nuevo cargo' : 'Nuevo abono')}
+                    </Text>
                     <Text style={styles.subtitulo}>
-                        {esCargo ? 'Aumenta la deuda de la clienta' : 'Reduce la deuda de la clienta'}
+                        {esEdicion
+                            ? 'Modifica el monto o la descripción'
+                            : (esCargo ? 'Aumenta la deuda de la clienta' : 'Reduce la deuda de la clienta')}
                     </Text>
                 </View>
 
@@ -114,14 +165,30 @@ export default function AddMovimientoScreen({ route, navigation }) {
             {/* Botón de guardar */}
             <View style={styles.footerContainer}>
                 <TouchableOpacity
-                    style={styles.botonGuardar}
+                    style={[styles.botonGuardar, loading && styles.botonDisabled]}
                     onPress={handleGuardar}
                     activeOpacity={0.7}
+                    disabled={loading}
                 >
                     <Ionicons name="checkmark-outline" size={24} color="#2D3436" />
-                    <Text style={styles.botonGuardarTexto}>Registrar {tipo.toLowerCase()}</Text>
+                    <Text style={styles.botonGuardarTexto}>
+                        {esEdicion ? 'Guardar cambios' : `Registrar ${tipo.toLowerCase()}`}
+                    </Text>
                 </TouchableOpacity>
             </View>
+
+            <CustomModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                {...modalConfig}
+            />
+
+            <Toast
+                visible={toastVisible}
+                message={toastMessage}
+                type="success"
+                onHide={() => setToastVisible(false)}
+            />
         </KeyboardAvoidingView>
     );
 }
@@ -144,8 +211,8 @@ const styles = StyleSheet.create({
         borderBottomColor: '#F0F0F0',
     },
     iconoHeader: {
-        width: 70,
-        height: 70,
+        width: 60,
+        height: 60,
         borderRadius: 35,
         justifyContent: 'center',
         alignItems: 'center',
@@ -227,19 +294,16 @@ const styles = StyleSheet.create({
     notaContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: '#F0EBFF',
         padding: 12,
         borderRadius: 10,
         marginTop: 8,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
     notaTexto: {
         fontSize: 13,
-        color: '#636E72',
+        color: '#6C5CE7',
         marginLeft: 8,
         flex: 1,
-        lineHeight: 18,
     },
     footerContainer: {
         backgroundColor: '#FFFFFF',
@@ -263,5 +327,8 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '700',
         marginLeft: 8,
+    },
+    botonDisabled: {
+        opacity: 0.6,
     },
 });

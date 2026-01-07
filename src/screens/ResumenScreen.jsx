@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerAbonosDelDia, obtenerAbonosDeLaSemana } from '../logic/movimientosService';
@@ -12,12 +12,20 @@ import {
 } from '../logic/reportesService';
 import { formatCurrency, sumarMontos, formatDate } from '../utils/helpers';
 import Header from '../components/Header';
+import CustomModal from '../components/CustomModal';
 
 export default function ResumenScreen() {
     const [cobroHoy, setCobroHoy] = useState(0);
     const [cobroSemana, setCobroSemana] = useState(0);
     const [reportes, setReportes] = useState([]);
     const [exportando, setExportando] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({});
+
+    const showModal = (config) => {
+        setModalConfig(config);
+        setModalVisible(true);
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -43,9 +51,17 @@ export default function ResumenScreen() {
             await exportarReporteSemanaActual();
         } catch (error) {
             if (error.message === 'No hay movimientos esta semana') {
-                Alert.alert('Sin datos', 'No hay movimientos registrados esta semana para exportar');
+                showModal({
+                    type: 'warning',
+                    title: 'Sin datos',
+                    message: 'No hay movimientos registrados esta semana para exportar',
+                });
             } else {
-                Alert.alert('Error', 'No se pudo exportar. Intenta de nuevo.');
+                showModal({
+                    type: 'error',
+                    title: 'Error',
+                    message: 'No se pudo exportar. Intenta de nuevo.',
+                });
                 console.log('Error exportar:', error);
             }
         } finally {
@@ -55,14 +71,22 @@ export default function ResumenScreen() {
 
     const handleExportarReporte = async (reporte) => {
         if (reporte.movimientos.length === 0) {
-            Alert.alert('Sin datos', 'Este reporte no tiene movimientos');
+            showModal({
+                type: 'warning',
+                title: 'Sin datos',
+                message: 'Este reporte no tiene movimientos',
+            });
             return;
         }
         try {
             setExportando(true);
             await exportarReporteCSV(reporte);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo exportar. Intenta de nuevo.');
+            showModal({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo exportar. Intenta de nuevo.',
+            });
             console.log('Error exportar reporte:', error);
         } finally {
             setExportando(false);
@@ -74,9 +98,17 @@ export default function ResumenScreen() {
             await guardarReporteSemanal();
             const reportesGuardados = await obtenerReportesGuardados();
             setReportes(reportesGuardados);
-            Alert.alert('Listo', 'Reporte de la semana guardado');
+            showModal({
+                type: 'success',
+                title: 'Guardado',
+                message: 'Reporte de la semana guardado correctamente',
+            });
         } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar el reporte');
+            showModal({
+                type: 'error',
+                title: 'Error',
+                message: 'No se pudo guardar el reporte',
+            });
         }
     };
 
@@ -254,6 +286,12 @@ export default function ResumenScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <CustomModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                {...modalConfig}
+            />
         </View>
     );
 }
@@ -274,8 +312,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        marginBottom: 20,
-        paddingVertical: 8,
+        marginBottom: 15,
+        // paddingVertical: 8,
     },
     fecha: {
         fontSize: 14,
@@ -286,7 +324,7 @@ const styles = StyleSheet.create({
     cardsGrid: {
         flexDirection: 'row',
         gap: 12,
-        marginBottom: 20,
+        marginBottom: 15,
     },
     cardHoy: {
         flex: 1,
@@ -559,9 +597,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         backgroundColor: '#F0EBFF',
-        padding: 16,
+        padding: 12,
         borderRadius: 12,
-        marginBottom: 20,
+        marginBottom: 10,
         gap: 12,
     },
     infoIcono: {

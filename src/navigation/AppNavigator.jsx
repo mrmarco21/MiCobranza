@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import InicioScreen from '../screens/InicioScreen';
 import ClientasScreen from '../screens/ClientasScreen';
@@ -40,16 +41,19 @@ function CanceladasStack() {
 }
 
 export default function AppNavigator() {
+    const insets = useSafeAreaInsets();
+
     return (
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
                 tabBarActiveTintColor: '#9b59b6',
+                tabBarActiveBackgroundColor: '#9999992c',
                 tabBarInactiveTintColor: '#999',
                 tabBarStyle: {
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                    height: 60,
+                    paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+                    paddingTop: 2,
+                    height: 60 + (insets.bottom > 0 ? insets.bottom : 5),
                     backgroundColor: '#FFFFFF',
                     borderTopWidth: 1,
                     borderTopColor: '#F0F0F0',
@@ -64,6 +68,11 @@ export default function AppNavigator() {
                     tabBarLabel: 'Inicio',
                     tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
                 }}
+                listeners={({ navigation }) => ({
+                    tabPress: (e) => {
+                        navigation.navigate('InicioTab', { screen: 'InicioMain' });
+                    },
+                })}
             />
             <Tab.Screen
                 name="CanceladasTab"
@@ -72,6 +81,11 @@ export default function AppNavigator() {
                     tabBarLabel: 'Canceladas',
                     tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done-outline" size={size} color={color} />,
                 }}
+                listeners={({ navigation }) => ({
+                    tabPress: (e) => {
+                        navigation.navigate('CanceladasTab', { screen: 'CuentasCanceladas' });
+                    },
+                })}
             />
             <Tab.Screen
                 name="ResumenTab"

@@ -18,6 +18,20 @@ export const create = async (movimiento) => {
   return movimiento;
 };
 
+export const getById = async (id) => {
+  const movimientos = await getAll();
+  return movimientos.find(m => m.id === id) || null;
+};
+
+export const update = async (id, datos) => {
+  const movimientos = await getAll();
+  const index = movimientos.findIndex(m => m.id === id);
+  if (index === -1) return null;
+  movimientos[index] = { ...movimientos[index], ...datos };
+  await setData(KEYS.MOVIMIENTOS, movimientos);
+  return movimientos[index];
+};
+
 export const getAbonosPorRango = async (fechaInicio, fechaFin) => {
   const movimientos = await getAll();
   return movimientos.filter(m => {

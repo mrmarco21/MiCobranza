@@ -1,19 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency, formatDate } from '../utils/helpers';
 
-export default function MovimientoItem({ movimiento }) {
+export default function MovimientoItem({ movimiento, onPress }) {
     const esCargo = movimiento.tipo === 'CARGO';
 
     return (
-        <View style={styles.container}>
+        <TouchableOpacity
+            style={styles.container}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
             <View style={styles.izquierda}>
                 <View style={[styles.icono, esCargo ? styles.iconoCargo : styles.iconoAbono]}>
-                    <Ionicons 
-                        name={esCargo ? "arrow-up" : "arrow-down"} 
-                        size={18} 
-                        color={esCargo ? "#FF6B6B" : "#4CAF50"} 
+                    <Ionicons
+                        name={esCargo ? "arrow-up" : "arrow-down"}
+                        size={18}
+                        color={esCargo ? "#FF6B6B" : "#4CAF50"}
                     />
                 </View>
                 <View style={styles.info}>
@@ -27,8 +31,9 @@ export default function MovimientoItem({ movimiento }) {
                 <Text style={[styles.monto, esCargo ? styles.montoRojo : styles.montoVerde]}>
                     {esCargo ? '+' : '-'} {formatCurrency(movimiento.monto)}
                 </Text>
+                <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 
@@ -79,7 +84,9 @@ const styles = StyleSheet.create({
         color: '#95A5A6',
     },
     derecha: {
-        alignItems: 'flex-end',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     monto: {
         fontSize: 16,

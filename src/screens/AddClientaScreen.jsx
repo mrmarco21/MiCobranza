@@ -1,21 +1,75 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { registrarClienta } from '../logic/clientasService';
+import { registrarClienta, actualizarClienta, obtenerClientaPorId } from '../logic/clientasService';
 import Header from '../components/Header';
+import CustomModal from '../components/CustomModal';
+import Toast from '../components/Toast';
 
-export default function AddClientaScreen({ navigation }) {
+export default function AddClientaScreen({ route, navigation }) {
+    const clientaId = route.params?.clientaId;
+    const esEdicion = !!clientaId;
+
     const [nombre, setNombre] = useState('');
     const [referencia, setReferencia] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalConfig, setModalConfig] = useState({});
+    const [toastVisible, setToastVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    useEffect(() => {
+        if (esEdicion) {
+            cargarClienta();
+        }
+    }, [clientaId]);
+
+    const cargarClienta = async () => {
+        const clienta = await obtenerClientaPorId(clientaId);
+        if (clienta) {
+            setNombre(clienta.nombre);
+            setReferencia(clienta.referencia || '');
+        }
+    };
+
+    const showModal = (config) => {
+        setModalConfig(config);
+        setModalVisible(true);
+    };
+
+    const showToast = (message) => {
+        setToastMessage(message);
+        setToastVisible(true);
+    };
 
     const handleGuardar = async () => {
         if (!nombre.trim()) {
-            Alert.alert('Error', 'El nombre es obligatorio');
+            showModal({
+                type: 'error',
+                title: 'Campo requerido',
+                message: 'El nombre es obligatorio',
+            });
             return;
         }
 
-        await registrarClienta({ nombre, referencia });
-        navigation.goBack();
+        setLoading(true);
+        try {
+            if (esEdicion) {
+                await actualizarClienta(clientaId, { nombre, referencia });
+                showToast('Clienta actualizada correctamente');
+            } else {
+                await registrarClienta({ nombre, referencia });
+                showToast('Clienta registrada correctamente');
+            }
+            setTimeout(() => navigation.goBack(), 1500);
+        } catch (error) {
+            showModal({
+                type: 'error',
+                title: 'Error',
+                message: error.message,
+            });
+            setLoading(false);
+        }
     };
 
     return (
@@ -23,7 +77,7 @@ export default function AddClientaScreen({ navigation }) {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <Header title="Nueva Clienta" showBack />
+            <Header title={esEdicion ? "Editar Clienta" : "Nueva Clienta"} showBack />
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
@@ -31,10 +85,12 @@ export default function AddClientaScreen({ navigation }) {
                 {/* Header informativo */}
                 <View style={styles.headerInfo}>
                     <View style={styles.iconoHeader}>
-                        <Ionicons name="person-add" size={32} color="#6C5CE7" />
+                        <Ionicons name={esEdicion ? "create-outline" : "person-add"} size={25} color="#6C5CE7" />
                     </View>
-                    <Text style={styles.titulo}>Nueva Clienta</Text>
-                    <Text style={styles.subtitulo}>Complete la información de la clienta</Text>
+                    <Text style={styles.titulo}>{esEdicion ? "Editar Clienta" : "Nueva Clienta"}</Text>
+                    <Text style={styles.subtitulo}>
+                        {esEdicion ? "Modifica la información de la clienta" : "Complete la información de la clienta"}
+                    </Text>
                 </View>
 
                 {/* Formulario */}
@@ -76,7 +132,7 @@ export default function AddClientaScreen({ navigation }) {
                     <View style={styles.notaContainer}>
                         <Ionicons name="information-circle-outline" size={18} color="#6C5CE7" />
                         <Text style={styles.notaTexto}>
-                            Los campos marcados con * son obligatorios
+                            El campo marcado con * es obligatorios
                         </Text>
                     </View>
                 </View>
@@ -85,14 +141,30 @@ export default function AddClientaScreen({ navigation }) {
             {/* Botón de guardar fijo */}
             <View style={styles.footerContainer}>
                 <TouchableOpacity
-                    style={styles.botonGuardar}
+                    style={[styles.botonGuardar, loading && styles.botonDisabled]}
                     onPress={handleGuardar}
                     activeOpacity={0.8}
+                    disabled={loading}
                 >
-                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                    <Text style={styles.botonGuardarTexto}>Guardar Clienta</Text>
+                    <Ionicons name="checkmark-circle" size={24} color="#636E72" />
+                    <Text style={styles.botonGuardarTexto}>
+                        {esEdicion ? "Guardar cambios" : "Guardar Clienta"}
+                    </Text>
                 </TouchableOpacity>
             </View>
+
+            <CustomModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                {...modalConfig}
+            />
+
+            <Toast
+                visible={toastVisible}
+                message={toastMessage}
+                type="success"
+                onHide={() => setToastVisible(false)}
+            />
         </KeyboardAvoidingView>
     );
 }
@@ -115,8 +187,8 @@ const styles = StyleSheet.create({
         borderBottomColor: '#F0F0F0',
     },
     iconoHeader: {
-        width: 70,
-        height: 70,
+        width: 60,
+        height: 60,
         borderRadius: 35,
         backgroundColor: '#F0EBFF',
         justifyContent: 'center',
@@ -201,22 +273,22 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     botonGuardar: {
-        backgroundColor: '#6C5CE7',
+        backgroundColor: '#F8F9FA',
         paddingVertical: 16,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#6C5CE7',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
     },
     botonGuardarTexto: {
-        color: '#fff',
+        color: '#2D3436',
         fontSize: 17,
         fontWeight: '700',
         marginLeft: 8,
+    },
+    botonDisabled: {
+        opacity: 0.6,
     },
 })

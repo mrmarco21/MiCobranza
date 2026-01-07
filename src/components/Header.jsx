@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Header({ title, showBack = false }) {
+export default function Header({ title, showBack = false, showAddButton = false }) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
 
@@ -22,7 +22,18 @@ export default function Header({ title, showBack = false }) {
                     <View style={styles.placeholder} />
                 )}
                 <Text style={styles.title}>{title}</Text>
-                <View style={styles.placeholder} />
+                {showAddButton ? (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => navigation.navigate('AddClienta')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="person-add" size={22} color="#fff" />
+                        <Text style={styles.registrar}> Registrar</Text>  
+                    </TouchableOpacity>
+                ) : (
+                    <View style={styles.placeholder} />
+                )}
             </View>
         </View>
     );
@@ -45,6 +56,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginLeft: -8,
     },
+    addButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: -4,
+    },
     placeholder: {
         width: 40,
     },
@@ -55,4 +73,8 @@ const styles = StyleSheet.create({
         color: '#fff',
         textAlign: 'center',
     },
+    registrar:{
+        fontSize: 9,
+        color: 'white'
+    }
 });

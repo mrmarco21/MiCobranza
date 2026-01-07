@@ -39,3 +39,14 @@ export const registrarClienta = async (datos) => {
   };
   return await clientasRepo.create(clienta);
 };
+
+export const actualizarClienta = async (clientaId, datos) => {
+  return await clientasRepo.update(clientaId, {
+    nombre: datos.nombre.trim(),
+    referencia: datos.referencia?.trim() || '',
+  });
+};
+
+export const obtenerClientaPorId = async (clientaId) => {
+  return await clientasRepo.getById(clientaId);
+};

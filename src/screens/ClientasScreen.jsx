@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerClientasConSaldo } from '../logic/clientasService';
 import ClientaCard from '../components/ClientaCard';
@@ -11,7 +10,6 @@ import Header from '../components/Header';
 export default function ClientasScreen({ navigation }) {
     const [clientas, setClientas] = useState([]);
     const [busqueda, setBusqueda] = useState('');
-    const insets = useSafeAreaInsets();
 
     useFocusEffect(
         useCallback(() => {
@@ -36,7 +34,7 @@ export default function ClientasScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Header title="Todas las Clientas" showBack />
+            <Header title="Todas las Clientas" showBack showAddButton />
 
             {/* Header con estadísticas */}
             <View style={styles.header}>
@@ -120,14 +118,6 @@ export default function ClientasScreen({ navigation }) {
             />
 
             {/* Botón flotante para agregar nueva clienta */}
-            <TouchableOpacity
-                style={[styles.botonFlotante, { bottom: 20 + insets.bottom }]}
-                onPress={() => navigation.navigate('AddClienta')}
-                activeOpacity={0.8}
-            >
-                <Ionicons name="person-add" size={28} color="#fff" />
-                {/* <Text style={styles.botonFlotanteTexto}>Nueva Clienta</Text> */}
-            </TouchableOpacity>
         </View>
     );
 }
@@ -139,9 +129,9 @@ const styles = StyleSheet.create({
     },
     header: {
         backgroundColor: '#FFFFFF',
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 14,
+        paddingHorizontal: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
@@ -151,7 +141,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#F8F9FA',
         borderRadius: 10,
-        padding: 14,
+        padding: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -229,28 +219,5 @@ const styles = StyleSheet.create({
     emptyContainer: {
         flex: 1,
         paddingHorizontal: 16,
-    },
-    botonFlotante: {
-        position: 'absolute',
-        bottom: 24,
-        right: 20,
-        width: 56,
-        height: 56,
-        backgroundColor: '#9b59b6',
-        borderRadius: 28, // Mitad del width/height para hacerlo circular
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#6C5CE7',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-
-    botonFlotanteTexto: {
-        color: '#fff',
-        fontSize: 17,
-        fontWeight: '700',
-        marginLeft: 8
     },
 });
