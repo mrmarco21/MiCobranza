@@ -2,8 +2,12 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDate } from '../utils/helpers';
+import { useTheme } from '../hooks/useTheme';
 
 export default function CuentaCerradaCard({ cuenta, cantidadCuentas = 1, onPress }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
+
     const getAvatarColor = (nombre) => {
         const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336'];
         const index = nombre.charCodeAt(0) % colors.length;
@@ -35,7 +39,7 @@ export default function CuentaCerradaCard({ cuenta, cantidadCuentas = 1, onPress
                     <Text style={styles.clientName} numberOfLines={1}>
                         {cuenta.clientaNombre}
                     </Text>
-                    
+
                     {cantidadCuentas === 1 ? (
                         <View style={styles.dateRow}>
                             <View style={styles.iconBadge}>
@@ -68,15 +72,15 @@ export default function CuentaCerradaCard({ cuenta, cantidadCuentas = 1, onPress
 
             {/* Indicador de navegación */}
             <View style={styles.arrowContainer}>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </View>
         </Pressable>
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         marginHorizontal: 20,
         marginVertical: 6,
         borderRadius: 16,
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
     clientName: {
         fontSize: 17,
         fontWeight: '600',
-        color: '#1A1A1A',
+        color: colors.text,
         marginBottom: 6,
         letterSpacing: -0.2,
     },
@@ -142,14 +146,14 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
         borderRadius: 10,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: colors.border,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 6,
     },
     dateText: {
         fontSize: 13,
-        color: '#6B7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     statusBadge: {

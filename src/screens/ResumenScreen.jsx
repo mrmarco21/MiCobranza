@@ -11,10 +11,13 @@ import {
     guardarReporteSemanal
 } from '../logic/reportesService';
 import { formatCurrency, sumarMontos, formatDate } from '../utils/helpers';
+import { useTheme } from '../hooks/useTheme';
 import Header from '../components/Header';
 import CustomModal from '../components/CustomModal';
 
-export default function ResumenScreen() {
+export default function ResumenScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
     const [cobroHoy, setCobroHoy] = useState(0);
     const [cobroSemana, setCobroSemana] = useState(0);
     const [reportes, setReportes] = useState([]);
@@ -121,7 +124,12 @@ export default function ResumenScreen() {
 
     return (
         <View style={styles.container}>
-            <Header title="Resumen de Cobros" />
+            <Header
+                title="Resumen de Cobros"
+                showBack
+                // rightIcon="settings-outline"
+                onRightPress={() => navigation.navigate('Configuracion')}
+            />
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
@@ -157,7 +165,7 @@ export default function ResumenScreen() {
                         <View style={styles.cardSemana}>
                             <View style={styles.cardHeader}>
                                 <View style={styles.cardIconoSemana}>
-                                    <Ionicons name="calendar" size={22} color="#6C5CE7" />
+                                    <Ionicons name="calendar" size={22} color="#29B6F6" />
                                 </View>
                                 <View style={styles.cardBadgeSemana}>
                                     <Text style={styles.cardBadgeTextSemana}>SEMANA</Text>
@@ -166,7 +174,7 @@ export default function ResumenScreen() {
                             <Text style={styles.cardLabelSemana}>Esta semana</Text>
                             <Text style={styles.cardMontoSemana}>{formatCurrency(cobroSemana)}</Text>
                             <View style={styles.cardFooter}>
-                                <Ionicons name="trending-up" size={14} color="#6C5CE7" />
+                                <Ionicons name="trending-up" size={14} color="#29B6F6" />
                                 <Text style={styles.cardDescSemana}>Acumulado</Text>
                             </View>
                         </View>
@@ -181,6 +189,25 @@ export default function ResumenScreen() {
 
                         <TouchableOpacity
                             style={styles.botonExportar}
+                            onPress={() => navigation.navigate('ProductosVendidos')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.botonContenido}>
+                                <View style={styles.botonIconoWrapper}>
+                                    <Ionicons name="cube" size={22} color="#FF9800" />
+                                </View>
+                                <View style={styles.botonTextos}>
+                                    <Text style={styles.botonTitulo}>Productos vendidos</Text>
+                                    <Text style={styles.botonSubtitulo}>Ver por categoría</Text>
+                                </View>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color="#B0B0B0" />
+                        </TouchableOpacity>
+
+                        <View style={styles.divisor} />
+
+                        <TouchableOpacity
+                            style={styles.botonExportar}
                             onPress={handleExportarSemanaActual}
                             disabled={exportando}
                             activeOpacity={0.7}
@@ -188,9 +215,9 @@ export default function ResumenScreen() {
                             <View style={styles.botonContenido}>
                                 <View style={styles.botonIconoWrapper}>
                                     {exportando ? (
-                                        <ActivityIndicator size="small" color="#6C5CE7" />
+                                        <ActivityIndicator size="small" color="#29B6F6" />
                                     ) : (
-                                        <Ionicons name="download" size={22} color="#6C5CE7" />
+                                        <Ionicons name="download" size={22} color="#29B6F6" />
                                     )}
                                 </View>
                                 <View style={styles.botonTextos}>
@@ -221,7 +248,7 @@ export default function ResumenScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Lista de reportes guardados */}
+                    {/* Lista de reportes guardados - solo si hay reportes con movimientos */}
                     {reportes.length > 0 && (
                         <View style={styles.seccionCard}>
                             <View style={styles.reportesHeader}>
@@ -244,7 +271,7 @@ export default function ResumenScreen() {
                                             activeOpacity={0.7}
                                         >
                                             <View style={styles.reporteIcono}>
-                                                <Ionicons name="document-text" size={20} color="#6C5CE7" />
+                                                <Ionicons name="document-text" size={20} color="#29B6F6" />
                                             </View>
                                             <View style={styles.reporteInfo}>
                                                 <Text style={styles.reporteFechas}>
@@ -252,9 +279,9 @@ export default function ResumenScreen() {
                                                 </Text>
                                                 <View style={styles.reporteDetalles}>
                                                     <View style={styles.reporteDetallePill}>
-                                                        <Ionicons name="swap-horizontal" size={12} color="#636E72" />
+                                                        <Ionicons name="pricetag" size={12} color="#FF6B6B" />
                                                         <Text style={styles.reporteDetalle}>
-                                                            {reporte.totalMovimientos}
+                                                            {reporte.totalPrendas || reporte.totalMovimientos} prendas
                                                         </Text>
                                                     </View>
                                                     <View style={styles.reporteDetallePill}>
@@ -266,7 +293,7 @@ export default function ResumenScreen() {
                                                 </View>
                                             </View>
                                             <View style={styles.reporteAccion}>
-                                                <Ionicons name="download-outline" size={20} color="#6C5CE7" />
+                                                <Ionicons name="download-outline" size={20} color="#29B6F6" />
                                             </View>
                                         </TouchableOpacity>
                                     </View>
@@ -278,7 +305,7 @@ export default function ResumenScreen() {
                     {/* Info sobre guardado automático */}
                     <View style={styles.infoContainer}>
                         <View style={styles.infoIcono}>
-                            <Ionicons name="information-circle" size={20} color="#6C5CE7" />
+                            <Ionicons name="information-circle" size={20} color="#29B6F6" />
                         </View>
                         <Text style={styles.infoTexto}>
                             Los reportes se guardan automáticamente cada semana. Toca un reporte para descargarlo.
@@ -296,10 +323,10 @@ export default function ResumenScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFBFC',
+        backgroundColor: colors.background,
     },
     scrollView: {
         flex: 1,
@@ -317,7 +344,7 @@ const styles = StyleSheet.create({
     },
     fecha: {
         fontSize: 14,
-        color: '#636E72',
+        color: colors.textSecondary,
         textTransform: 'capitalize',
         fontWeight: '500',
     },
@@ -328,7 +355,7 @@ const styles = StyleSheet.create({
     },
     cardHoy: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         padding: 18,
         borderRadius: 16,
         shadowColor: '#000',
@@ -341,7 +368,7 @@ const styles = StyleSheet.create({
     },
     cardSemana: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         padding: 18,
         borderRadius: 16,
         shadowColor: '#000',
@@ -350,7 +377,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
         borderWidth: 1,
-        borderColor: '#F0EBFF',
+        borderColor: '#E1F5FE',
     },
     cardHeader: {
         flexDirection: 'row',
@@ -370,7 +397,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -387,7 +414,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     cardBadgeSemana: {
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 6,
@@ -395,18 +422,18 @@ const styles = StyleSheet.create({
     cardBadgeTextSemana: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#6C5CE7',
+        color: '#29B6F6',
         letterSpacing: 0.5,
     },
     cardLabel: {
         fontSize: 12,
-        color: '#95A5A6',
+        color: colors.textSecondary,
         marginBottom: 6,
         fontWeight: '500',
     },
     cardLabelSemana: {
         fontSize: 12,
-        color: '#95A5A6',
+        color: colors.textSecondary,
         marginBottom: 6,
         fontWeight: '500',
     },
@@ -420,7 +447,7 @@ const styles = StyleSheet.create({
     cardMontoSemana: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#6C5CE7',
+        color: '#29B6F6',
         marginBottom: 8,
         letterSpacing: -0.5,
     },
@@ -436,11 +463,11 @@ const styles = StyleSheet.create({
     },
     cardDescSemana: {
         fontSize: 11,
-        color: '#6C5CE7',
+        color: '#29B6F6',
         fontWeight: '500',
     },
     seccionCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
@@ -450,7 +477,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
         borderWidth: 1,
-        borderColor: '#F5F5F5',
+        borderColor: colors.border,
     },
     seccionHeader: {
         flexDirection: 'row',
@@ -460,7 +487,7 @@ const styles = StyleSheet.create({
     seccionTitulo: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
     },
     botonExportar: {
         flexDirection: 'row',
@@ -483,7 +510,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 12,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -503,22 +530,22 @@ const styles = StyleSheet.create({
     botonTitulo: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 2,
     },
     botonTituloGuardar: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 2,
     },
     botonSubtitulo: {
         fontSize: 12,
-        color: '#95A5A6',
+        color: colors.textSecondary,
     },
     divisor: {
         height: 1,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: colors.border,
         marginVertical: 4,
     },
     reportesHeader: {
@@ -528,7 +555,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     contadorBadge: {
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 12,
@@ -538,7 +565,7 @@ const styles = StyleSheet.create({
     contadorTexto: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#6C5CE7',
+        color: '#29B6F6',
     },
     reportesLista: {
         marginTop: 8,
@@ -552,7 +579,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 10,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -563,7 +590,7 @@ const styles = StyleSheet.create({
     reporteFechas: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 6,
     },
     reporteDetalles: {
@@ -575,31 +602,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.background,
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 8,
     },
     reporteDetalle: {
         fontSize: 12,
-        color: '#636E72',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     reporteAccion: {
         width: 36,
         height: 36,
         borderRadius: 10,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
     },
     infoContainer: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         padding: 12,
         borderRadius: 12,
-        marginBottom: 10,
+        marginBottom: 20,
         gap: 12,
     },
     infoIcono: {
@@ -607,9 +634,10 @@ const styles = StyleSheet.create({
     },
     infoTexto: {
         fontSize: 13,
-        color: '#6C5CE7',
+        color: '#29B6F6',
         flex: 1,
         lineHeight: 19,
         fontWeight: '500',
     },
 });
+

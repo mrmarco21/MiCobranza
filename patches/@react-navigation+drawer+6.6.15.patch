@@ -1,0 +1,26 @@
+diff --git a/node_modules/@react-navigation/drawer/lib/commonjs/views/DrawerView.js b/node_modules/@react-navigation/drawer/lib/commonjs/views/DrawerView.js
+index 58a6c69..a87298b 100644
+--- a/node_modules/@react-navigation/drawer/lib/commonjs/views/DrawerView.js
++++ b/node_modules/@react-navigation/drawer/lib/commonjs/views/DrawerView.js
+@@ -51,7 +51,7 @@ function DrawerViewBase(_ref2) {
+     detachInactiveScreens = _reactNative.Platform.OS === 'web' || _reactNative.Platform.OS === 'android' || _reactNative.Platform.OS === 'ios',
+     // Reanimated 2 is not configured
+     // @ts-expect-error: the type definitions are incomplete
+-    useLegacyImplementation = !((_Reanimated$isConfigu = Reanimated.isConfigured) !== null && _Reanimated$isConfigu !== void 0 && _Reanimated$isConfigu.call(Reanimated))
++    useLegacyImplementation = false
+   } = _ref2;
+   // Reanimated v3 dropped legacy v1 syntax
+   const legacyImplemenationNotAvailable = require('react-native-reanimated').abs === undefined;
+diff --git a/node_modules/@react-navigation/drawer/lib/module/views/DrawerView.js b/node_modules/@react-navigation/drawer/lib/module/views/DrawerView.js
+index 38765bb..28ed165 100644
+--- a/node_modules/@react-navigation/drawer/lib/module/views/DrawerView.js
++++ b/node_modules/@react-navigation/drawer/lib/module/views/DrawerView.js
+@@ -42,7 +42,7 @@ function DrawerViewBase(_ref2) {
+     detachInactiveScreens = Platform.OS === 'web' || Platform.OS === 'android' || Platform.OS === 'ios',
+     // Reanimated 2 is not configured
+     // @ts-expect-error: the type definitions are incomplete
+-    useLegacyImplementation = !((_Reanimated$isConfigu = Reanimated.isConfigured) !== null && _Reanimated$isConfigu !== void 0 && _Reanimated$isConfigu.call(Reanimated))
++    useLegacyImplementation = false
+   } = _ref2;
+   // Reanimated v3 dropped legacy v1 syntax
+   const legacyImplemenationNotAvailable = require('react-native-reanimated').abs === undefined;

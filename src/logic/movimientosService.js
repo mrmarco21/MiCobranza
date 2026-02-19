@@ -46,11 +46,13 @@ export const obtenerAbonosDelDia = async (fecha = new Date()) => {
 export const obtenerAbonosDeLaSemana = async (fecha = new Date()) => {
   const hoy = new Date(fecha);
   const diaSemana = hoy.getDay();
+  // Ajustar para que lunes sea el inicio (getDay: 0=domingo, 1=lunes, etc.)
+  const diasDesdeInicio = diaSemana === 0 ? 6 : diaSemana - 1;
   const inicio = new Date(hoy);
-  inicio.setDate(hoy.getDate() - diaSemana);
+  inicio.setDate(hoy.getDate() - diasDesdeInicio);
   inicio.setHours(0, 0, 0, 0);
   const fin = new Date(inicio);
-  fin.setDate(inicio.getDate() + 6);
+  fin.setDate(inicio.getDate() + 6); // Domingo
   fin.setHours(23, 59, 59, 999);
   return await movimientosRepo.getAbonosPorRango(inicio, fin);
 };

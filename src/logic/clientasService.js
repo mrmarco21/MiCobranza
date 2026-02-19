@@ -2,7 +2,7 @@ import * as clientasRepo from '../data/clientasRepository';
 import * as cuentasRepo from '../data/cuentasRepository';
 import { generateId } from '../utils/helpers';
 
-export const obtenerClientas = async () => {
+export const obtenerclientas = async () => {
   return await clientasRepo.getAll();
 };
 
@@ -18,7 +18,7 @@ export const obtenerClientaConSaldo = async (clientaId) => {
   };
 };
 
-export const obtenerClientasConSaldo = async () => {
+export const obtenerclientasConSaldo = async () => {
   const clientas = await clientasRepo.getAll();
   return Promise.all(clientas.map(async (clienta) => {
     const cuentaActiva = await cuentasRepo.getActiva(clienta.id);

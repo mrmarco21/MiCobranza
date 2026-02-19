@@ -1,14 +1,18 @@
 import { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerCuentasCerradas } from '../logic/cuentasService';
 import { formatDate } from '../utils/helpers';
 import EmptyState from '../components/EmptyState';
 import Header from '../components/Header';
+import { useTheme } from '../hooks/useTheme';
 
 export default function HistorialCuentasScreen({ route, navigation }) {
     const { clientaId, clientaNombre } = route.params;
+    const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const [cuentas, setCuentas] = useState([]);
 
     useFocusEffect(
@@ -22,14 +26,16 @@ export default function HistorialCuentasScreen({ route, navigation }) {
         setCuentas(data.sort((a, b) => new Date(b.fechaCierre) - new Date(a.fechaCierre)));
     };
 
+    const styles = createStyles(colors);
+
     const renderCuenta = ({ item, index }) => (
         <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate('DetalleCuenta', { cuentaId: item.id })}
+            onPress={() => navigation.navigate('DetalleCuenta', { cuentaId: item.id, clientaNombre })}
             activeOpacity={0.7}
         >
             <View style={styles.cardIcono}>
-                <Ionicons name="document-text-outline" size={24} color="#6C5CE7" />
+                <Ionicons name="document-text-outline" size={24} color="#29B6F6" />
             </View>
             <View style={styles.cardInfo}>
                 <Text style={styles.cardTitulo}>Cuenta #{cuentas.length - index}</Text>
@@ -78,7 +84,7 @@ export default function HistorialCuentasScreen({ route, navigation }) {
                 data={cuentas}
                 keyExtractor={(item) => item.id}
                 renderItem={renderCuenta}
-                contentContainerStyle={styles.lista}
+                contentContainerStyle={[styles.lista, { paddingBottom: Math.max(insets.bottom, 16) }]}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={<EmptyState message="No hay cuentas cerradas" />}
             />
@@ -86,24 +92,24 @@ export default function HistorialCuentasScreen({ route, navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFBFC',
+        backgroundColor: colors.background,
     },
     headerInfo: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         flexDirection: 'row',
         alignItems: 'center',
         padding: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: colors.border,
     },
     avatar: {
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 14,
@@ -111,24 +117,24 @@ const styles = StyleSheet.create({
     avatarTexto: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#6C5CE7',
+        color: '#29B6F6',
     },
     headerTextos: {
         flex: 1,
     },
     headerSubtitulo: {
         fontSize: 13,
-        color: '#95A5A6',
+        color: colors.textTertiary,
         marginBottom: 2,
     },
     headerNombre: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
     },
     contadorContainer: {
         alignItems: 'center',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.surfaceVariant,
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 12,
@@ -136,36 +142,36 @@ const styles = StyleSheet.create({
     contadorNumero: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#6C5CE7',
+        color: '#29B6F6',
     },
     contadorTexto: {
         fontSize: 11,
-        color: '#95A5A6',
+        color: colors.textTertiary,
         fontWeight: '500',
     },
     lista: {
         padding: 16,
     },
     card: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         marginBottom: 12,
         padding: 16,
         borderRadius: 16,
         flexDirection: 'row',
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
         elevation: 3,
         borderWidth: 1,
-        borderColor: '#F5F5F5',
+        borderColor: colors.border,
     },
     cardIcono: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 14,
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
     cardTitulo: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 6,
     },
     fechasContainer: {
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
     },
     fechaTexto: {
         fontSize: 12,
-        color: '#636E72',
+        color: colors.textSecondary,
         marginLeft: 6,
     },
     cardDerecha: {
@@ -210,3 +216,4 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
 });
+

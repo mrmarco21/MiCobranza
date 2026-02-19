@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../hooks/useTheme';
 
 export default function CustomModal({
     visible,
@@ -13,6 +14,9 @@ export default function CustomModal({
     showCancel = false,
     destructive = false,
 }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
+
     const getIconConfig = () => {
         switch (type) {
             case 'success':
@@ -22,7 +26,7 @@ export default function CustomModal({
             case 'warning':
                 return { name: 'warning', color: '#FF9800', bg: '#FFF3E0' };
             case 'confirm':
-                return { name: 'help-circle', color: '#6C5CE7', bg: '#F0EBFF' };
+                return { name: 'help-circle', color: '#29B6F6', bg: '#E1F5FE' };
             default:
                 return { name: 'information-circle', color: '#2196F3', bg: '#E3F2FD' };
         }
@@ -84,7 +88,7 @@ export default function CustomModal({
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 20,
         padding: 24,
         width: '100%',
@@ -111,13 +115,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
         textAlign: 'center',
         marginBottom: 8,
     },
     message: {
         fontSize: 14,
-        color: '#636E72',
+        color: colors.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 20,
@@ -131,19 +135,19 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 14,
         borderRadius: 12,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: colors.border,
         alignItems: 'center',
     },
     cancelButtonText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#636E72',
+        color: colors.textSecondary,
     },
     confirmButton: {
         flex: 1,
         paddingVertical: 14,
         borderRadius: 12,
-        backgroundColor: '#6C5CE7',
+        backgroundColor: '#29B6F6',
         alignItems: 'center',
     },
     fullWidthButton: {
@@ -161,3 +165,5 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
 });
+
+

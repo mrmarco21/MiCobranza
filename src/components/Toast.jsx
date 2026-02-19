@@ -2,8 +2,11 @@ import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Toast({ visible, message, type = 'success', onHide, duration = 2500 }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
     const insets = useSafeAreaInsets();
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(-20)).current;
@@ -80,7 +83,7 @@ export default function Toast({ visible, message, type = 'success', onHide, dura
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         position: 'absolute',
         left: 16,

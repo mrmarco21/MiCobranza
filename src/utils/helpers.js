@@ -4,7 +4,10 @@ export const generateId = () => {
 
 
 export const formatCurrency = (amount) => {
-  return `S/. ${Number(amount).toFixed(2)}`;
+  const formatted = Number(amount).toFixed(2);
+  const parts = formatted.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `S/ ${parts.join('.')}`;
 };
 
 

@@ -1,393 +1,433 @@
-import { useState, useCallback } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useState, useCallback, useRef } from 'react';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet, BackHandler } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { obtenerClientasConSaldo } from '../logic/clientasService';
-import { clearAllData } from '../data/storage';
+import { obtenerclientasConSaldo } from '../logic/clientasService';
 import { formatCurrency } from '../utils/helpers';
-import ClientaCard from '../components/ClientaCard';
-import EmptyState from '../components/EmptyState';
+import { useTheme } from '../hooks/useTheme';
 import Header from '../components/Header';
-import CustomModal from '../components/CustomModal';
+import Toast from '../components/Toast';
 
 export default function InicioScreen({ navigation }) {
-    const [clientasConDeuda, setClientasConDeuda] = useState([]);
-    const [busqueda, setBusqueda] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalConfig, setModalConfig] = useState({});
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
+    const insets = useSafeAreaInsets();
+    const [estadisticas, setEstadisticas] = useState({
+        clientasActivas: 0,
+        totalPorCobrar: 0,
+        cuentasPendientes: 0,
+    });
+    const [toastVisible, setToastVisible] = useState(false);
+    const backPressCount = useRef(0);
 
-    const showModal = (config) => {
-        setModalConfig(config);
-        setModalVisible(true);
+    const showToast = () => {
+        setToastVisible(true);
     };
 
+    // Manejar el botón de retroceso
     useFocusEffect(
         useCallback(() => {
-            cargarClientas();
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+                if (backPressCount.current === 0) {
+                    backPressCount.current = 1;
+                    showToast();
+
+                    setTimeout(() => {
+                        backPressCount.current = 0;
+                    }, 2000);
+
+                    return true;
+                } else {
+                    BackHandler.exitApp();
+                    return false;
+                }
+            });
+
+            return () => backHandler.remove();
         }, [])
     );
 
-    const cargarClientas = async () => {
-        const data = await obtenerClientasConSaldo();
-        const conDeuda = data.filter(c => c.tieneCuentaActiva && c.saldoActual > 0);
-        setClientasConDeuda(conDeuda);
-    };
+    useFocusEffect(
+        useCallback(() => {
+            cargarEstadisticas();
+        }, [])
+    );
 
-    const limpiarDatos = () => {
-        showModal({
-            type: 'warning',
-            title: 'Limpiar datos',
-            message: '¿Estás segura de eliminar TODOS los datos? Esta acción no se puede deshacer.',
-            confirmText: 'Eliminar todo',
-            cancelText: 'Cancelar',
-            showCancel: true,
-            destructive: true,
-            onConfirm: async () => {
-                await clearAllData();
-                setClientasConDeuda([]);
-                showModal({
-                    type: 'success',
-                    title: 'Listo',
-                    message: 'Todos los datos han sido eliminados',
-                });
-            }
+    const cargarEstadisticas = async () => {
+        const data = await obtenerclientasConSaldo();
+        const conDeuda = data.filter(c => c.tieneCuentaActiva && c.saldoActual > 0);
+        const totalPorCobrar = conDeuda.reduce((sum, c) => sum + c.saldoActual, 0);
+
+        setEstadisticas({
+            clientasActivas: conDeuda.length,
+            totalPorCobrar: totalPorCobrar,
+            cuentasPendientes: conDeuda.length,
         });
     };
 
-    const clientasFiltradas = clientasConDeuda.filter(c =>
-        c.nombre.toLowerCase().includes(busqueda.toLowerCase())
-    );
-
-    const totalPorCobrar = clientasConDeuda.reduce((sum, c) => sum + c.saldoActual, 0);
+    const menuOptions = [
+        {
+            title: 'Cuentas Pendientes',
+            subtitle: `${estadisticas.cuentasPendientes} cuentas activas`,
+            icon: 'wallet-outline',
+            color: '#FF6B6B',
+            bgColor: '#FFE5E5',
+            screen: 'CuentasPendientes',
+            badge: estadisticas.cuentasPendientes > 0 ? estadisticas.cuentasPendientes : null
+        },
+        {
+            title: 'Gestionar clientes',
+            subtitle: 'Ver y administrar clientes',
+            icon: 'people-outline',
+            color: '#29B6F6',
+            bgColor: '#E1F5FE',
+            screen: 'clientas'
+        },
+        {
+            title: 'Deudas Canceladas',
+            subtitle: 'Historial de pagos',
+            icon: 'checkmark-done-outline',
+            color: '#66BB6A',
+            bgColor: '#E8F5E9',
+            screen: 'CuentasCanceladas'
+        },
+        {
+            title: 'Resumen',
+            subtitle: 'Estadísticas y reportes',
+            icon: 'stats-chart-outline',
+            color: '#FFA726',
+            bgColor: '#FFF3E0',
+            screen: 'Resumen'
+        },
+    ];
 
     return (
         <View style={styles.container}>
-            <Header title="Inicio" showAddButton />
+            <Header title="Inicio" showMenu={true} />
 
-            {/* Header con estadísticas mejorado */}
-            <View style={styles.header}>
-                {/* Botón temporal para limpiar datos - ELIMINAR DESPUÉS */}
-                {/* <TouchableOpacity
-                    style={styles.botonLimpiar}
-                    onPress={limpiarDatos}
-                >
-                    <Ionicons name="trash-outline" size={16} color="#FFF" />
-                    <Text style={styles.textoLimpiar}>Limpiar todos los datos</Text>
-                </TouchableOpacity> */}
-
-                <View style={styles.estadisticasGrid}>
-                    {/* Card Clientas Activas */}
-                    <View style={styles.estadisticaCard}>
-                        <View style={styles.estadisticaIcono}>
-                            <Ionicons name="people" size={22} color="#6C5CE7" />
-                        </View>
-                        <Text style={styles.estadisticaValor}>{clientasConDeuda.length}</Text>
-                        <Text style={styles.estadisticaLabel}>Clientas activas</Text>
-                    </View>
-
-                    {/* Card Total por Cobrar */}
-                    <View style={styles.estadisticaCardDestacado}>
-                        <View style={styles.estadisticaIconoDestacado}>
-                            <Ionicons name="cash" size={22} color="#FF6B6B" />
-                        </View>
-                        <Text style={styles.estadisticaValorDestacado}>
-                            {formatCurrency(totalPorCobrar)}
-                        </Text>
-                        <Text style={styles.estadisticaLabelDestacado}>Total por cobrar</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Botón de navegación principal mejorado */}
-            <View style={styles.accionesContainer}>
-                <TouchableOpacity
-                    style={styles.botonPrincipal}
-                    onPress={() => navigation.navigate('Clientas')}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.botonContenido}>
-                        <View style={styles.botonIconContainer}>
-                            <Ionicons name="list" size={22} color="#6C5CE7" />
-                        </View>
-                        <View style={styles.botonTextoContainer}>
-                            <Text style={styles.botonTitulo}>Gestionar clientas</Text>
-                            <Text style={styles.botonSubtitulo}>Ver y administrar todas las clientas</Text>
-                        </View>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#B0B0B0" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Sección de búsqueda mejorada */}
-            {clientasConDeuda.length > 0 && (
-                <View style={styles.busquedaContainer}>
-                    <View style={styles.buscadorWrapper}>
-                        <Ionicons name="search" size={18} color="#A0A0A0" />
-                        <TextInput
-                            style={styles.buscador}
-                            placeholder="Buscar por nombre..."
-                            placeholderTextColor="#A0A0A0"
-                            value={busqueda}
-                            onChangeText={setBusqueda}
-                        />
-                        {busqueda.length > 0 && (
-                            <TouchableOpacity onPress={() => setBusqueda('')} style={styles.botonLimpiarBusqueda}>
-                                <Ionicons name="close-circle" size={20} color="#A0A0A0" />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
-            )}
-
-            {/* Título de sección mejorado */}
-            <View style={styles.seccionHeader}>
-                <View style={styles.seccionTituloWrapper}>
-                    <Ionicons name="wallet-outline" size={20} color="#2D3436" />
-                    <Text style={styles.seccionTitulo}>Cuentas pendientes</Text>
-                </View>
-                <View style={styles.seccionContador}>
-                    <Text style={styles.seccionContadorTexto}>
-                        {clientasFiltradas.length}
-                    </Text>
-                </View>
-            </View>
-
-            {/* Lista de clientas */}
-            <FlatList
-                data={clientasFiltradas}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <ClientaCard
-                        clienta={item}
-                        onPress={() => navigation.navigate('ClientaDetail', { clientaId: item.id })}
-                    />
-                )}
-                ListEmptyComponent={
-                    <EmptyState
-                        message={busqueda ? "No se encontraron resultados" : "No hay clientas con deuda activa"}
-                        iconName={busqueda ? "search-outline" : "checkmark-done-circle-outline"}
-                    />
-                }
-                contentContainerStyle={clientasFiltradas.length === 0 ? styles.emptyContainer : styles.listaContainer}
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
-            />
+            >
+                {/* Estadísticas principales */}
+                <View style={styles.statsSection}>
+                    <View style={styles.statsGrid}>
+                        {/* Card de Total por Cobrar */}
+                        <View style={styles.statCardPrimary}>
+                            <View style={styles.statCardHeader}>
+                                <View style={styles.statIconPrimary}>
+                                    <Ionicons name="trending-up" size={24} color="#FFFFFF" />
+                                </View>
+                                <View style={styles.statBadge}>
+                                    <Ionicons name="alert-circle" size={12} color="#38BDF8" />
+                                    <Text style={styles.statBadgeText}>Activo</Text>
+                                </View>
+                            </View>
+                            <Text style={styles.statPrimaryValue}>
+                                {formatCurrency(estadisticas.totalPorCobrar)}
+                            </Text>
+                            <Text style={styles.statPrimaryLabel}>Total por cobrar</Text>
+                            <View style={styles.statPrimaryFooter}>
+                                <Ionicons name="people" size={14} color="rgba(255,255,255,0.75)" />
+                                <Text style={styles.statPrimaryFooterText}>
+                                    {estadisticas.clientasActivas} clientes activos
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
 
-            <CustomModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-                {...modalConfig}
+                {/* Sección de accesos rápidos */}
+                <View style={styles.quickAccessSection}>
+                    <View style={styles.sectionHeader}>
+                        <View style={styles.sectionHeaderLeft}>
+                            <Ionicons name="apps-outline" size={20} color={colors.text} />
+                            <Text style={styles.sectionTitle}>Accesos Rápidos</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.menuGrid}>
+                        {menuOptions.map((option, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={styles.menuCard}
+                                onPress={() => navigation.navigate(option.screen, option.params)}
+                                activeOpacity={0.7}
+                            >
+                                {option.badge && (
+                                    <View style={[styles.menuBadge, { backgroundColor: option.color }]}>
+                                        <Text style={styles.menuBadgeText}>{option.badge}</Text>
+                                    </View>
+                                )}
+                                <View style={[styles.menuIconContainer, { backgroundColor: option.bgColor }]}>
+                                    <Ionicons name={option.icon} size={28} color={option.color} />
+                                </View>
+                                <View style={styles.menuContent}>
+                                    <Text style={styles.menuTitle} numberOfLines={2}>
+                                        {option.title}
+                                    </Text>
+                                    <Text style={styles.menuSubtitle} numberOfLines={2}>
+                                        {option.subtitle}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
+                {/* Footer con información adicional */}
+                <View style={styles.footerInfo}>
+                    <View style={styles.footerIconContainer}>
+                        <Ionicons name="shield-checkmark-outline" size={20} color="#66BB6A" />
+                    </View>
+                    <View style={styles.footerTextContainer}>
+                        <Text style={styles.footerTitle}>Sistema seguro y confiable</Text>
+                        <Text style={styles.footerSubtitle}>
+                            Toda tu información está protegida localmente
+                        </Text>
+                    </View>
+                </View>
+
+                <View style={styles.bottomPadding} />
+            </ScrollView>
+
+            <Toast
+                visible={toastVisible}
+                message="Presiona nuevamente para salir"
+                type="info"
+                onHide={() => setToastVisible(false)}
             />
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFBFC'
+        backgroundColor: colors.background,
     },
-    header: {
-        backgroundColor: '#FFFFFF',
-        paddingTop: 20,
-        paddingBottom: 20,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+    scrollView: {
+        flex: 1,
     },
-    botonLimpiar: {
+    scrollContent: {
+        padding: 16,
+    },
+
+    // Estadísticas
+    statsSection: {
+        marginBottom: 24,
+    },
+    statsGrid: {
+        gap: 10,
+    },
+    statCardPrimary: {
+        backgroundColor: '#30acefff',
+        borderRadius: 20,
+        padding: 10,
+        shadowColor: '#0EA5E9',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.40,
+        shadowRadius: 16,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(56, 189, 248, 0.30)',
+    },
+    statCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    statIconPrimary: {
+        width: 46,
+        height: 46,
+        borderRadius: 14,
+        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(125, 211, 252, 0.40)',
+    },
+    statBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#FF6B6B',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 2,
+        borderRadius: 20,
+        gap: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.20)',
+    },
+    statBadgeText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#BAE6FD',
+        letterSpacing: 0.5,
+    },
+    statPrimaryValue: {
+        fontSize: 34,
+        fontWeight: '800',
+        color: '#FFFFFF',
+        marginBottom: 4,
+        letterSpacing: -1,
+    },
+    statPrimaryLabel: {
+        fontSize: 13,
+        color: 'rgba(186, 230, 253, 0.90)',
+        fontWeight: '500',
+        marginBottom: 5,
+        letterSpacing: 0.9,
+    },
+    statPrimaryFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(56, 189, 248, 0.25)',
+    },
+    statPrimaryFooterText: {
+        fontSize: 12,
+        color: 'rgba(255, 255, 255, 0.65)',
+        fontWeight: '500',
+    },
+
+    // Accesos rápidos
+    quickAccessSection: {
+        marginBottom: 20,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 16,
     },
-    textoLimpiar: {
-        color: '#FFF',
-        fontWeight: '600',
-        marginLeft: 8,
-        fontSize: 14,
-    },
-    estadisticasGrid: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    estadisticaCard: {
-        flex: 1,
-        backgroundColor: '#F8F9FA',
-        borderRadius: 16,
-        padding: 12,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#F0EBFF',
-    },
-    estadisticaCardDestacado: {
-        flex: 1,
-        backgroundColor: '#FFF5F5',
-        borderRadius: 16,
-        padding: 12,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#FFE5E5',
-    },
-    estadisticaIcono: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: '#F0EBFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    estadisticaIconoDestacado: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: '#FFE5E5',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    estadisticaValor: {
-        fontSize: 22,
-        fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-    estadisticaValorDestacado: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#FF6B6B',
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-    estadisticaLabel: {
-        fontSize: 11,
-        color: '#636E72',
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    estadisticaLabelDestacado: {
-        fontSize: 11,
-        color: '#636E72',
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    accionesContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-    },
-    botonPrincipal: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
+    sectionHeaderLeft: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 8,
+    },
+    sectionTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: colors.text,
+    },
+    menuGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
         justifyContent: 'space-between',
-        padding: 10,
+    },
+    menuCard: {
+        flexBasis: '48%',
+        flexGrow: 0,
+        flexShrink: 0,
+        backgroundColor: colors.card,
+        borderRadius: 16,
+        padding: 12,
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
         elevation: 3,
-        borderWidth: 1,
-        borderColor: '#F5F5F5',
+        borderWidth: 0,
+        position: 'relative',
+        minHeight: 130,
+        maxHeight: 160,
+        justifyContent: 'space-between',
     },
-    botonContenido: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    botonIconContainer: {
-        width: 44,
-        height: 44,
+    menuBadge: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        minWidth: 24,
+        height: 24,
         borderRadius: 12,
-        backgroundColor: '#F0EBFF',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
+        paddingHorizontal: 7,
+        zIndex: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
     },
-    botonTextoContainer: {
+    menuBadgeText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    menuIconContainer: {
+        width: 56,
+        height: 56,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        flexShrink: 0,
+    },
+    menuContent: {
+        alignItems: 'center',
+        width: '100%',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    menuTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.text,
+        marginBottom: 3,
+        textAlign: 'center',
+        maxFontSizeMultiplier: 1.2,
+    },
+    menuSubtitle: {
+        fontSize: 10,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        lineHeight: 14,
+        maxFontSizeMultiplier: 1.15,
+    },
+
+    // Footer
+    footerInfo: {
+        flexDirection: 'row',
+        backgroundColor: '#E8F5E9',
+        borderRadius: 14,
+        padding: 10,
+        alignItems: 'center',
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#C8E6C9',
+    },
+    footerIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    footerTextContainer: {
         flex: 1,
     },
-    botonTitulo: {
-        fontSize: 14,
+    footerTitle: {
+        fontSize: 13,
         fontWeight: '600',
         color: '#2D3436',
         marginBottom: 2,
     },
-    botonSubtitulo: {
-        fontSize: 11,
-        color: '#95A5A6',
+    footerSubtitle: {
+        fontSize: 12,
+        color: '#636E72',
+        lineHeight: 16,
     },
-    busquedaContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 10,
-    },
-    buscadorWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 4,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: '#F5F5F5',
-        gap: 10,
-    },
-    buscador: {
-        flex: 1,
-        fontSize: 14,
-        color: '#2D3436',
-        padding: 0,
-    },
-    botonLimpiarBusqueda: {
-        padding: 4,
-    },
-    seccionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 10,
-    },
-    seccionTituloWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    seccionTitulo: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#2D3436',
-    },
-    seccionContador: {
-        backgroundColor: '#F0EBFF',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-        minWidth: 32,
-        alignItems: 'center',
-    },
-    seccionContadorTexto: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: '#6C5CE7',
-    },
-    listaContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 20,
-    },
-    emptyContainer: {
-        flex: 1,
-        paddingHorizontal: 16,
+
+    bottomPadding: {
+        height: 20,
     },
 });

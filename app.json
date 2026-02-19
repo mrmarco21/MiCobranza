@@ -2,7 +2,7 @@
   "expo": {
     "name": "MiCobranza",
     "slug": "MiCobranza",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon_app.jpg",
     "userInterfaceStyle": "light",
@@ -16,21 +16,25 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mrmarco62.MiCobranza",
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon_app.jpg",
         "backgroundColor": "#9b59b6"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.mrmarco64.MiCobranza"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "e18b1fb2-603c-4b05-9727-2ecaea6130f5"
+        "projectId": "51ab2e0a-0cba-4a02-9bf4-1afbc34ece08"
       }
     },
-    "owner": "mrmarco64"
+    "owner": "mrmarco62",
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }

@@ -1,103 +1,170 @@
-import { useState, useCallback } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Keyboard } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { obtenerClientasConSaldo } from '../logic/clientasService';
+import { obtenerclientasConSaldo } from '../logic/clientasService';
+import { useTheme } from '../hooks/useTheme';
 import ClientaCard from '../components/ClientaCard';
 import EmptyState from '../components/EmptyState';
 import Header from '../components/Header';
+import SortFilterModal from '../components/SortFilterModal';
 
-export default function ClientasScreen({ navigation }) {
-    const [clientas, setClientas] = useState([]);
+export default function clientasScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
+    const insets = useSafeAreaInsets();
+    const [clientas, setclientas] = useState([]);
     const [busqueda, setBusqueda] = useState('');
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const [showSortModal, setShowSortModal] = useState(false);
+    const [filterType, setFilterType] = useState('all');
+    const [sortOrder, setSortOrder] = useState('a-z');
+    const [showSearchBar, setShowSearchBar] = useState(false);
+    const searchInputRef = useRef(null);
 
     useFocusEffect(
         useCallback(() => {
-            cargarClientas();
+            cargarclientas();
         }, [])
     );
 
-    const cargarClientas = async () => {
-        const data = await obtenerClientasConSaldo();
-        setClientas(data);
+    // Detectar cuando el teclado se muestra/oculta
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+            setKeyboardVisible(true);
+        });
+
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardVisible(false);
+        });
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
+    const cargarclientas = async () => {
+        const data = await obtenerclientasConSaldo();
+        setclientas(data);
     };
 
-    const clientasFiltradas = clientas.filter(c =>
-        c.nombre.toLowerCase().includes(busqueda.toLowerCase())
-    );
+    const clientasFiltradas = clientas
+        .filter(c => {
+            const matchesSearch = c.nombre.toLowerCase().includes(busqueda.toLowerCase());
+            if (filterType === 'all') return matchesSearch;
+            if (filterType === 'pending') return matchesSearch && c.tieneCuentaActiva && c.saldoActual > 0;
+            if (filterType === 'inactive') return matchesSearch && !c.tieneCuentaActiva;
+            return matchesSearch;
+        })
+        .sort((a, b) => {
+            switch (sortOrder) {
+                case 'a-z':
+                    return a.nombre.localeCompare(b.nombre);
+                case 'z-a':
+                    return b.nombre.localeCompare(a.nombre);
+                case 'recent':
+                    return new Date(b.fechaUltimaCuenta || 0) - new Date(a.fechaUltimaCuenta || 0);
+                case 'oldest':
+                    return new Date(a.fechaUltimaCuenta || 0) - new Date(b.fechaUltimaCuenta || 0);
+                case 'highest':
+                    return b.saldoActual - a.saldoActual;
+                case 'lowest':
+                    return a.saldoActual - b.saldoActual;
+                default:
+                    return 0;
+            }
+        });
 
     // Calcular estadísticas
-    const totalClientas = clientas.length;
+    const totalclientas = clientas.length;
     const clientasConDeuda = clientas.filter(c => c.tieneCuentaActiva && c.saldoActual > 0).length;
     const clientasAlDia = clientas.filter(c => c.tieneCuentaActiva && c.saldoActual === 0).length;
     const clientasSinCuenta = clientas.filter(c => !c.tieneCuentaActiva).length;
 
+    const handleSortFilterApply = ({ filter, sort }) => {
+        setFilterType(filter);
+        setSortOrder(sort);
+    };
+
+    const toggleSearch = () => {
+        setShowSearchBar(!showSearchBar);
+        if (showSearchBar) {
+            setBusqueda('');
+        }
+    };
+
     return (
         <View style={styles.container}>
-            <Header title="Todas las Clientas" showBack showAddButton />
+            <Header
+                title="Todos los clientes"
+                showBack
+                searchMode={showSearchBar}
+                searchValue={busqueda}
+                onSearchChange={setBusqueda}
+                searchPlaceholder="Buscar cliente..."
+                rightButtons={[
+                    {
+                        icon: showSearchBar ? 'close' : 'search',
+                        onPress: toggleSearch
+                    },
+                    {
+                        icon: 'ellipsis-vertical',
+                        onPress: () => setShowSortModal(true)
+                    }
+                ]}
+            />
 
-            {/* Header con estadísticas */}
-            <View style={styles.header}>
-                <View style={styles.estadisticasContainer}>
-                    <View style={styles.estadisticaItem}>
-                        <View style={styles.estadisticaIcono}>
-                            <Ionicons name="people" size={18} color="#6C5CE7" />
+            {/* Header con estadísticas - se oculta cuando el teclado está visible */}
+            {!keyboardVisible && (
+                <View style={styles.header}>
+                    <View style={styles.estadisticasContainer}>
+                        <View style={styles.estadisticaItem}>
+                            <View style={styles.estadisticaIcono}>
+                                <Ionicons name="people" size={18} color="#29B6F6" />
+                            </View>
+                            <Text style={styles.estadisticaValor}>{totalclientas}</Text>
+                            <Text style={styles.estadisticaLabel}>Total</Text>
                         </View>
-                        <Text style={styles.estadisticaValor}>{totalClientas}</Text>
-                        <Text style={styles.estadisticaLabel}>Total</Text>
-                    </View>
 
-                    <View style={styles.estadisticaItem}>
-                        <View style={[styles.estadisticaIcono, { backgroundColor: '#FFE5E5' }]}>
-                            <Ionicons name="alert-circle" size={18} color="#FF6B6B" />
+                        <View style={styles.estadisticaItem}>
+                            <View style={[styles.estadisticaIcono, { backgroundColor: '#FFE5E5' }]}>
+                                <Ionicons name="alert-circle" size={18} color="#FF6B6B" />
+                            </View>
+                            <Text style={styles.estadisticaValor}>{clientasConDeuda}</Text>
+                            <Text style={styles.estadisticaLabel}>Con deuda</Text>
                         </View>
-                        <Text style={styles.estadisticaValor}>{clientasConDeuda}</Text>
-                        <Text style={styles.estadisticaLabel}>Con deuda</Text>
-                    </View>
 
-                    {/* <View style={styles.estadisticaItem}>
-                        <View style={[styles.estadisticaIcono, { backgroundColor: '#E8F5E9' }]}>
-                            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                        <View style={styles.estadisticaItem}>
+                            <View style={[styles.estadisticaIcono, { backgroundColor: '#F5F5F5' }]}>
+                                <Ionicons name="person-outline" size={18} color="#9E9E9E" />
+                            </View>
+                            <Text style={styles.estadisticaValor}>{clientasSinCuenta}</Text>
+                            <Text style={styles.estadisticaLabel}>Sin cuenta</Text>
                         </View>
-                        <Text style={styles.estadisticaValor}>{clientasAlDia}</Text>
-                        <Text style={styles.estadisticaLabel}>Al día</Text>
-                    </View> */}
-
-                    <View style={styles.estadisticaItem}>
-                        <View style={[styles.estadisticaIcono, { backgroundColor: '#F5F5F5' }]}>
-                            <Ionicons name="person-outline" size={18} color="#9E9E9E" />
-                        </View>
-                        <Text style={styles.estadisticaValor}>{clientasSinCuenta}</Text>
-                        <Text style={styles.estadisticaLabel}>Sin cuenta</Text>
                     </View>
                 </View>
-            </View>
+            )}
 
-            {/* Sección de búsqueda */}
-            <View style={styles.busquedaContainer}>
-                <View style={styles.buscadorWrapper}>
-                    <Ionicons name="search" size={20} color="#A0A0A0" style={styles.iconoBuscador} />
-                    <TextInput
-                        style={styles.buscador}
-                        placeholder="Buscar por nombre..."
-                        placeholderTextColor="#A0A0A0"
-                        value={busqueda}
-                        onChangeText={setBusqueda}
-                    />
-                    {busqueda.length > 0 && (
-                        <TouchableOpacity onPress={() => setBusqueda('')}>
-                            <Ionicons name="close-circle" size={20} color="#A0A0A0" />
-                        </TouchableOpacity>
-                    )}
+            {/* Barra de búsqueda SIMPLIFICADA */}
+            {busqueda.length > 0 && (
+                <View style={styles.resultadosInfo}>
+                    <Ionicons name="filter" size={16} color="#29B6F6" />
+                    <Text style={styles.resultadosTexto}>
+                        {clientasFiltradas.length} {clientasFiltradas.length === 1 ? 'resultado' : 'resultados'}
+                    </Text>
                 </View>
-            </View>
+            )}
 
-            {/* Título de sección con contador */}
-            <View style={styles.seccionHeader}>
-                <Text style={styles.seccionTitulo}>Todas las clientas</Text>
-            </View>
+            {/* Título de sección con contador - se oculta cuando el teclado está visible */}
+            {!keyboardVisible && (
+                <View style={styles.seccionHeader}>
+                    <Text style={styles.seccionTitulo}>Todos los clientes</Text>
+                </View>
+            )}
 
-            {/* Lista de clientas */}
+            {/* Lista de clientes */}
             <FlatList
                 data={clientasFiltradas}
                 keyExtractor={(item) => item.id}
@@ -109,7 +176,7 @@ export default function ClientasScreen({ navigation }) {
                 )}
                 ListEmptyComponent={
                     <EmptyState
-                        message={busqueda ? "No se encontraron resultados" : "No hay clientas registradas"}
+                        message={busqueda ? "No se encontraron resultados" : "No hay clientes registrados"}
                         iconName={busqueda ? "search-outline" : "people-outline"}
                     />
                 }
@@ -117,29 +184,48 @@ export default function ClientasScreen({ navigation }) {
                 showsVerticalScrollIndicator={false}
             />
 
-            {/* Botón flotante para agregar nueva clienta */}
+            {/* Botón flotante para agregar nueva clienta - se oculta cuando el teclado está visible */}
+            {!keyboardVisible && (
+                <TouchableOpacity
+                    style={[styles.botonFlotante, { bottom: Math.max(insets.bottom + 24, 24) }]}
+                    onPress={() => navigation.navigate('AddClienta')}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons name="person-add" size={24} color="#fff" />
+                </TouchableOpacity>
+            )}
+
+            {/* Modal de ordenamiento y filtrado */}
+            <SortFilterModal
+                visible={showSortModal}
+                onClose={() => setShowSortModal(false)}
+                onApply={handleSortFilterApply}
+                currentFilter={filterType}
+                currentSort={sortOrder}
+                showFilters={true}
+            />
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFBFC'
+        backgroundColor: colors.background
     },
     header: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         paddingTop: 12,
         paddingBottom: 14,
         paddingHorizontal: 14,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: colors.border,
     },
     estadisticasContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.background,
         borderRadius: 10,
         padding: 5,
         shadowColor: '#000',
@@ -156,7 +242,7 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35,
         borderRadius: 20,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 5,
@@ -164,40 +250,37 @@ const styles = StyleSheet.create({
     estadisticaValor: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
         marginTop: 4,
     },
     estadisticaLabel: {
         fontSize: 12,
-        color: '#636E72',
+        color: colors.textSecondary,
         marginTop: 4,
         textAlign: 'center',
     },
     busquedaContainer: {
         paddingHorizontal: 16,
         paddingTop: 16,
+        paddingBottom: 4,
     },
-    buscadorWrapper: {
+    resultadosInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        justifyContent: 'center',
+        marginTop: 8,
+        marginHorizontal: 16,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        backgroundColor: '#E1F5FE',
+        borderRadius: 20,
+        alignSelf: 'center',
+        gap: 6,
     },
-    iconoBuscador: {
-        marginRight: 10,
-    },
-    buscador: {
-        flex: 1,
-        fontSize: 15,
-        color: '#2D3436',
-        padding: 0,
+    resultadosTexto: {
+        fontSize: 13,
+        color: '#29B6F6',
+        fontWeight: '600',
     },
     seccionHeader: {
         flexDirection: 'row',
@@ -210,7 +293,7 @@ const styles = StyleSheet.create({
     seccionTitulo: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
     },
     listaContainer: {
         paddingHorizontal: 16,
@@ -220,4 +303,21 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 16,
     },
+    botonFlotante: {
+        position: 'absolute',
+        bottom: 24,
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
 });
+

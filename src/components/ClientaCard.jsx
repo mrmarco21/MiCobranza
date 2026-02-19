@@ -2,8 +2,12 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../utils/helpers';
+import { useTheme } from '../hooks/useTheme';
 
 export default function ClientaCard({ clienta, onPress }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
+
     return (
         <TouchableOpacity
             style={styles.container}
@@ -40,7 +44,7 @@ export default function ClientaCard({ clienta, onPress }) {
 
                     {clienta.referencia ? (
                         <View style={styles.referenciaRow}>
-                            <Ionicons name="person-outline" size={13} color="#95A5A6" />
+                            <Ionicons name="person-outline" size={13} color={colors.textSecondary} />
                             <Text style={styles.referencia} numberOfLines={1}>
                                 {clienta.referencia}
                             </Text>
@@ -71,16 +75,16 @@ export default function ClientaCard({ clienta, onPress }) {
                     </Text>
                 </View>
                 <View style={styles.accionIcono}>
-                    <Ionicons name="chevron-forward" size={18} color="#6C5CE7" />
+                    <Ionicons name="chevron-forward" size={18} color={colors.primary} />
                 </View>
             </View>
         </TouchableOpacity>
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         marginBottom: 12,
         padding: 16,
         borderRadius: 16,
@@ -92,8 +96,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 8,
         elevation: 3,
-        borderWidth: 1,
-        borderColor: '#F5F5F5',
+        borderWidth: 0,
     },
     contenidoPrincipal: {
         flexDirection: 'row',
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
     nombre: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         flex: 1,
     },
     indicadorActivo: {
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
     },
     referencia: {
         fontSize: 13,
-        color: '#95A5A6',
+        color: colors.textSecondary,
         flex: 1,
     },
     badgeContainer: {
@@ -173,14 +176,14 @@ const styles = StyleSheet.create({
     },
     saldoCard: {
         alignItems: 'flex-end',
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.surfaceVariant,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 10,
     },
     saldoLabel: {
         fontSize: 10,
-        color: '#95A5A6',
+        color: colors.textSecondary,
         marginBottom: 2,
         fontWeight: '600',
         textTransform: 'uppercase',
@@ -201,8 +204,9 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 10,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
 });
+

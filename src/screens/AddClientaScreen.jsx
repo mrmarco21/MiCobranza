@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { registrarClienta, actualizarClienta, obtenerClientaPorId } from '../logic/clientasService';
 import Header from '../components/Header';
 import CustomModal from '../components/CustomModal';
 import Toast from '../components/Toast';
+import { useTheme } from '../hooks/useTheme';
 
-export default function AddClientaScreen({ route, navigation }) {
+export default function Addclientascreen({ route, navigation }) {
     const clientaId = route.params?.clientaId;
     const esEdicion = !!clientaId;
+    const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
 
     const [nombre, setNombre] = useState('');
     const [referencia, setReferencia] = useState('');
@@ -22,6 +26,14 @@ export default function AddClientaScreen({ route, navigation }) {
         if (esEdicion) {
             cargarClienta();
         }
+
+        // Manejar el botón de retroceso del hardware
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            navigation.goBack();
+            return true;
+        });
+
+        return () => backHandler.remove();
     }, [clientaId]);
 
     const cargarClienta = async () => {
@@ -56,12 +68,14 @@ export default function AddClientaScreen({ route, navigation }) {
         try {
             if (esEdicion) {
                 await actualizarClienta(clientaId, { nombre, referencia });
-                showToast('Clienta actualizada correctamente');
+                showToast('Cliente actualizado correctamente');
+                setTimeout(() => navigation.goBack(), 1500);
             } else {
                 await registrarClienta({ nombre, referencia });
-                showToast('Clienta registrada correctamente');
+                showToast('Cliente registrado correctamente');
+                // Simplemente regresar a la pantalla anterior
+                setTimeout(() => navigation.goBack(), 1500);
             }
-            setTimeout(() => navigation.goBack(), 1500);
         } catch (error) {
             showModal({
                 type: 'error',
@@ -72,12 +86,14 @@ export default function AddClientaScreen({ route, navigation }) {
         }
     };
 
+    const styles = createStyles(colors);
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <Header title={esEdicion ? "Editar Clienta" : "Nueva Clienta"} showBack />
+            <Header title={esEdicion ? "Editar Cliente" : "Nuevo Cliente"} showBack />
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
@@ -85,11 +101,11 @@ export default function AddClientaScreen({ route, navigation }) {
                 {/* Header informativo */}
                 <View style={styles.headerInfo}>
                     <View style={styles.iconoHeader}>
-                        <Ionicons name={esEdicion ? "create-outline" : "person-add"} size={25} color="#6C5CE7" />
+                        <Ionicons name={esEdicion ? "create-outline" : "person-add"} size={25} color="#29B6F6" />
                     </View>
-                    <Text style={styles.titulo}>{esEdicion ? "Editar Clienta" : "Nueva Clienta"}</Text>
+                    <Text style={styles.titulo}>{esEdicion ? "Editar Cliente" : "Nuevo Cliente"}</Text>
                     <Text style={styles.subtitulo}>
-                        {esEdicion ? "Modifica la información de la clienta" : "Complete la información de la clienta"}
+                        {esEdicion ? "Modifica la información del cliente" : "Complete la información del cliente"}
                     </Text>
                 </View>
 
@@ -130,7 +146,7 @@ export default function AddClientaScreen({ route, navigation }) {
 
                     {/* Nota informativa */}
                     <View style={styles.notaContainer}>
-                        <Ionicons name="information-circle-outline" size={18} color="#6C5CE7" />
+                        <Ionicons name="information-circle-outline" size={18} color="#29B6F6" />
                         <Text style={styles.notaTexto}>
                             El campo marcado con * es obligatorios
                         </Text>
@@ -139,7 +155,7 @@ export default function AddClientaScreen({ route, navigation }) {
             </ScrollView>
 
             {/* Botón de guardar fijo */}
-            <View style={styles.footerContainer}>
+            <View style={[styles.footerContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                 <TouchableOpacity
                     style={[styles.botonGuardar, loading && styles.botonDisabled]}
                     onPress={handleGuardar}
@@ -148,7 +164,7 @@ export default function AddClientaScreen({ route, navigation }) {
                 >
                     <Ionicons name="checkmark-circle" size={24} color="#636E72" />
                     <Text style={styles.botonGuardarTexto}>
-                        {esEdicion ? "Guardar cambios" : "Guardar Clienta"}
+                        {esEdicion ? "Guardar cambios" : "Guardar Cliente"}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -169,28 +185,28 @@ export default function AddClientaScreen({ route, navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFBFC'
+        backgroundColor: colors.background
     },
     scrollView: {
         flex: 1,
     },
     headerInfo: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         paddingTop: 24,
         paddingBottom: 24,
         paddingHorizontal: 20,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: colors.border,
     },
     iconoHeader: {
         width: 60,
         height: 60,
         borderRadius: 35,
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 12,
@@ -198,12 +214,12 @@ const styles = StyleSheet.create({
     titulo: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 6,
     },
     subtitulo: {
         fontSize: 14,
-        color: '#636E72',
+        color: colors.textSecondary,
         textAlign: 'center',
     },
     formulario: {
@@ -215,7 +231,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 8,
     },
     requerido: {
@@ -225,17 +241,17 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
-        shadowColor: '#000',
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
         borderWidth: 1,
-        borderColor: '#F0F0F0',
+        borderColor: colors.border,
     },
     inputIcono: {
         marginRight: 12,
@@ -243,47 +259,47 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        color: '#2D3436',
+        color: colors.text,
         padding: 0,
     },
     notaContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F0EBFF',
+        backgroundColor: '#E1F5FE',
         padding: 12,
         borderRadius: 10,
         marginTop: 8,
     },
     notaTexto: {
         fontSize: 13,
-        color: '#6C5CE7',
+        color: '#45beffff',
         marginLeft: 8,
         flex: 1,
     },
     footerContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-        shadowColor: '#000',
+        borderTopColor: colors.border,
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 5,
     },
     botonGuardar: {
-        backgroundColor: '#F8F9FA',
+        backgroundColor: colors.surfaceVariant,
         paddingVertical: 16,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: colors.border,
     },
     botonGuardarTexto: {
-        color: '#2D3436',
+        color: colors.text,
         fontSize: 17,
         fontWeight: '700',
         marginLeft: 8,
@@ -292,3 +308,4 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
 })
+

@@ -2,8 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency, formatDate } from '../utils/helpers';
+import { useTheme } from '../hooks/useTheme';
 
 export default function MovimientoItem({ movimiento, onPress }) {
+    const { colors } = useTheme();
+    const styles = createStyles(colors);
     const esCargo = movimiento.tipo === 'CARGO';
 
     return (
@@ -31,15 +34,15 @@ export default function MovimientoItem({ movimiento, onPress }) {
                 <Text style={[styles.monto, esCargo ? styles.montoRojo : styles.montoVerde]}>
                     {esCargo ? '+' : '-'} {formatCurrency(movimiento.monto)}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color="#B0B0B0" />
+                <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
             </View>
         </TouchableOpacity>
     );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
     container: {
-        backgroundColor: '#FAFBFC',
+        backgroundColor: colors.surfaceVariant,
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderRadius: 10,
@@ -48,7 +51,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#F0F0F0',
+        borderColor: colors.border,
     },
     izquierda: {
         flexDirection: 'row',
@@ -76,12 +79,12 @@ const styles = StyleSheet.create({
     comentario: {
         fontSize: 15,
         fontWeight: '500',
-        color: '#2D3436',
+        color: colors.text,
         marginBottom: 4,
     },
     fecha: {
         fontSize: 12,
-        color: '#95A5A6',
+        color: colors.textSecondary,
     },
     derecha: {
         flexDirection: 'row',

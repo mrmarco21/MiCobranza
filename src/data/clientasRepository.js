@@ -1,7 +1,7 @@
 import { getData, setData, KEYS } from './storage';
 
 export const getAll = async () => {
-  return await getData(KEYS.CLIENTAS);
+  return await getData(KEYS.clientas);
 };
 
 export const getById = async (id) => {
@@ -12,7 +12,7 @@ export const getById = async (id) => {
 export const create = async (clienta) => {
   const clientas = await getAll();
   clientas.push(clienta);
-  await setData(KEYS.CLIENTAS, clientas);
+  await setData(KEYS.clientas, clientas);
   return clienta;
 };
 
@@ -21,7 +21,7 @@ export const update = async (id, updates) => {
   const index = clientas.findIndex(c => c.id === id);
   if (index !== -1) {
     clientas[index] = { ...clientas[index], ...updates };
-    await setData(KEYS.CLIENTAS, clientas);
+    await setData(KEYS.clientas, clientas);
     return clientas[index];
   }
   return null;

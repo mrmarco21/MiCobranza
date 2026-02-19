@@ -2,13 +2,15 @@ import { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { obtenerCuentasCerradas, obtenerCuentasConClientas } from '../logic/cuentasService';
+import { obtenerCuentasCerradas, obtenerCuentasConclientas } from '../logic/cuentasService';
 import CuentaCerradaCard from '../components/CuentaCerradaCard';
 import EmptyState from '../components/EmptyState';
 import Header from '../components/Header';
+import { useTheme } from '../hooks/useTheme';
 
 export default function CuentasCanceladasScreen({ navigation }) {
-    const [clientasAgrupadas, setClientasAgrupadas] = useState([]);
+    const { colors } = useTheme();
+    const [clientasAgrupadas, setclientasAgrupadas] = useState([]);
     const [totalCuentas, setTotalCuentas] = useState(0);
 
     useFocusEffect(
@@ -19,8 +21,8 @@ export default function CuentasCanceladasScreen({ navigation }) {
 
     const cargarCuentas = async () => {
         const cerradas = await obtenerCuentasCerradas();
-        const conClientas = await obtenerCuentasConClientas(cerradas);
-        const ordenadas = conClientas.sort((a, b) => new Date(b.fechaCierre) - new Date(a.fechaCierre));
+        const conclientas = await obtenerCuentasConclientas(cerradas);
+        const ordenadas = conclientas.sort((a, b) => new Date(b.fechaCierre) - new Date(a.fechaCierre));
 
         const agrupadas = ordenadas.reduce((acc, cuenta) => {
             const existing = acc.find(c => c.clientaId === cuenta.clientaId);
@@ -36,24 +38,29 @@ export default function CuentasCanceladasScreen({ navigation }) {
             return acc;
         }, []);
 
-        setClientasAgrupadas(agrupadas);
+        setclientasAgrupadas(agrupadas);
         setTotalCuentas(ordenadas.length);
     };
 
     const handlePress = (clienta) => {
         if (clienta.cuentas.length === 1) {
-            navigation.navigate('DetalleCuenta', { cuentaId: clienta.cuentas[0].id });
+            navigation.navigate('DetalleCuenta', {
+                cuentaId: clienta.cuentas[0].id,
+                clientaNombre: clienta.clientaNombre
+            });
         } else {
-            navigation.navigate('HistorialCuentas', {
+            navigation.navigate('HistorialClientaCuentas', {
                 clientaId: clienta.clientaId,
                 clientaNombre: clienta.clientaNombre
             });
         }
     };
 
+    const styles = createStyles(colors);
+
     return (
         <View style={styles.container}>
-            <Header title="Cuentas Canceladas" />
+            <Header title="Cuentas Canceladas" showBack />
 
             <FlatList
                 data={clientasAgrupadas}
@@ -71,7 +78,7 @@ export default function CuentasCanceladasScreen({ navigation }) {
                                 >
                                     <View style={styles.statsIconContainer}>
                                         <View style={styles.statsIconCircle}>
-                                            <Ionicons name="checkmark-done" size={28} color="#4CAF50" />
+                                            <Ionicons name="checkmark-done" size={28} color={colors.success} />
                                         </View>
                                     </View>
                                     <View style={styles.statsContent}>
@@ -119,10 +126,11 @@ export default function CuentasCanceladasScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+
+const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA'
+        backgroundColor: colors.background
     },
     headerSection: {
         paddingHorizontal: 20,
@@ -130,14 +138,14 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     statsCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         borderRadius: 20,
         padding: 24,
         flexDirection: 'row',
         alignItems: 'center',
         ...Platform.select({
             ios: {
-                shadowColor: '#000',
+                shadowColor: colors.shadow,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.08,
                 shadowRadius: 12,
@@ -159,7 +167,7 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: colors.successLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -169,13 +177,13 @@ const styles = StyleSheet.create({
     statsValue: {
         fontSize: 32,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         letterSpacing: -0.5,
         marginBottom: 2,
     },
     statsLabel: {
         fontSize: 15,
-        color: '#6B7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     statsDecorator: {
@@ -187,14 +195,14 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: colors.successLight,
         opacity: 0.3,
     },
     decoratorCircle2: {
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: colors.successLight,
         opacity: 0.2,
         position: 'absolute',
         top: 30,
@@ -211,13 +219,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#1A1A1A',
+        color: colors.text,
         letterSpacing: -0.3,
         marginBottom: 2,
     },
     sectionSubtitle: {
         fontSize: 13,
-        color: '#9CA3AF',
+        color: colors.textTertiary,
         fontWeight: '500',
     },
     listaContainer: {
@@ -227,3 +235,4 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
+
