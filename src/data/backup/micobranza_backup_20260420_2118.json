@@ -1,0 +1,1753 @@
+{
+  "version": "1.0",
+  "exportDate": "2026-04-21T02:18:15.829Z",
+  "data": {
+    "clientas": [
+      {
+        "id": "mkn6wzewleymbtao7ag",
+        "nombre": "Loy ozaca",
+        "referencia": "",
+        "fechaRegistro": "2026-01-20T22:53:15.464Z"
+      },
+      {
+        "id": "mknaymknfz39bbt86t",
+        "nombre": "Vivían lucero",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T00:46:30.599Z"
+      },
+      {
+        "id": "mknb0xq9mutljq3sv69",
+        "nombre": "Maria paula",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T00:48:18.369Z"
+      },
+      {
+        "id": "mkndhrv7f3e5w8rq49r",
+        "nombre": "Yadira",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T01:57:23.155Z"
+      },
+      {
+        "id": "mkndzoe95qjx9vey1xl",
+        "nombre": "Georgina",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T02:11:18.465Z"
+      },
+      {
+        "id": "mkoaizsj9a7z7l05knw",
+        "nombre": "Gaby",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T17:22:07.411Z"
+      },
+      {
+        "id": "mkoih9obxjiaaexd0re",
+        "nombre": "Azumi",
+        "referencia": "",
+        "fechaRegistro": "2026-01-21T21:04:43.835Z"
+      },
+      {
+        "id": "mkosq1hy8shzbq5f8ux",
+        "nombre": "Mitsy",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:51:29.302Z"
+      },
+      {
+        "id": "mkosswebmnmkwrndbza",
+        "nombre": "Loti",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:53:42.659Z"
+      },
+      {
+        "id": "mkostkuaokhttcf7ej",
+        "nombre": "Claudia peda",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:54:14.338Z"
+      },
+      {
+        "id": "mkosvmi6zo7o5372mrb",
+        "nombre": "Natali visalot",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:55:49.806Z"
+      },
+      {
+        "id": "mkoswimc52cgtfq21b",
+        "nombre": "Cilia",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:56:31.428Z"
+      },
+      {
+        "id": "mkosxmbyo6b618l3mig",
+        "nombre": "Verita",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T01:57:22.894Z"
+      },
+      {
+        "id": "mkq0em28kd4svnzkt6",
+        "nombre": "Richar soto",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T22:14:19.184Z"
+      },
+      {
+        "id": "mkq3me8g6m1klfg8n1c",
+        "nombre": "Dipa",
+        "referencia": "",
+        "fechaRegistro": "2026-01-22T23:44:21.136Z"
+      },
+      {
+        "id": "mkrl6m3xyl3o8v9l8la",
+        "nombre": "Friana",
+        "referencia": "",
+        "fechaRegistro": "2026-01-24T00:43:44.109Z"
+      },
+      {
+        "id": "mkrqelp5r1j05lsvzam",
+        "nombre": "Danixita",
+        "referencia": "",
+        "fechaRegistro": "2026-01-24T03:09:54.905Z"
+      },
+      {
+        "id": "mksypf2oelhx08eemqg",
+        "nombre": "Sweet",
+        "referencia": "",
+        "fechaRegistro": "2026-01-24T23:50:02.640Z"
+      },
+      {
+        "id": "mkt09kmos5bv05cijzq",
+        "nombre": "Valentina saenz",
+        "referencia": "",
+        "fechaRegistro": "2026-01-25T00:33:42.576Z"
+      },
+      {
+        "id": "mkt0tmq1kwkbjqf07s",
+        "nombre": "Katy",
+        "referencia": "",
+        "fechaRegistro": "2026-01-25T00:49:18.409Z"
+      },
+      {
+        "id": "mku2d9jfyejvxwkya7q",
+        "nombre": "Sindy nissei",
+        "referencia": "",
+        "fechaRegistro": "2026-01-25T18:20:20.235Z"
+      },
+      {
+        "id": "mku3mu3ulvgn1hav3rh",
+        "nombre": "Gimena reategui",
+        "referencia": "",
+        "fechaRegistro": "2026-01-25T18:55:46.410Z"
+      },
+      {
+        "id": "mku3uc0k9x3wd2sg7bm",
+        "nombre": "Issa",
+        "referencia": "",
+        "fechaRegistro": "2026-01-25T19:01:36.213Z"
+      },
+      {
+        "id": "mkuggqjo2wdddqcakwp",
+        "nombre": "Kristel",
+        "referencia": "",
+        "fechaRegistro": "2026-01-26T00:54:56.868Z"
+      },
+      {
+        "id": "mkv8c9fkx2zgqa3wps",
+        "nombre": "Angi nicole",
+        "referencia": "",
+        "fechaRegistro": "2026-01-26T13:55:17.312Z"
+      },
+      {
+        "id": "mkx2gfreowne51u7xmo",
+        "nombre": "Hidelma (mamá de celeste )",
+        "referencia": "",
+        "fechaRegistro": "2026-01-27T20:46:06.794Z"
+      },
+      {
+        "id": "mkxbm4zzhmm4awj4j0a",
+        "nombre": "Sonia",
+        "referencia": "",
+        "fechaRegistro": "2026-01-28T01:02:29.327Z"
+      },
+      {
+        "id": "mky77li8p0bi1q8ntq",
+        "nombre": "Patricia sol sol",
+        "referencia": "",
+        "fechaRegistro": "2026-01-28T15:46:58.592Z"
+      },
+      {
+        "id": "mkymb1fuu3txpbttlsi",
+        "nombre": "Jair perra",
+        "referencia": "",
+        "fechaRegistro": "2026-01-28T22:49:33.450Z"
+      },
+      {
+        "id": "mkyqo9g7h4dq1cn21ft",
+        "nombre": "Rosa sou",
+        "referencia": "",
+        "fechaRegistro": "2026-01-29T00:51:48.823Z"
+      },
+      {
+        "id": "mkysb0jxntrrkoqodig",
+        "nombre": "Shanelli",
+        "referencia": "",
+        "fechaRegistro": "2026-01-29T01:37:29.997Z"
+      },
+      {
+        "id": "mkzruqml3mk3beblyua",
+        "nombre": "Laurita",
+        "referencia": "",
+        "fechaRegistro": "2026-01-29T18:12:36.814Z"
+      },
+      {
+        "id": "ml02eadn33zdx3hxbkc",
+        "nombre": "Kathleen soto",
+        "referencia": "",
+        "fechaRegistro": "2026-01-29T23:07:45.035Z"
+      },
+      {
+        "id": "ml04hbln73qtd1qbgwi",
+        "nombre": "Ruth",
+        "referencia": "",
+        "fechaRegistro": "2026-01-30T00:06:05.819Z"
+      },
+      {
+        "id": "ml07j9oorubbvdzh2w",
+        "nombre": "Odeli cora",
+        "referencia": "",
+        "fechaRegistro": "2026-01-30T01:31:35.496Z"
+      },
+      {
+        "id": "ml13386t13m6h5c5k7ej",
+        "nombre": "Cinco vecina",
+        "referencia": "",
+        "fechaRegistro": "2026-01-30T16:14:54.774Z"
+      },
+      {
+        "id": "ml16z5ox4nxo3x6j72c",
+        "nombre": "Adriana ruiz",
+        "referencia": "",
+        "fechaRegistro": "2026-01-30T18:03:43.377Z"
+      },
+      {
+        "id": "ml18xlstge6x7v7vi3b",
+        "nombre": "Miguelita",
+        "referencia": "",
+        "fechaRegistro": "2026-01-30T18:58:30.173Z"
+      },
+      {
+        "id": "ml1mcymn5e5oty4n6tb",
+        "nombre": "Natali",
+        "referencia": "",
+        "fechaRegistro": "2026-01-31T01:14:21.647Z"
+      },
+      {
+        "id": "ml2zktgpxv36brxi0tc",
+        "nombre": "Lisbet",
+        "referencia": "",
+        "fechaRegistro": "2026-02-01T00:12:09.385Z"
+      },
+      {
+        "id": "ml37er2ddgren24wntk",
+        "nombre": "Luz charpentier",
+        "referencia": "",
+        "fechaRegistro": "2026-02-01T03:51:23.269Z"
+      },
+      {
+        "id": "ml4gp2xybfyfkekq1qg",
+        "nombre": "Eddy hidalgo",
+        "referencia": "",
+        "fechaRegistro": "2026-02-02T00:59:07.942Z"
+      },
+      {
+        "id": "ml6ugxfy3vyv0ar62ss",
+        "nombre": "Anita",
+        "referencia": "",
+        "fechaRegistro": "2026-02-03T17:00:14.542Z"
+      },
+      {
+        "id": "ml6uj2984uyes6vmk0t",
+        "nombre": "Anel",
+        "referencia": "",
+        "fechaRegistro": "2026-02-03T17:01:54.092Z"
+      },
+      {
+        "id": "ml8kvd89yes0m6jval",
+        "nombre": "Viviana inuma",
+        "referencia": "",
+        "fechaRegistro": "2026-02-04T22:07:04.377Z"
+      },
+      {
+        "id": "mla4gz2f677h1phl1l2",
+        "nombre": "Adriana mavas",
+        "referencia": "",
+        "fechaRegistro": "2026-02-06T00:03:31.335Z"
+      },
+      {
+        "id": "mla4nt0lljvj4te916q",
+        "nombre": "Celeste santillan",
+        "referencia": "",
+        "fechaRegistro": "2026-02-06T00:08:50.085Z"
+      },
+      {
+        "id": "mlehqtufdqr8hf1bott",
+        "nombre": "Marco",
+        "referencia": "",
+        "fechaRegistro": "2026-02-09T01:26:10.839Z"
+      },
+      {
+        "id": "mlei1tz6tv0qt0tunw",
+        "nombre": "Maricela lanchi",
+        "referencia": "",
+        "fechaRegistro": "2026-02-09T01:34:44.226Z"
+      },
+      {
+        "id": "mlfhj7fcgf7f1l5dagn",
+        "nombre": "Mis jarli",
+        "referencia": "",
+        "fechaRegistro": "2026-02-09T18:08:01.368Z"
+      },
+      {
+        "id": "mlhd2iw93v1k2l2m43s",
+        "nombre": "Hermna de lisbeb",
+        "referencia": "",
+        "fechaRegistro": "2026-02-11T01:38:36.969Z"
+      },
+      {
+        "id": "mlhd8i64l5tpvc6p0w",
+        "nombre": "Nicoll cárdenas",
+        "referencia": "",
+        "fechaRegistro": "2026-02-11T01:43:15.964Z"
+      },
+      {
+        "id": "mlmc1nc64un8yl46z5v",
+        "nombre": "Luz navarro",
+        "referencia": "",
+        "fechaRegistro": "2026-02-14T13:08:47.334Z"
+      },
+      {
+        "id": "mlmzwagcr8guks2l7y",
+        "nombre": "Deymi",
+        "referencia": "",
+        "fechaRegistro": "2026-02-15T00:16:28.140Z"
+      },
+      {
+        "id": "mlqn6qnb7i7ybg0w6tx",
+        "nombre": "Sobrina de paola",
+        "referencia": "",
+        "fechaRegistro": "2026-02-17T13:31:45.383Z"
+      },
+      {
+        "id": "mlqn8yk8b5kuqvjimnl",
+        "nombre": "Roxy",
+        "referencia": "",
+        "fechaRegistro": "2026-02-17T13:33:28.952Z"
+      }
+    ],
+    "cuentas": [
+      {
+        "id": "mkn6xj7dvmn1hvqm4ao",
+        "clientaId": "mkn6wzewleymbtao7ag",
+        "numeroCuenta": 1,
+        "saldo": 140,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-20T22:53:41.113Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mknazhlqse2b6rhkdaj",
+        "clientaId": "mknaymknfz39bbt86t",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-01-21T00:47:10.814Z",
+        "fechaCierre": "2026-01-30T00:09:55.148Z"
+      },
+      {
+        "id": "mknb1d6h285sltwar6v",
+        "clientaId": "mknb0xq9mutljq3sv69",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-01-21T00:48:38.393Z",
+        "fechaCierre": "2026-02-09T01:27:34.101Z"
+      },
+      {
+        "id": "mkndiyx32lc3xu06hao",
+        "clientaId": "mkndhrv7f3e5w8rq49r",
+        "numeroCuenta": 1,
+        "saldo": 95,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-21T01:58:18.951Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkne0b2jv04v4zcm8jl",
+        "clientaId": "mkndzoe95qjx9vey1xl",
+        "numeroCuenta": 1,
+        "saldo": 100,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-21T02:11:47.851Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkoakae2c01usrga3fh",
+        "clientaId": "mkoaizsj9a7z7l05knw",
+        "numeroCuenta": 1,
+        "saldo": 125,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-21T17:23:07.802Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkoihq18rib5ffeqxtj",
+        "clientaId": "mkoih9obxjiaaexd0re",
+        "numeroCuenta": 1,
+        "saldo": 70,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-21T21:05:05.036Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkosqbb6ll3zqslzhh",
+        "clientaId": "mkosq1hy8shzbq5f8ux",
+        "numeroCuenta": 1,
+        "saldo": 50,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:51:42.018Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkost4g0vu2xn5q7pxc",
+        "clientaId": "mkosswebmnmkwrndbza",
+        "numeroCuenta": 1,
+        "saldo": 10,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:53:53.088Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkostta1ri557w55rel",
+        "clientaId": "mkostkuaokhttcf7ej",
+        "numeroCuenta": 1,
+        "saldo": 253,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:54:25.273Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkosvs6avipv04uaw1",
+        "clientaId": "mkosvmi6zo7o5372mrb",
+        "numeroCuenta": 1,
+        "saldo": 30,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:55:57.154Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkoswq6gvadcvb7ss78",
+        "clientaId": "mkoswimc52cgtfq21b",
+        "numeroCuenta": 1,
+        "saldo": 395,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:56:41.224Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkosxthhtlz3no4qchf",
+        "clientaId": "mkosxmbyo6b618l3mig",
+        "numeroCuenta": 1,
+        "saldo": 100,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T01:57:32.165Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkq0f04hof4k65hs66",
+        "clientaId": "mkq0em28kd4svnzkt6",
+        "numeroCuenta": 1,
+        "saldo": 83,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T22:14:37.409Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkq3njrjn4iq58sqie",
+        "clientaId": "mkq3me8g6m1klfg8n1c",
+        "numeroCuenta": 1,
+        "saldo": 193,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-22T23:45:14.959Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkrl71b9k90l64m5lq",
+        "clientaId": "mkrl6m3xyl3o8v9l8la",
+        "numeroCuenta": 1,
+        "saldo": 97,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-24T00:44:03.813Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkrqf7scap549zz7wlm",
+        "clientaId": "mkrqelp5r1j05lsvzam",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-01-24T03:10:23.533Z",
+        "fechaCierre": "2026-01-24T03:14:56.505Z"
+      },
+      {
+        "id": "mksypu1e9n5dzipw6b",
+        "clientaId": "mksypf2oelhx08eemqg",
+        "numeroCuenta": 1,
+        "saldo": 519,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-24T23:50:22.034Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mksznjkcrytv5fzbeaa",
+        "clientaId": "mksypf2oelhx08eemqg",
+        "numeroCuenta": 2,
+        "saldo": 150,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T00:16:34.764Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkt0bl9dawkdo5o7z7l",
+        "clientaId": "mkt09kmos5bv05cijzq",
+        "numeroCuenta": 1,
+        "saldo": 420,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T00:35:16.705Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkt0u6gt5juphzh2jf",
+        "clientaId": "mkt0tmq1kwkbjqf07s",
+        "numeroCuenta": 1,
+        "saldo": 60,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T00:49:43.997Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mku2dhw5635lkjks9o4",
+        "clientaId": "mku2d9jfyejvxwkya7q",
+        "numeroCuenta": 1,
+        "saldo": 80,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T18:20:31.061Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mku3nr2fovtgwglgmqh",
+        "clientaId": "mku3mu3ulvgn1hav3rh",
+        "numeroCuenta": 1,
+        "saldo": 255,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T18:56:29.127Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mku3v84solmpirye01a",
+        "clientaId": "mku3uc0k9x3wd2sg7bm",
+        "numeroCuenta": 1,
+        "saldo": 48,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-25T19:02:17.836Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkugixagaf6d7e70fvi",
+        "clientaId": "mkuggqjo2wdddqcakwp",
+        "numeroCuenta": 1,
+        "saldo": 569,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-26T00:56:38.920Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkv8ck8fi1i6obik5b",
+        "clientaId": "mkv8c9fkx2zgqa3wps",
+        "numeroCuenta": 1,
+        "saldo": 158,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-26T13:55:31.311Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkx2gsljm4vezulhogc",
+        "clientaId": "mkx2gfreowne51u7xmo",
+        "numeroCuenta": 1,
+        "saldo": 238,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-27T20:46:23.431Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkxbn0wqxrtvo9qxy2s",
+        "clientaId": "mkxbm4zzhmm4awj4j0a",
+        "numeroCuenta": 1,
+        "saldo": 305,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-28T01:03:10.682Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mky78kj9vce365yx3na",
+        "clientaId": "mky77li8p0bi1q8ntq",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-01-28T15:47:43.989Z",
+        "fechaCierre": "2026-02-17T13:31:28.415Z"
+      },
+      {
+        "id": "mkymbg8g2800mz4sfxw",
+        "clientaId": "mkymb1fuu3txpbttlsi",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-01-28T22:49:52.624Z",
+        "fechaCierre": "2026-02-17T13:30:51.353Z"
+      },
+      {
+        "id": "mkyqoro03nzafhltuej",
+        "clientaId": "mkyqo9g7h4dq1cn21ft",
+        "numeroCuenta": 1,
+        "saldo": 26,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-29T00:52:12.432Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkysckfen5gm6pdghwh",
+        "clientaId": "mkysb0jxntrrkoqodig",
+        "numeroCuenta": 1,
+        "saldo": 161,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-29T01:38:42.410Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mkzrvpdpdd2p9ntiu9l",
+        "clientaId": "mkzruqml3mk3beblyua",
+        "numeroCuenta": 1,
+        "saldo": 425,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-29T18:13:21.853Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml02fi7jx9mgl9yx8cc",
+        "clientaId": "ml02eadn33zdx3hxbkc",
+        "numeroCuenta": 1,
+        "saldo": 238,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-29T23:08:41.839Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml04i7lni5qrmxpjz4p",
+        "clientaId": "ml04hbln73qtd1qbgwi",
+        "numeroCuenta": 1,
+        "saldo": 139,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T00:06:47.291Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml04nc0a8g2ezfytr1c",
+        "clientaId": "mknaymknfz39bbt86t",
+        "numeroCuenta": 1,
+        "saldo": 270,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T00:10:46.282Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml07jqka33tii8e1bni",
+        "clientaId": "ml07j9oorubbvdzh2w",
+        "numeroCuenta": 1,
+        "saldo": 155,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T01:31:57.371Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml135i12gpr2n0t86h6",
+        "clientaId": "ml13386t13m6h5c5k7ej",
+        "numeroCuenta": 1,
+        "saldo": 142,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T16:16:40.838Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml157001k718itfbz3",
+        "clientaId": "mkndhrv7f3e5w8rq49r",
+        "numeroCuenta": 2,
+        "saldo": 328,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T17:13:50.017Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml16zokm4wkyr6smr0j",
+        "clientaId": "ml16z5ox4nxo3x6j72c",
+        "numeroCuenta": 1,
+        "saldo": 100,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T18:04:07.846Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml18y5ihujwkl7939im",
+        "clientaId": "ml18xlstge6x7v7vi3b",
+        "numeroCuenta": 1,
+        "saldo": 186,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-30T18:58:55.721Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml1mf6wfbnd2od9a90j",
+        "clientaId": "ml1mcymn5e5oty4n6tb",
+        "numeroCuenta": 1,
+        "saldo": 225,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-01-31T01:16:05.679Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml2zl6hnme1h0ph39pg",
+        "clientaId": "ml2zktgpxv36brxi0tc",
+        "numeroCuenta": 1,
+        "saldo": 85,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-01T00:12:26.267Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml37gkr9y2rnk56pzin",
+        "clientaId": "ml37er2ddgren24wntk",
+        "numeroCuenta": 1,
+        "saldo": 120,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-01T03:52:48.405Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml4gqmrdltw2hvyswpc",
+        "clientaId": "ml4gp2xybfyfkekq1qg",
+        "numeroCuenta": 1,
+        "saldo": 150,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-02T01:00:20.281Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml6uh62ecjazlju2gg9",
+        "clientaId": "ml6ugxfy3vyv0ar62ss",
+        "numeroCuenta": 1,
+        "saldo": 98,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-03T17:00:25.718Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml6ujnlz2ejb4w2re5",
+        "clientaId": "ml6uj2984uyes6vmk0t",
+        "numeroCuenta": 1,
+        "saldo": 133,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-03T17:02:21.767Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "ml8kvsjwiqjh3dc95b7",
+        "clientaId": "ml8kvd89yes0m6jval",
+        "numeroCuenta": 1,
+        "saldo": 15,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-04T22:07:24.236Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mla4in72d3qkuqk5gan",
+        "clientaId": "mla4gz2f677h1phl1l2",
+        "numeroCuenta": 1,
+        "saldo": 355,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-06T00:04:49.262Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mla4pgak8o4c5449jca",
+        "clientaId": "mla4nt0lljvj4te916q",
+        "numeroCuenta": 1,
+        "saldo": 194,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-06T00:10:06.908Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlei2ebmw1774kh6psf",
+        "clientaId": "mlei1tz6tv0qt0tunw",
+        "numeroCuenta": 1,
+        "saldo": 136,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-09T01:35:10.594Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlfhk8hs1c5cl3ze0lu",
+        "clientaId": "mlfhj7fcgf7f1l5dagn",
+        "numeroCuenta": 1,
+        "saldo": 283,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-09T18:08:49.408Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlhd2yu3wjq3hgjzai8",
+        "clientaId": "mlhd2iw93v1k2l2m43s",
+        "numeroCuenta": 1,
+        "saldo": 78,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-11T01:38:57.627Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlhd8rmadcnmka3ke5",
+        "clientaId": "mlhd8i64l5tpvc6p0w",
+        "numeroCuenta": 1,
+        "saldo": 90,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-11T01:43:28.210Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlmc798qavj8ophevb8",
+        "clientaId": "mlmc1nc64un8yl46z5v",
+        "numeroCuenta": 1,
+        "saldo": 263,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-14T13:13:09.002Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlmzwlq60jlcv43c4mgm",
+        "clientaId": "mlmzwagcr8guks2l7y",
+        "numeroCuenta": 1,
+        "saldo": 75,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-15T00:16:42.750Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlqn79wvxpwe93ocrj",
+        "clientaId": "mlqn6qnb7i7ybg0w6tx",
+        "numeroCuenta": 1,
+        "saldo": 93,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-17T13:32:10.351Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mlqna15h454fd33jms9",
+        "clientaId": "mlqn8yk8b5kuqvjimnl",
+        "numeroCuenta": 1,
+        "saldo": 238,
+        "estado": "ACTIVA",
+        "fechaCreacion": "2026-02-17T13:34:18.966Z",
+        "fechaCierre": null
+      },
+      {
+        "id": "mm4c52fy8rbt0snqjb",
+        "clientaId": "mlehqtufdqr8hf1bott",
+        "numeroCuenta": 1,
+        "saldo": 0,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-02-27T03:31:18.046Z",
+        "fechaCierre": "2026-02-27T03:32:02.464Z"
+      }
+    ],
+    "movimientos": [
+      {
+        "id": "mkn6xj7uwp90we6hv2j",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "CARGO",
+        "monto": 292,
+        "comentario": "",
+        "fecha": "2026-01-20T22:53:41.130Z"
+      },
+      {
+        "id": "mkn6xypemianxv9jin",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[20/01/2026]",
+        "fecha": "2026-01-20T22:54:01.202Z"
+      },
+      {
+        "id": "mknazhmop3z1xelmdsl",
+        "cuentaId": "mknazhlqse2b6rhkdaj",
+        "tipo": "CARGO",
+        "monto": 133,
+        "comentario": "Short (S/65.00) [20/01/2026] | Short (S/68.00) [20/01/2026]",
+        "fecha": "2026-01-21T00:47:10.848Z"
+      },
+      {
+        "id": "mknazta651bjqyqbu39",
+        "cuentaId": "mknazhlqse2b6rhkdaj",
+        "tipo": "ABONO",
+        "monto": 20,
+        "comentario": "[20/01/2026]",
+        "fecha": "2026-01-21T00:47:25.950Z"
+      },
+      {
+        "id": "mknb1d76k491yb96jx8",
+        "cuentaId": "mknb1d6h285sltwar6v",
+        "tipo": "CARGO",
+        "monto": 108,
+        "comentario": "Vestido (S/48.00) [20/01/2026] | Sandalias  (S/60.00) [20/01/2026]",
+        "fecha": "2026-01-21T00:48:38.419Z"
+      },
+      {
+        "id": "mknb1itp62h7dakqp0a",
+        "cuentaId": "mknb1d6h285sltwar6v",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[20/01/2026]",
+        "fecha": "2026-01-21T00:48:45.709Z"
+      },
+      {
+        "id": "mkndiyxiw80s59679ql",
+        "cuentaId": "mkndiyx32lc3xu06hao",
+        "tipo": "CARGO",
+        "monto": 275,
+        "comentario": "Sandalias  (S/65.00) [20/01/2026]",
+        "fecha": "2026-01-21T01:58:18.966Z"
+      },
+      {
+        "id": "mkne0b3eq786ovuqdem",
+        "cuentaId": "mkne0b2jv04v4zcm8jl",
+        "tipo": "CARGO",
+        "monto": 243,
+        "comentario": "Conjunto niña (S/55.00) [20/01/2026] | Polito niña (S/28.00) [20/01/2026] | Bodi (S/35.00) [20/01/2026] | Short (S/70.00) [20/01/2026] | Polo hombre  (S/55.00) [20/01/2026]",
+        "fecha": "2026-01-21T02:11:47.883Z"
+      },
+      {
+        "id": "mkoakaeq8rvrtqbo17",
+        "cuentaId": "mkoakae2c01usrga3fh",
+        "tipo": "CARGO",
+        "monto": 125,
+        "comentario": "Short (S/70.00) [21/01/2026] | Body (S/38.00) [21/01/2026] | Cuenta anterior  (S/17.00) [21/01/2026]",
+        "fecha": "2026-01-21T17:23:07.826Z"
+      },
+      {
+        "id": "mkoihq1sfxlen3sl26",
+        "cuentaId": "mkoihq18rib5ffeqxtj",
+        "tipo": "CARGO",
+        "monto": 60,
+        "comentario": "Sandalias (S/60.00) [21/01/2026]",
+        "fecha": "2026-01-21T21:05:05.056Z"
+      },
+      {
+        "id": "mkoihvec2zpal8vlge6",
+        "cuentaId": "mkoihq18rib5ffeqxtj",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[21/01/2026]",
+        "fecha": "2026-01-21T21:05:11.988Z"
+      },
+      {
+        "id": "mkosqbbriehe4agmfp",
+        "cuentaId": "mkosqbb6ll3zqslzhh",
+        "tipo": "CARGO",
+        "monto": 193,
+        "comentario": "",
+        "fecha": "2026-01-22T01:51:42.039Z"
+      },
+      {
+        "id": "mkost4gi16731ys5qn3",
+        "cuentaId": "mkost4g0vu2xn5q7pxc",
+        "tipo": "CARGO",
+        "monto": 110,
+        "comentario": "Short (S/75.00) [21/01/2026] | Blusita  (S/35.00) [31/01/2026]",
+        "fecha": "2026-01-22T01:53:53.106Z"
+      },
+      {
+        "id": "mkosttamwkgxi97i6q",
+        "cuentaId": "mkostta1ri557w55rel",
+        "tipo": "CARGO",
+        "monto": 253,
+        "comentario": "",
+        "fecha": "2026-01-22T01:54:25.294Z"
+      },
+      {
+        "id": "mkosvs6vsybjvvzscqd",
+        "cuentaId": "mkosvs6avipv04uaw1",
+        "tipo": "CARGO",
+        "monto": 30,
+        "comentario": "",
+        "fecha": "2026-01-22T01:55:57.175Z"
+      },
+      {
+        "id": "mkoswq6wlslis3vtxjl",
+        "cuentaId": "mkoswq6gvadcvb7ss78",
+        "tipo": "CARGO",
+        "monto": 395,
+        "comentario": "",
+        "fecha": "2026-01-22T01:56:41.240Z"
+      },
+      {
+        "id": "mkosxthyes6z3t29i6q",
+        "cuentaId": "mkosxthhtlz3no4qchf",
+        "tipo": "CARGO",
+        "monto": 100,
+        "comentario": "",
+        "fecha": "2026-01-22T01:57:32.182Z"
+      },
+      {
+        "id": "mkq0f04yoq6tgcnn89m",
+        "cuentaId": "mkq0f04hof4k65hs66",
+        "tipo": "CARGO",
+        "monto": 183,
+        "comentario": "",
+        "fecha": "2026-01-22T22:14:37.426Z"
+      },
+      {
+        "id": "mkq0f4u95qqq9hu5c84",
+        "cuentaId": "mkq0f04hof4k65hs66",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[22/01/2026]",
+        "fecha": "2026-01-22T22:14:43.521Z"
+      },
+      {
+        "id": "mkq20jfm3j0gkprzh3u",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "ABONO",
+        "monto": 40,
+        "comentario": "[22/01/2026]",
+        "fecha": "2026-01-22T22:59:21.826Z"
+      },
+      {
+        "id": "mkq3njsgpivczbgnhx",
+        "cuentaId": "mkq3njrjn4iq58sqie",
+        "tipo": "CARGO",
+        "monto": 193,
+        "comentario": "Conjunto  (S/64.00) [22/01/2026] | Conjunto  (S/65.00) [22/01/2026] | Vestidos jeans  (S/64.00) [22/01/2026]",
+        "fecha": "2026-01-22T23:45:14.992Z"
+      },
+      {
+        "id": "mkrl71btzdsc907yzxe",
+        "cuentaId": "mkrl71b9k90l64m5lq",
+        "tipo": "CARGO",
+        "monto": 197,
+        "comentario": "",
+        "fecha": "2026-01-24T00:44:03.833Z"
+      },
+      {
+        "id": "mkrl79wwpgawy3rpc6d",
+        "cuentaId": "mkrl71b9k90l64m5lq",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[23/01/2026]",
+        "fecha": "2026-01-24T00:44:14.960Z"
+      },
+      {
+        "id": "mkrqf7t7idwp7s1w1y",
+        "cuentaId": "mkrqf7scap549zz7wlm",
+        "tipo": "CARGO",
+        "monto": 286,
+        "comentario": "Short (S/80.00) [23/01/2026]",
+        "fecha": "2026-01-24T03:10:23.563Z"
+      },
+      {
+        "id": "mkrql2ee70y1opuluz8",
+        "cuentaId": "mkrqf7scap549zz7wlm",
+        "tipo": "ABONO",
+        "monto": 286,
+        "comentario": "[23/01/2026]",
+        "fecha": "2026-01-24T03:14:56.486Z"
+      },
+      {
+        "id": "mksypu1ud7el90xkdgf",
+        "cuentaId": "mksypu1e9n5dzipw6b",
+        "tipo": "CARGO",
+        "monto": 619,
+        "comentario": "Total cuenta  (S/619.00) [24/01/2026]",
+        "fecha": "2026-01-24T23:50:22.050Z"
+      },
+      {
+        "id": "mksyq1joj3m6g10lhc9",
+        "cuentaId": "mksypu1e9n5dzipw6b",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[24/01/2026]",
+        "fecha": "2026-01-24T23:50:31.764Z"
+      },
+      {
+        "id": "mksznjkvpbaivd0jiz",
+        "cuentaId": "mksznjkcrytv5fzbeaa",
+        "tipo": "CARGO",
+        "monto": 150,
+        "comentario": "Vestid celeste  (S/65.00) [24/01/2026] | Conjunto celeste  (S/85.00) [24/01/2026]",
+        "fecha": "2026-01-25T00:16:34.783Z"
+      },
+      {
+        "id": "mkt0bl9vavgmyewcpd",
+        "cuentaId": "mkt0bl9dawkdo5o7z7l",
+        "tipo": "CARGO",
+        "monto": 420,
+        "comentario": "Anterior  (S/230.00) [24/01/2026] | Conjunto  (S/85.00) [24/01/2026] | Body (S/35.00) [24/01/2026] | Top (S/30.00) [24/01/2026] | Short (S/40.00) [24/01/2026]",
+        "fecha": "2026-01-25T00:35:16.723Z"
+      },
+      {
+        "id": "mkt0u6i0k9ywi1i6brc",
+        "cuentaId": "mkt0u6gt5juphzh2jf",
+        "tipo": "CARGO",
+        "monto": 60,
+        "comentario": "Anterior (S/25.00) [24/01/2026] | Top suplex (S/35.00) [24/01/2026]",
+        "fecha": "2026-01-25T00:49:44.040Z"
+      },
+      {
+        "id": "mku2dhwn6lhmi2qb0yt",
+        "cuentaId": "mku2dhw5635lkjks9o4",
+        "tipo": "CARGO",
+        "monto": 130,
+        "comentario": "Short (S/65.00) [25/01/2026]",
+        "fecha": "2026-01-25T18:20:31.079Z"
+      },
+      {
+        "id": "mku2eg73ehzrbhw55da",
+        "cuentaId": "mku2dhw5635lkjks9o4",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[25/01/2026]",
+        "fecha": "2026-01-25T18:21:15.519Z"
+      },
+      {
+        "id": "mku3nr32ispscri8yvc",
+        "cuentaId": "mku3nr2fovtgwglgmqh",
+        "tipo": "CARGO",
+        "monto": 255,
+        "comentario": "Blusa roja (S/45.00) [25/01/2026] | Blusa negra (S/45.00) [25/01/2026] | Blusa fucsia (S/45.00) [25/01/2026] | Blusa rosa (S/35.00) [25/01/2026] | Short (S/65.00) [25/01/2026] | Funda de cel (S/20.00) [28/01/2026]",
+        "fecha": "2026-01-25T18:56:29.150Z"
+      },
+      {
+        "id": "mku3v85ctfse39uimco",
+        "cuentaId": "mku3v84solmpirye01a",
+        "tipo": "CARGO",
+        "monto": 48,
+        "comentario": "Vestido  (S/48.00) [25/01/2026]",
+        "fecha": "2026-01-25T19:02:17.856Z"
+      },
+      {
+        "id": "mkugixb3q6zzqvrlp7",
+        "cuentaId": "mkugixagaf6d7e70fvi",
+        "tipo": "CARGO",
+        "monto": 569,
+        "comentario": "Cuenta anterior (S/205.00) [25/01/2026] | Short (S/75.00) [25/01/2026] | Short (S/75.00) [25/01/2026] | Blusa celeste (S/45.00) [25/01/2026] | Polo blanco (S/45.00) [25/01/2026] | Polo rojo (S/45.00) [25/01/2026] | Polo negro hombre (S/45.00) [25/01/2026] | Blusas de oferte (S/34.00) [26/01/2026]",
+        "fecha": "2026-01-26T00:56:38.944Z"
+      },
+      {
+        "id": "mkv8ck91egcmxefjcxh",
+        "cuentaId": "mkv8ck8fi1i6obik5b",
+        "tipo": "CARGO",
+        "monto": 158,
+        "comentario": "Vestido verde (S/68.00) [26/01/2026] | Pantalon  (S/90.00) [29/01/2026]",
+        "fecha": "2026-01-26T13:55:31.333Z"
+      },
+      {
+        "id": "mkwx5ym3faurllllq2h",
+        "cuentaId": "mku2dhw5635lkjks9o4",
+        "tipo": "ABONO",
+        "monto": 15,
+        "comentario": "[27/01/2026]",
+        "fecha": "2026-01-27T18:17:59.931Z"
+      },
+      {
+        "id": "mkx2gsmmp8mcktzxwwj",
+        "cuentaId": "mkx2gsljm4vezulhogc",
+        "tipo": "CARGO",
+        "monto": 238,
+        "comentario": "Conjunto shein (S/68.00) [27/01/2026] | Perfume (S/85.00) [14/02/2026] | Perfume (S/85.00) [14/02/2026]",
+        "fecha": "2026-01-27T20:46:23.470Z"
+      },
+      {
+        "id": "mkxbn0xbo89rnoaqoxm",
+        "cuentaId": "mkxbn0wqxrtvo9qxy2s",
+        "tipo": "CARGO",
+        "monto": 305,
+        "comentario": "Anterior (S/90.00) [27/01/2026] | Perfume (S/85.00) [27/01/2026] | Sandalias (S/60.00) [27/01/2026] | Conjunto  (S/70.00) [28/01/2026]",
+        "fecha": "2026-01-28T01:03:10.703Z"
+      },
+      {
+        "id": "mky57fidjhse7t1gjx",
+        "cuentaId": "mkne0b2jv04v4zcm8jl",
+        "tipo": "ABONO",
+        "monto": 143,
+        "comentario": "[28/01/2026]",
+        "fecha": "2026-01-28T14:50:51.589Z"
+      },
+      {
+        "id": "mky78kjr0am7atwxoeav",
+        "cuentaId": "mky78kj9vce365yx3na",
+        "tipo": "CARGO",
+        "monto": 290,
+        "comentario": "Short (S/70.00) [28/01/2026] | Short (S/65.00) [28/01/2026] | Short falda (S/85.00) [28/01/2026] | Polo basico (S/35.00) [28/01/2026] | Blusita suplex (S/35.00) [28/01/2026]",
+        "fecha": "2026-01-28T15:47:44.007Z"
+      },
+      {
+        "id": "mky95xxmnbafml45ly",
+        "cuentaId": "mkndiyx32lc3xu06hao",
+        "tipo": "ABONO",
+        "monto": 180,
+        "comentario": "[28/01/2026]",
+        "fecha": "2026-01-28T16:41:40.618Z"
+      },
+      {
+        "id": "mkymbg918hvsk25ucmm",
+        "cuentaId": "mkymbg8g2800mz4sfxw",
+        "tipo": "CARGO",
+        "monto": 148,
+        "comentario": "Cartera (S/45.00) [28/01/2026] | Top basico (S/28.00) [28/01/2026] | Correa (S/25.00) [28/01/2026] | Blusa cuerina (S/50.00) [28/01/2026]",
+        "fecha": "2026-01-28T22:49:52.645Z"
+      },
+      {
+        "id": "mkymbkt12rr8wpfctk9",
+        "cuentaId": "mkymbg8g2800mz4sfxw",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[28/01/2026]",
+        "fecha": "2026-01-28T22:49:58.550Z"
+      },
+      {
+        "id": "mkyqoromyjbnh742l8",
+        "cuentaId": "mkyqoro03nzafhltuej",
+        "tipo": "CARGO",
+        "monto": 138,
+        "comentario": "Sabana (S/55.00) [28/01/2026] | Sabana (S/55.00) [28/01/2026] | Basico (S/28.00) [28/01/2026]",
+        "fecha": "2026-01-29T00:52:12.454Z"
+      },
+      {
+        "id": "mkysckgrm2cma4vsw3q",
+        "cuentaId": "mkysckfen5gm6pdghwh",
+        "tipo": "CARGO",
+        "monto": 161,
+        "comentario": "Vestido (S/78.00) [28/01/2026] | Binchas (S/23.00) [28/01/2026] | Sandalias  (S/60.00) [28/01/2026]",
+        "fecha": "2026-01-29T01:38:42.459Z"
+      },
+      {
+        "id": "mkzrvpeiywb6vctq0gn",
+        "cuentaId": "mkzrvpdpdd2p9ntiu9l",
+        "tipo": "CARGO",
+        "monto": 425,
+        "comentario": "Pantalon (S/90.00) [29/01/2026] | Blusa suplex (S/30.00) [29/01/2026] | Pesonera (S/10.00) [29/01/2026] | Crema (S/80.00) [14/02/2026] | Perfume (S/50.00) [14/02/2026] | Perfume  (S/50.00) [14/02/2026] | Cuenta anterior  (S/115.00) [14/02/2026]",
+        "fecha": "2026-01-29T18:13:21.882Z"
+      },
+      {
+        "id": "ml02beo78hbum3kicuf",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "CARGO",
+        "monto": 138,
+        "comentario": "Short (S/68.00) [29/01/2026] | Enterizo (S/45.00) [29/01/2026] | Cartera (S/25.00) [30/01/2026]",
+        "fecha": "2026-01-29T23:05:30.631Z"
+      },
+      {
+        "id": "ml02fi90phk0xbj0c39",
+        "cuentaId": "ml02fi7jx9mgl9yx8cc",
+        "tipo": "CARGO",
+        "monto": 238,
+        "comentario": "5 politos (S/140.00) [29/01/2026] | Short (S/28.00) [29/01/2026] | Short (S/30.00) [29/01/2026] | Short (S/40.00) [31/01/2026]",
+        "fecha": "2026-01-29T23:08:41.892Z"
+      },
+      {
+        "id": "ml04i7m98lka726v6ta",
+        "cuentaId": "ml04i7lni5qrmxpjz4p",
+        "tipo": "CARGO",
+        "monto": 139,
+        "comentario": "Polo niño (S/28.00) [29/01/2026] | Polo niño (S/28.00) [29/01/2026] | Por niña (S/28.00) [29/01/2026] | Short (S/30.00) [29/01/2026] | Lentes (S/25.00) [29/01/2026]",
+        "fecha": "2026-01-30T00:06:47.313Z"
+      },
+      {
+        "id": "ml04m8j1bknf8dcyfm",
+        "cuentaId": "mknazhlqse2b6rhkdaj",
+        "tipo": "ABONO",
+        "monto": 113,
+        "comentario": "[29/01/2026]",
+        "fecha": "2026-01-30T00:09:55.117Z"
+      },
+      {
+        "id": "ml04nc1nzr5txi0poe",
+        "cuentaId": "ml04nc0a8g2ezfytr1c",
+        "tipo": "CARGO",
+        "monto": 235,
+        "comentario": "Pantalon  (S/90.00) [29/01/2026] | Perfuma (S/85.00) [29/01/2026] | Sandalias  (S/60.00) [29/01/2026]",
+        "fecha": "2026-01-30T00:10:46.331Z"
+      },
+      {
+        "id": "ml04nueu8xqjsn7k64c",
+        "cuentaId": "ml04nc0a8g2ezfytr1c",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[29/01/2026]",
+        "fecha": "2026-01-30T00:11:10.134Z"
+      },
+      {
+        "id": "ml07jql3suw0sk3jv1m",
+        "cuentaId": "ml07jqka33tii8e1bni",
+        "tipo": "CARGO",
+        "monto": 155,
+        "comentario": "Pantalon  (S/90.00) [29/01/2026] | Short (S/65.00) [29/01/2026]",
+        "fecha": "2026-01-30T01:31:57.399Z"
+      },
+      {
+        "id": "ml135i1x03rzsob7mzze",
+        "cuentaId": "ml135i12gpr2n0t86h6",
+        "tipo": "CARGO",
+        "monto": 242,
+        "comentario": "Blusita (S/28.00) [30/01/2026] | Sandalias (S/65.00) [30/01/2026] | Blusita basica (S/28.00) [30/01/2026] | Blusita básica (S/28.00) [30/01/2026] | Cartera (S/58.00) [30/01/2026] | Vestido (S/35.00) [30/01/2026]",
+        "fecha": "2026-01-30T16:16:40.869Z"
+      },
+      {
+        "id": "ml135sp5uua0ajbcrfh",
+        "cuentaId": "ml135i12gpr2n0t86h6",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[30/01/2026]",
+        "fecha": "2026-01-30T16:16:54.665Z"
+      },
+      {
+        "id": "ml157015ud51nfj5qr",
+        "cuentaId": "ml157001k718itfbz3",
+        "tipo": "CARGO",
+        "monto": 328,
+        "comentario": "Cinta (S/20.00) [30/01/2026] | Blusa (S/45.00) [30/01/2026] | Blusa (S/58.00) [30/01/2026] | Vestido (S/85.00) [30/01/2026] | Conjunto (S/120.00) [10/02/2026]",
+        "fecha": "2026-01-30T17:13:50.057Z"
+      },
+      {
+        "id": "ml16zomm6lek2x8m88i",
+        "cuentaId": "ml16zokm4wkyr6smr0j",
+        "tipo": "CARGO",
+        "monto": 100,
+        "comentario": "Basico (S/35.00) [30/01/2026] | Short (S/65.00) [30/01/2026]",
+        "fecha": "2026-01-30T18:04:07.918Z"
+      },
+      {
+        "id": "ml18y5jgjfjvuxfax5",
+        "cuentaId": "ml18y5ihujwkl7939im",
+        "tipo": "CARGO",
+        "monto": 186,
+        "comentario": "Blusta crop (S/28.00) [30/01/2026] | Blusa crop (S/28.00) [30/01/2026] | Sandalias (S/60.00) [30/01/2026] | Conjunto  (S/70.00) [03/02/2026]",
+        "fecha": "2026-01-30T18:58:55.756Z"
+      },
+      {
+        "id": "ml1mf6x08p7o34egbzf",
+        "cuentaId": "ml1mf6wfbnd2od9a90j",
+        "tipo": "CARGO",
+        "monto": 325,
+        "comentario": "Top suplex (S/35.00) [30/01/2026] | Top suplex (S/35.00) [30/01/2026] | Blusa (S/35.00) [30/01/2026] | Top suplex (S/35.00) [30/01/2026] | Vestido (S/65.00) [30/01/2026] | Conjunto (S/85.00) [30/01/2026] | Blusa suplex (S/35.00) [31/01/2026]",
+        "fecha": "2026-01-31T01:16:05.700Z"
+      },
+      {
+        "id": "ml1pjfx0mtpydnrfdbc",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[30/01/2026]",
+        "fecha": "2026-01-31T02:43:22.836Z"
+      },
+      {
+        "id": "ml27bovqg0hgg63zx6n",
+        "cuentaId": "mku2dhw5635lkjks9o4",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[31/01/2026]",
+        "fecha": "2026-01-31T11:01:14.294Z"
+      },
+      {
+        "id": "ml2zl6jglagxi3w60me",
+        "cuentaId": "ml2zl6hnme1h0ph39pg",
+        "tipo": "CARGO",
+        "monto": 125,
+        "comentario": "Short (S/65.00) [31/01/2026] | Sandalias  (S/60.00) [31/01/2026]",
+        "fecha": "2026-02-01T00:12:26.332Z"
+      },
+      {
+        "id": "ml2zlqactw6c0z45rb8",
+        "cuentaId": "mknb1d6h285sltwar6v",
+        "tipo": "ABONO",
+        "monto": 28,
+        "comentario": "[31/01/2026]",
+        "fecha": "2026-02-01T00:12:51.924Z"
+      },
+      {
+        "id": "ml2znevpvvkkg9830gp",
+        "cuentaId": "mkyqoro03nzafhltuej",
+        "tipo": "ABONO",
+        "monto": 41,
+        "comentario": "[31/01/2026]",
+        "fecha": "2026-02-01T00:14:10.453Z"
+      },
+      {
+        "id": "ml37gks59u5xu92azav",
+        "cuentaId": "ml37gkr9y2rnk56pzin",
+        "tipo": "CARGO",
+        "monto": 220,
+        "comentario": "Short  (S/85.00) [31/01/2026] | Short (S/65.00) [31/01/2026] | Falda short (S/70.00) [31/01/2026]",
+        "fecha": "2026-02-01T03:52:48.437Z"
+      },
+      {
+        "id": "ml37grm7ziqzfnysga8",
+        "cuentaId": "ml37gkr9y2rnk56pzin",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[31/01/2026]",
+        "fecha": "2026-02-01T03:52:57.295Z"
+      },
+      {
+        "id": "ml4gqms2zyxp5yhlpsh",
+        "cuentaId": "ml4gqmrdltw2hvyswpc",
+        "tipo": "CARGO",
+        "monto": 306,
+        "comentario": "Short (S/65.00) [01/02/2026] | Short (S/65.00) [01/02/2026] | Short (S/75.00) [01/02/2026] | Basico (S/28.00) [01/02/2026] | Body (S/30.00) [01/02/2026] | Basico (S/30.00) [01/02/2026] | Bra (S/13.00) [01/02/2026]",
+        "fecha": "2026-02-02T01:00:20.306Z"
+      },
+      {
+        "id": "ml4gqw01z8mrbknx78",
+        "cuentaId": "ml4gqmrdltw2hvyswpc",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[01/02/2026]",
+        "fecha": "2026-02-02T01:00:32.257Z"
+      },
+      {
+        "id": "ml4grcu3lpnokpq1m28",
+        "cuentaId": "mku2dhw5635lkjks9o4",
+        "tipo": "ABONO",
+        "monto": 15,
+        "comentario": "[01/02/2026]",
+        "fecha": "2026-02-02T01:00:54.075Z"
+      },
+      {
+        "id": "ml6uh63jlc4wxkwwy8",
+        "cuentaId": "ml6uh62ecjazlju2gg9",
+        "tipo": "CARGO",
+        "monto": 208,
+        "comentario": "",
+        "fecha": "2026-02-03T17:00:25.759Z"
+      },
+      {
+        "id": "ml6uhd89nxq7w0y0z2j",
+        "cuentaId": "ml6uh62ecjazlju2gg9",
+        "tipo": "ABONO",
+        "monto": 60,
+        "comentario": "[03/02/2026]",
+        "fecha": "2026-02-03T17:00:35.001Z"
+      },
+      {
+        "id": "ml6uhjaxfgn51l86mk7",
+        "cuentaId": "ml6uh62ecjazlju2gg9",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[03/02/2026]",
+        "fecha": "2026-02-03T17:00:42.873Z"
+      },
+      {
+        "id": "ml6ujnmrbt2j3p5tot6",
+        "cuentaId": "ml6ujnlz2ejb4w2re5",
+        "tipo": "CARGO",
+        "monto": 133,
+        "comentario": "Short (S/58.00) [03/02/2026] | Vestidos (S/65.00) [03/02/2026] | Anterior (S/10.00) [03/02/2026]",
+        "fecha": "2026-02-03T17:02:21.795Z"
+      },
+      {
+        "id": "ml8kvskmgoqfp92bhyc",
+        "cuentaId": "ml8kvsjwiqjh3dc95b7",
+        "tipo": "CARGO",
+        "monto": 25,
+        "comentario": "Lentes (S/25.00) [04/02/2026]",
+        "fecha": "2026-02-04T22:07:24.262Z"
+      },
+      {
+        "id": "mla4fwim68bru6wm91n",
+        "cuentaId": "mkyqoro03nzafhltuej",
+        "tipo": "ABONO",
+        "monto": 42,
+        "comentario": "[05/02/2026]",
+        "fecha": "2026-02-06T00:02:41.374Z"
+      },
+      {
+        "id": "mla4in7o7smdug92v8s",
+        "cuentaId": "mla4in72d3qkuqk5gan",
+        "tipo": "CARGO",
+        "monto": 356,
+        "comentario": "Lentes (S/25.00) [05/02/2026] | Polo  (S/38.00) [05/02/2026] | Polo (S/50.00) [05/02/2026] | Body (S/35.00) [05/02/2026] | Short  (S/75.00) [05/02/2026] | Short (S/65.00) [05/02/2026] | Short  (S/68.00) [05/02/2026]",
+        "fecha": "2026-02-06T00:04:49.284Z"
+      },
+      {
+        "id": "mla4jcgfz1939242gm",
+        "cuentaId": "mla4in72d3qkuqk5gan",
+        "tipo": "ABONO",
+        "monto": 1,
+        "comentario": "[05/02/2026]",
+        "fecha": "2026-02-06T00:05:21.999Z"
+      },
+      {
+        "id": "mla4jkluaxr6xa15m1j",
+        "cuentaId": "ml8kvsjwiqjh3dc95b7",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[05/02/2026]",
+        "fecha": "2026-02-06T00:05:32.562Z"
+      },
+      {
+        "id": "mla4khc2b2ont5p9zbm",
+        "cuentaId": "ml1mf6wfbnd2od9a90j",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[05/02/2026]",
+        "fecha": "2026-02-06T00:06:14.978Z"
+      },
+      {
+        "id": "mla4pgb7xgmbvwfu3c",
+        "cuentaId": "mla4pgak8o4c5449jca",
+        "tipo": "CARGO",
+        "monto": 194,
+        "comentario": "Basico (S/28.00) [05/02/2026] | Basico (S/28.00) [05/02/2026] | Blusa (S/50.00) [05/02/2026] | Basico (S/28.00) [05/02/2026] | Falda (S/60.00) [05/02/2026]",
+        "fecha": "2026-02-06T00:10:06.931Z"
+      },
+      {
+        "id": "mlbkr64jyxxx4ogwoi9",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[06/02/2026]",
+        "fecha": "2026-02-07T00:27:07.075Z"
+      },
+      {
+        "id": "mlbksa4t8o5joi3ode7",
+        "cuentaId": "mkyqoro03nzafhltuej",
+        "tipo": "ABONO",
+        "monto": 29,
+        "comentario": "[06/02/2026]",
+        "fecha": "2026-02-07T00:27:58.925Z"
+      },
+      {
+        "id": "mlehsm2isqbhkx333eq",
+        "cuentaId": "mknb1d6h285sltwar6v",
+        "tipo": "ABONO",
+        "monto": 30,
+        "comentario": "[08/02/2026]",
+        "fecha": "2026-02-09T01:27:34.074Z"
+      },
+      {
+        "id": "mlehuhzus2cy5vb6u9",
+        "cuentaId": "ml04nc0a8g2ezfytr1c",
+        "tipo": "CARGO",
+        "monto": 85,
+        "comentario": "Vestido  (S/85.00) [08/02/2026]",
+        "fecha": "2026-02-09T01:29:02.106Z"
+      },
+      {
+        "id": "mlei2ec7sbqe0sz8ldq",
+        "cuentaId": "mlei2ebmw1774kh6psf",
+        "tipo": "CARGO",
+        "monto": 136,
+        "comentario": "Short (S/68.00) [08/02/2026] | Short (S/68.00) [08/02/2026]",
+        "fecha": "2026-02-09T01:35:10.615Z"
+      },
+      {
+        "id": "mlfhhm2n6ix76c8eu2e",
+        "cuentaId": "ml2zl6hnme1h0ph39pg",
+        "tipo": "ABONO",
+        "monto": 20,
+        "comentario": "[09/02/2026]",
+        "fecha": "2026-02-09T18:06:47.039Z"
+      },
+      {
+        "id": "mlfhk8ibbnksq72gkrw",
+        "cuentaId": "mlfhk8hs1c5cl3ze0lu",
+        "tipo": "CARGO",
+        "monto": 283,
+        "comentario": "Anterior (S/174.00) [09/02/2026] | Basico (S/28.00) [09/02/2026] | Blusit (S/28.00) [14/02/2026] | Blusita (S/28.00) [14/02/2026] | Lentes (S/25.00) [14/02/2026]",
+        "fecha": "2026-02-09T18:08:49.427Z"
+      },
+      {
+        "id": "mlfv5po0t23e7cig5m",
+        "cuentaId": "ml4gqmrdltw2hvyswpc",
+        "tipo": "ABONO",
+        "monto": 56,
+        "comentario": "[09/02/2026]",
+        "fecha": "2026-02-10T00:29:26.448Z"
+      },
+      {
+        "id": "mlhd2yum8ae3ug4h55",
+        "cuentaId": "mlhd2yu3wjq3hgjzai8",
+        "tipo": "CARGO",
+        "monto": 128,
+        "comentario": "Polo (S/38.00) [10/02/2026] | Pantalon (S/90.00) [10/02/2026]",
+        "fecha": "2026-02-11T01:38:57.646Z"
+      },
+      {
+        "id": "mlhd33u3djex35db5z",
+        "cuentaId": "mlhd2yu3wjq3hgjzai8",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[10/02/2026]",
+        "fecha": "2026-02-11T01:39:04.107Z"
+      },
+      {
+        "id": "mlhd8rmt0t9lj8res69",
+        "cuentaId": "mlhd8rmadcnmka3ke5",
+        "tipo": "CARGO",
+        "monto": 90,
+        "comentario": "",
+        "fecha": "2026-02-11T01:43:28.229Z"
+      },
+      {
+        "id": "mlmc0ie7l24hfmid72",
+        "cuentaId": "ml2zl6hnme1h0ph39pg",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[14/02/2026]",
+        "fecha": "2026-02-14T13:07:54.271Z"
+      },
+      {
+        "id": "mlmc21vlszmcp2svlde",
+        "cuentaId": "mkoihq18rib5ffeqxtj",
+        "tipo": "ABONO",
+        "monto": 30,
+        "comentario": "[14/02/2026]",
+        "fecha": "2026-02-14T13:09:06.177Z"
+      },
+      {
+        "id": "mlmc3fvnfu53mvhb0pp",
+        "cuentaId": "mkosqbb6ll3zqslzhh",
+        "tipo": "ABONO",
+        "monto": 143,
+        "comentario": "[14/02/2026]",
+        "fecha": "2026-02-14T13:10:10.979Z"
+      },
+      {
+        "id": "mlmc79980ag4wm6bo6nq",
+        "cuentaId": "mlmc798qavj8ophevb8",
+        "tipo": "CARGO",
+        "monto": 349,
+        "comentario": "Anterior (S/18.00) [14/02/2026] | Pantalon (S/90.00) [14/02/2026] | Pantalon (S/90.00) [14/02/2026] | Basico (S/28.00) [14/02/2026] | Basico (S/28.00) [14/02/2026] | Blusa (S/45.00) [14/02/2026] | Blusa (S/50.00) [14/02/2026]",
+        "fecha": "2026-02-14T13:13:09.020Z"
+      },
+      {
+        "id": "mlmc7elt8vxc2rspcut",
+        "cuentaId": "mlmc798qavj8ophevb8",
+        "tipo": "ABONO",
+        "monto": 86,
+        "comentario": "[14/02/2026]",
+        "fecha": "2026-02-14T13:13:15.953Z"
+      },
+      {
+        "id": "mlmzspr2tk7ccr6auh",
+        "cuentaId": "mkn6xj7dvmn1hvqm4ao",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[14/02/2026]",
+        "fecha": "2026-02-15T00:13:41.342Z"
+      },
+      {
+        "id": "mlmzwlqratiwkgmhnc",
+        "cuentaId": "mlmzwlq60jlcv43c4mgm",
+        "tipo": "CARGO",
+        "monto": 75,
+        "comentario": "Short (S/75.00) [14/02/2026]",
+        "fecha": "2026-02-15T00:16:42.771Z"
+      },
+      {
+        "id": "mlpa5rvxp7yhyi6mx1",
+        "cuentaId": "ml2zl6hnme1h0ph39pg",
+        "tipo": "ABONO",
+        "monto": 10,
+        "comentario": "[16/02/2026]",
+        "fecha": "2026-02-16T14:39:19.149Z"
+      },
+      {
+        "id": "mlqn4x09wx1gqfcjaa",
+        "cuentaId": "mkost4g0vu2xn5q7pxc",
+        "tipo": "ABONO",
+        "monto": 100,
+        "comentario": "[17/02/2026]",
+        "fecha": "2026-02-17T13:30:20.313Z"
+      },
+      {
+        "id": "mlqn576n1iwm7ccitb2",
+        "cuentaId": "mkq0f04hof4k65hs66",
+        "tipo": "ABONO",
+        "monto": 50,
+        "comentario": "[17/02/2026]",
+        "fecha": "2026-02-17T13:30:33.503Z"
+      },
+      {
+        "id": "mlqn5kxpe5qbe7b0alr",
+        "cuentaId": "mkymbg8g2800mz4sfxw",
+        "tipo": "ABONO",
+        "monto": 98,
+        "comentario": "[17/02/2026]",
+        "fecha": "2026-02-17T13:30:51.325Z"
+      },
+      {
+        "id": "mlqn6dj3ls52zjets",
+        "cuentaId": "mky78kj9vce365yx3na",
+        "tipo": "ABONO",
+        "monto": 290,
+        "comentario": "[17/02/2026]",
+        "fecha": "2026-02-17T13:31:28.383Z"
+      },
+      {
+        "id": "mlqn79xk3u69cvzuyqq",
+        "cuentaId": "mlqn79wvxpwe93ocrj",
+        "tipo": "CARGO",
+        "monto": 93,
+        "comentario": "Basico (S/28.00) [17/02/2026] | Short (S/65.00) [17/02/2026]",
+        "fecha": "2026-02-17T13:32:10.376Z"
+      },
+      {
+        "id": "mlqna166a5jolbews9e",
+        "cuentaId": "mlqna15h454fd33jms9",
+        "tipo": "CARGO",
+        "monto": 238,
+        "comentario": "Blusa (S/28.00) [17/02/2026] | Sandalias  (S/60.00) [17/02/2026] | Polo (S/75.00) [17/02/2026] | Poli (S/75.00) [17/02/2026]",
+        "fecha": "2026-02-17T13:34:18.990Z"
+      },
+      {
+        "id": "mm4c52gcso6tye6f11p",
+        "cuentaId": "mm4c52fy8rbt0snqjb",
+        "tipo": "CARGO",
+        "monto": 35,
+        "comentario": "Gorra (S/15.00) [26/02/2026] {utiles} | Polo (S/20.00) [26/02/2026] {ropa-otros}",
+        "fecha": "2026-02-27T03:31:18.060Z"
+      },
+      {
+        "id": "mm4c5lt9bd6jigbs4bc",
+        "cuentaId": "mm4c52fy8rbt0snqjb",
+        "tipo": "ABONO",
+        "monto": 35,
+        "comentario": "Cancelado de ambos [26/02/2026]",
+        "fecha": "2026-02-27T03:31:43.149Z"
+      },
+      {
+        "id": "mm6fhyvzbgmnnzwu74k",
+        "cuentaId": "mkoihq18rib5ffeqxtj",
+        "tipo": "CARGO",
+        "monto": 50,
+        "comentario": "Figueredo (S/50.00) [28/02/2026] {ropa-otros}",
+        "fecha": "2026-02-28T14:40:51.167Z"
+      }
+    ],
+    "storeName": "Mi Cobranza",
+    "storeLogo": null
+  }
+}

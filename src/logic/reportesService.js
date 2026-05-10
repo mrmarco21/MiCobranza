@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as movimientosRepo from '../data/movimientosRepository';
 import * as clientasRepo from '../data/clientasRepository';
 import * as cuentasRepo from '../data/cuentasRepository';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate, formatCurrency } from '../shared/utils/helpers';
 
 const REPORTES_KEY = 'reportes_semanales';
 
@@ -53,17 +53,24 @@ const parsearPrendas = (comentario) => {
         // Formato nuevo con categoría: "Blusa roja (S/25.00) [01/01/2026] {categoria-id}"
         const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
         if (matchCompleto) {
+            const categoria = matchCompleto[4].toLowerCase();
+            console.log('✅ Prenda parseada con categoría:', {
+                descripcion: matchCompleto[1].trim(),
+                categoria: categoria,
+                comentarioOriginal: parte
+            });
             return {
                 descripcion: matchCompleto[1].trim(),
                 monto: parseFloat(matchCompleto[2]),
                 fecha: matchCompleto[3],
-                categoria: matchCompleto[4].toLowerCase() // Normalizar a minúsculas
+                categoria: categoria // Normalizar a minúsculas
             };
         }
         
         // Formato con fecha pero sin categoría (datos antiguos)
         const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
         if (matchConFecha) {
+            console.log('⚠️ Prenda sin categoría (formato antiguo con fecha):', parte);
             return {
                 descripcion: matchConFecha[1].trim(),
                 monto: parseFloat(matchConFecha[2]),
@@ -75,6 +82,7 @@ const parsearPrendas = (comentario) => {
         // Formato antiguo sin fecha
         const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
         if (matchSinFecha) {
+            console.log('⚠️ Prenda sin categoría (formato antiguo sin fecha):', parte);
             return {
                 descripcion: matchSinFecha[1].trim(),
                 monto: parseFloat(matchSinFecha[2]),
@@ -83,6 +91,7 @@ const parsearPrendas = (comentario) => {
             };
         }
         
+        console.log('❌ Prenda con formato no reconocido:', parte);
         return { descripcion: parte, monto: null, fecha: null, categoria: 'ropa-otros' };
     }).filter(p => p.descripcion);
 };

@@ -1,7 +1,7 @@
 import * as movimientosRepo from '../data/movimientosRepository';
 import * as cuentasService from './cuentasService';
 import * as cuentasRepo from '../data/cuentasRepository';
-import { generateId } from '../utils/helpers';
+import { generateId } from '../shared/utils/helpers';
 
 export const obtenerMovimientosDeCuenta = async (cuentaId) => {
   return await movimientosRepo.getByCuenta(cuentaId);

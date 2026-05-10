@@ -1,6 +1,6 @@
 import * as cuentasRepo from '../data/cuentasRepository';
 import * as clientasRepo from '../data/clientasRepository';
-import { generateId } from '../utils/helpers';
+import { generateId } from '../shared/utils/helpers';
 
 export const obtenerCuentaActiva = async (clientaId) => {
   return await cuentasRepo.getActiva(clientaId);

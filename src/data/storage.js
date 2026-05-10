@@ -11,6 +11,8 @@ const KEYS = {
   STORE_LOGO: 'store_logo',
   GASTOS: 'gastos',
   PEDIDOS: 'pedidos',
+  PRODUCTOS: 'productos',
+  VENTAS: 'ventas',
 };
 
 export const getData = async (key) => {

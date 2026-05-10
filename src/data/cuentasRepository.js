@@ -23,9 +23,11 @@ export const getActiva = async (clientaId) => {
 export const getCerradas = async (clientaId = null) => {
   const cuentas = await getAll();
   if (clientaId) {
-    return cuentas.filter(c => c.clientaId === clientaId && c.estado === 'CERRADA');
+    // Excluir cuentas anuladas del historial de cuentas cerradas
+    return cuentas.filter(c => c.clientaId === clientaId && c.estado === 'CERRADA' && !c.anulada);
   }
-  return cuentas.filter(c => c.estado === 'CERRADA');
+  // Excluir cuentas anuladas del historial de cuentas cerradas
+  return cuentas.filter(c => c.estado === 'CERRADA' && !c.anulada);
 };
 
 export const create = async (cuenta) => {

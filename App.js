@@ -4,16 +4,23 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider } from './src/shared/context/ThemeContext';
+import { ToastProvider } from './src/shared/context/ToastContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import SplashScreen from './src/screens/SplashScreen';
-import PinScreen from './src/screens/PinScreen';
+import SplashScreen from './src/screens/Splash/SplashScreen';
+import PinScreen from './src/screens/Pin/PinScreen';
+import { migrarCategoriasProductosVendidos } from './src/shared/utils/migraciones';
+import { useImageMigration } from './src/shared/hooks/useImageMigration';
+import { useAutoBackup } from './src/shared/hooks/useAutoBackup';
+import { migrarNumerosDocumento, necesitaMigracion } from './src/shared/utils/migracionNumerosDocumento';
 
 const DEFAULT_LOCK_TIMEOUT = 60000; // 60 segundos por defecto
 const LAST_ACTIVE_KEY = 'last_active_time';
 const LOCK_TIMEOUT_KEY = 'lock_timeout';
 const PIN_KEY = 'user_pin';
 const PIN_ENABLED_KEY = 'pin_enabled';
+const MIGRATION_CATEGORIAS_KEY = 'migration_categorias_v1_completed';
+const MIGRATION_NUMEROS_DOC_KEY = 'migration_numeros_documento_v1_completed';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,10 +30,21 @@ export default function App() {
   const [hasPin, setHasPin] = useState(false);
   const [pinEnabled, setPinEnabled] = useState(true);
   const appStateRef = useRef('active');
+  const [showExportReminder, setShowExportReminder] = useState(false);
+
+  // Ejecutar migración de imágenes automáticamente
+  useImageMigration();
+
+  // Ejecutar respaldos automáticos y recordatorios
+  useAutoBackup(() => {
+    // Mostrar recordatorio de exportación
+    setShowExportReminder(true);
+  });
 
   useEffect(() => {
     checkPinStatus();
     loadLockTimeout();
+    ejecutarMigraciones();
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     // Revisar periódicamente si se debe forzar el setup del PIN
@@ -42,6 +60,50 @@ export default function App() {
       clearInterval(interval);
     };
   }, [isAuthenticated]);
+
+  const ejecutarMigraciones = async () => {
+    try {
+      // Migración 1: Categorías en productos vendidos
+      const migracionCategoriasCompletada = await AsyncStorage.getItem(MIGRATION_CATEGORIAS_KEY);
+      
+      if (!migracionCategoriasCompletada) {
+        console.log('🔄 Ejecutando migración de categorías en productos vendidos...');
+        const resultado = await migrarCategoriasProductosVendidos();
+        
+        if (resultado.success) {
+          await AsyncStorage.setItem(MIGRATION_CATEGORIAS_KEY, 'true');
+          console.log('✅ Migración de categorías completada exitosamente');
+        } else {
+          console.error('❌ Error en migración de categorías:', resultado.error);
+        }
+      }
+
+      // Migración 2: Números de documento al formato AAMM-0001
+      const migracionNumerosCompletada = await AsyncStorage.getItem(MIGRATION_NUMEROS_DOC_KEY);
+      
+      if (!migracionNumerosCompletada) {
+        const necesita = await necesitaMigracion();
+        
+        if (necesita) {
+          console.log('🔄 Ejecutando migración de números de documento...');
+          const resultado = await migrarNumerosDocumento();
+          
+          if (resultado.success) {
+            await AsyncStorage.setItem(MIGRATION_NUMEROS_DOC_KEY, 'true');
+            console.log(`✅ Migración de números de documento completada: ${resultado.migradas} ventas actualizadas`);
+          } else {
+            console.error('❌ Error en migración de números de documento:', resultado.error);
+          }
+        } else {
+          // Marcar como completada si no hay nada que migrar
+          await AsyncStorage.setItem(MIGRATION_NUMEROS_DOC_KEY, 'true');
+          console.log('✅ No hay números de documento para migrar');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error ejecutando migraciones:', error);
+    }
+  };
 
   const checkPinStatus = async () => {
     try {
@@ -149,10 +211,12 @@ export default function App() {
       return (
         <ThemeProvider>
           <SafeAreaProvider>
-            <NavigationContainer>
-              <AppNavigator />
-              <StatusBar style="light" />
-            </NavigationContainer>
+            <ToastProvider>
+              <NavigationContainer>
+                <AppNavigator />
+                <StatusBar style="light" />
+              </NavigationContainer>
+            </ToastProvider>
           </SafeAreaProvider>
         </ThemeProvider>
       );
@@ -161,11 +225,15 @@ export default function App() {
     // Si el PIN está activado, mostrar pantalla de autenticación
     return (
       <ThemeProvider>
-        <PinScreen onSuccess={() => {
-          setIsAuthenticated(true);
-          checkPinStatus(); // Recargar estado después de crear PIN
-        }} />
-        <StatusBar style="dark" />
+        <SafeAreaProvider>
+          <ToastProvider>
+            <PinScreen onSuccess={() => {
+              setIsAuthenticated(true);
+              checkPinStatus(); // Recargar estado después de crear PIN
+            }} />
+            <StatusBar style="dark" />
+          </ToastProvider>
+        </SafeAreaProvider>
       </ThemeProvider>
     );
   }
@@ -173,10 +241,12 @@ export default function App() {
   return (
     <ThemeProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <AppNavigator />
-          <StatusBar style="light" />
-        </NavigationContainer>
+        <ToastProvider>
+          <NavigationContainer>
+            <AppNavigator />
+            <StatusBar style="light" />
+          </NavigationContainer>
+        </ToastProvider>
       </SafeAreaProvider>
     </ThemeProvider>
   );

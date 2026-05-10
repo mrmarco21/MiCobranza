@@ -1,6 +1,6 @@
 import * as clientasRepo from '../data/clientasRepository';
 import * as cuentasRepo from '../data/cuentasRepository';
-import { generateId } from '../utils/helpers';
+import { generateId } from '../shared/utils/helpers';
 
 export const obtenerclientas = async () => {
   return await clientasRepo.getAll();
