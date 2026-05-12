@@ -9,7 +9,8 @@ import { obtenerClientaConSaldo } from '../../services/clientasService';
 import { obtenerCuentasActivas, obtenerCuentasCerradas } from '../../services/cuentasService';
 import { obtenerMovimientosDeCuenta } from '../../services/movimientosService';
 import * as categoriasRepo from '../../data/categoriasRepository';
-import { formatCurrency, formatDate } from '../../shared/utils/helpers';
+import * as ventasRepo from '../../data/ventasRepository';
+import { formatCurrency, formatDate, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import { useTheme } from '../../shared/hooks/useTheme';
 import Header from '../../shared/components/Header';
 import ResumenClienteImagen from './components/ResumenClienteImagen';
@@ -31,11 +32,13 @@ export default function ClientaDetailScreen({ route, navigation }) {
     const [modalDetalleVisible, setModalDetalleVisible] = useState(false);
     const [movimientoSeleccionado, setMovimientoSeleccionado] = useState(null);
     const [cuentaIdSeleccionada, setCuentaIdSeleccionada] = useState(null);
+    const [productosVenta, setProductosVenta] = useState([]); // Productos de la venta asociada
 
     // Estados para compartir imagen del resumen completo del cliente
     const [modalCompartirVisible, setModalCompartirVisible] = useState(false);
     const [todasLasCuentas, setTodasLasCuentas] = useState([]);
     const [todosLosMovimientos, setTodosLosMovimientos] = useState({});
+    const [todasLasVentas, setTodasLasVentas] = useState({}); // Ventas por cuenta
     const viewShotRef = useRef();
 
     useFocusEffect(
@@ -63,6 +66,17 @@ export default function ClientaDetailScreen({ route, navigation }) {
         }
         setMovimientosPorCuenta(movsPorCuenta);
 
+        // Obtener las ventas asociadas a cada cuenta para mostrar comentarios
+        const todasVentas = await ventasRepo.getAll();
+        const ventasPorCuenta = {};
+        for (const cuenta of cuentas) {
+            const venta = todasVentas.find(v => v.cuentaId === cuenta.id && v.tipo !== 'CONTADO');
+            if (venta) {
+                ventasPorCuenta[cuenta.id] = venta;
+            }
+        }
+        setTodasLasVentas(ventasPorCuenta);
+
         const cerradas = await obtenerCuentasCerradas(clientaId);
         setNumCuentasCerradas(cerradas.length);
     };
@@ -89,9 +103,23 @@ export default function ClientaDetailScreen({ route, navigation }) {
         }));
     };
 
-    const handleMovimientoPress = (movimiento, cuentaId) => {
+    const handleMovimientoPress = async (movimiento, cuentaId) => {
         setMovimientoSeleccionado(movimiento);
         setCuentaIdSeleccionada(cuentaId);
+
+        // Si es un CARGO, obtener la venta asociada para mostrar los productos completos
+        if (movimiento.tipo === 'CARGO') {
+            const ventas = await ventasRepo.getAll();
+            const ventaAsociada = ventas.find(v => v.cuentaId === cuentaId && v.tipo !== 'CONTADO');
+            if (ventaAsociada && ventaAsociada.productos) {
+                setProductosVenta(ventaAsociada.productos);
+            } else {
+                setProductosVenta([]);
+            }
+        } else {
+            setProductosVenta([]);
+        }
+
         setModalDetalleVisible(true);
     };
 
@@ -106,22 +134,29 @@ export default function ClientaDetailScreen({ route, navigation }) {
 
     // Parsear prendas
     const parsearPrendas = (comentario) => {
+        console.log('🔍 [ClientaDetail] parsearPrendas recibió comentario:', comentario);
         if (!comentario) return [];
         const partes = comentario.split(' | ');
-        return partes.map(parte => {
-            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 2 [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+        console.log('🔍 [ClientaDetail] Partes separadas:', partes);
+        return partes.map((parte, idx) => {
+            console.log(`🔍 [ClientaDetail] Procesando parte ${idx}:`, parte);
+            // Formato nuevo con cantidad y categoría ID: "LAPICERO - Layconsa - Borrable - AZUL (S/25.00) x 2 [01/01/2026] {ropa-otros}"
+            // Usar .+ (greedy) en lugar de .+? (non-greedy) para capturar todo el nombre hasta el paréntesis
+            const matchCompleto = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            console.log(`🔍 [ClientaDetail] Match completo parte ${idx}:`, matchCompleto);
             if (matchCompleto) {
-                return {
+                const resultado = {
                     descripcion: matchCompleto[1].trim(),
                     monto: parseFloat(matchCompleto[2]),
                     cantidad: parseInt(matchCompleto[3]),
                     fecha: matchCompleto[4],
                     categoria: matchCompleto[5]
                 };
+                console.log(`✅ [ClientaDetail] Resultado parte ${idx}:`, resultado);
+                return resultado;
             }
             // Formato con categoría pero sin cantidad (datos antiguos): "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"
-            const matchSinCantidad = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            const matchSinCantidad = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchSinCantidad) {
                 return {
                     descripcion: matchSinCantidad[1].trim(),
@@ -132,7 +167,7 @@ export default function ClientaDetailScreen({ route, navigation }) {
                 };
             }
             // Formato con fecha pero sin categoría ni cantidad (datos antiguos)
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            const matchConFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
                 return {
                     descripcion: matchConFecha[1].trim(),
@@ -143,7 +178,7 @@ export default function ClientaDetailScreen({ route, navigation }) {
                 };
             }
             // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            const matchSinFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)$/);
             if (matchSinFecha) {
                 return {
                     descripcion: matchSinFecha[1].trim(),
@@ -203,8 +238,19 @@ export default function ClientaDetailScreen({ route, navigation }) {
             movimientosPorCuentaCompleto[cuenta.id] = movs;
         }
 
+        // Obtener ventas de todas las cuentas
+        const todasVentas = await ventasRepo.getAll();
+        const ventasPorCuentaCompleto = {};
+        for (const cuenta of todasCuentas) {
+            const venta = todasVentas.find(v => v.cuentaId === cuenta.id && v.tipo !== 'CONTADO');
+            if (venta) {
+                ventasPorCuentaCompleto[cuenta.id] = venta;
+            }
+        }
+
         setTodasLasCuentas(todasCuentas);
         setTodosLosMovimientos(movimientosPorCuentaCompleto);
+        setTodasLasVentas(ventasPorCuentaCompleto);
         setModalCompartirVisible(true);
 
         // Esperar un momento para que el modal se renderice
@@ -333,6 +379,10 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                 .filter(m => m.tipo === 'ABONO')
                                 .reduce((sum, m) => sum + m.monto, 0);
 
+                            // Obtener el comentario de la venta asociada
+                            const ventaAsociada = todasLasVentas[cuenta.id];
+                            const comentarioVenta = ventaAsociada?.comentario || '';
+
                             return (
                                 <View key={cuenta.id} style={[styles.cuentaCard, { borderLeftWidth: 4, borderLeftColor: color.border }]}>
                                     {/* Header compacto de la cuenta */}
@@ -343,6 +393,16 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                             </View>
                                             <Text style={styles.cuentaFecha}>{formatDate(cuenta.fechaCreacion)}</Text>
                                         </View>
+
+                                        {/* Comentario de la venta si existe */}
+                                        {comentarioVenta && (
+                                            <View style={styles.cuentaComentarioContainer}>
+                                                <Ionicons name="chatbox-outline" size={12} color={colors.textSecondary} />
+                                                <Text style={styles.cuentaComentario} numberOfLines={2}>
+                                                    {comentarioVenta}
+                                                </Text>
+                                            </View>
+                                        )}
 
                                         {/* Información compacta en 3 columnas */}
                                         <View style={styles.cuentaInfoGrid}>
@@ -385,33 +445,50 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                                         <Text style={styles.encabezadoTexto}>Descripción</Text>
                                                         <Text style={styles.encabezadoTexto}>Monto</Text>
                                                     </View>
-                                                    {(movimientosExpandidos[cuenta.id] ? movimientos : movimientos.slice(0, 3)).map((mov) => (
-                                                        <TouchableOpacity
-                                                            key={mov.id}
-                                                            style={styles.miniMovimiento}
-                                                            onPress={() => handleMovimientoPress(mov, cuenta.id)}
-                                                        >
-                                                            <View style={[
-                                                                styles.miniMovIcono,
-                                                                mov.tipo === 'CARGO' ? styles.miniMovIconoCargo : styles.miniMovIconoAbono
-                                                            ]}>
-                                                                <Ionicons
-                                                                    name={mov.tipo === 'CARGO' ? "arrow-up" : "arrow-down"}
-                                                                    size={12}
-                                                                    color={mov.tipo === 'CARGO' ? "#FF6B6B" : "#4CAF50"}
-                                                                />
-                                                            </View>
-                                                            <Text style={styles.miniMovDesc} numberOfLines={1}>
-                                                                {extraerDescripcionLimpia(mov.comentario, mov.tipo)}
-                                                            </Text>
-                                                            <Text style={[
-                                                                styles.miniMovMonto,
-                                                                mov.tipo === 'CARGO' ? styles.montoRojo : styles.montoVerde
-                                                            ]}>
-                                                                {mov.tipo === 'CARGO' ? '+' : '-'}{formatCurrency(mov.monto)}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    ))}
+                                                    {(movimientosExpandidos[cuenta.id] ? movimientos : movimientos.slice(0, 3)).map((mov) => {
+                                                        // Extraer comentario del abono (sin la fecha)
+                                                        const comentarioAbono = mov.tipo === 'ABONO' ? extraerDescripcionAbono(mov.comentario) : '';
+
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={mov.id}
+                                                                style={styles.miniMovimiento}
+                                                                onPress={() => handleMovimientoPress(mov, cuenta.id)}
+                                                            >
+                                                                <View style={styles.miniMovimientoContent}>
+                                                                    <View style={styles.miniMovimientoRow}>
+                                                                        <View style={[
+                                                                            styles.miniMovIcono,
+                                                                            mov.tipo === 'CARGO' ? styles.miniMovIconoCargo : styles.miniMovIconoAbono
+                                                                        ]}>
+                                                                            <Ionicons
+                                                                                name={mov.tipo === 'CARGO' ? "arrow-up" : "arrow-down"}
+                                                                                size={12}
+                                                                                color={mov.tipo === 'CARGO' ? "#FF6B6B" : "#4CAF50"}
+                                                                            />
+                                                                        </View>
+                                                                        <Text style={styles.miniMovDesc} numberOfLines={1}>
+                                                                            {extraerDescripcionLimpia(mov.comentario, mov.tipo)}
+                                                                        </Text>
+                                                                        <Text style={[
+                                                                            styles.miniMovMonto,
+                                                                            mov.tipo === 'CARGO' ? styles.montoRojo : styles.montoVerde
+                                                                        ]}>
+                                                                            {mov.tipo === 'CARGO' ? '+' : '-'}{formatCurrency(mov.monto)}
+                                                                        </Text>
+                                                                    </View>
+                                                                    {mov.tipo === 'ABONO' && comentarioAbono && (
+                                                                        <View style={styles.miniMovComentarioContainer}>
+                                                                            <Ionicons name="chatbox-outline" size={10} color={colors.textSecondary} />
+                                                                            <Text style={styles.miniMovComentario} numberOfLines={1}>
+                                                                                {comentarioAbono}
+                                                                            </Text>
+                                                                        </View>
+                                                                    )}
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
                                                     {movimientos.length > 3 && !movimientosExpandidos[cuenta.id] && (
                                                         <TouchableOpacity
                                                             style={styles.verMasBtn}
@@ -542,7 +619,52 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                     </Text>
                                 </View>
 
-                                {movimientoSeleccionado.tipo === 'CARGO' && tienePrendasDesglosadas ? (
+                                {movimientoSeleccionado.tipo === 'CARGO' && productosVenta.length > 0 ? (
+                                    <View style={styles.prendasContainer}>
+                                        <Text style={styles.prendasTitulo}>Detalle de productos</Text>
+
+                                        {/* Header de la tabla */}
+                                        <View style={styles.prendasTableHeader}>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColProducto]}>PRODUCTO</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColPrecio]}>PRECIO</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColCantidad]}>#</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColTotal]}>TOTAL</Text>
+                                        </View>
+
+                                        {/* Filas de productos */}
+                                        {productosVenta.map((producto, index) => {
+                                            const cantidad = producto.cantidad || 1;
+                                            const precioUnitario = producto.precioVenta || 0;
+                                            const totalLinea = precioUnitario * cantidad;
+                                            const nombreCompleto = obtenerNombreProductoCompleto(producto);
+
+                                            return (
+                                                <View key={index} style={styles.prendaTableRow}>
+                                                    <View style={styles.prendasColProducto}>
+                                                        <Text style={styles.prendaDescripcion}>{nombreCompleto}</Text>
+                                                    </View>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColPrecio]}>
+                                                        {formatCurrency(precioUnitario)}
+                                                    </Text>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColCantidad]}>
+                                                        {cantidad}
+                                                    </Text>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColTotal, styles.prendaTableTextBold]}>
+                                                        {formatCurrency(totalLinea)}
+                                                    </Text>
+                                                </View>
+                                            );
+                                        })}
+
+                                        {/* Footer con total */}
+                                        <View style={styles.prendasTableFooter}>
+                                            <Text style={styles.prendasFooterLabel}>Total:</Text>
+                                            <Text style={styles.prendasFooterValue}>
+                                                {formatCurrency(movimientoSeleccionado.monto)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ) : movimientoSeleccionado.tipo === 'CARGO' && tienePrendasDesglosadas ? (
                                     <View style={styles.prendasContainer}>
                                         <Text style={styles.prendasTitulo}>Detalle de productos</Text>
 
@@ -653,6 +775,7 @@ export default function ClientaDetailScreen({ route, navigation }) {
                             cuentas={todasLasCuentas}
                             totalDeuda={totalDeuda}
                             movimientosPorCuenta={todosLosMovimientos}
+                            ventasPorCuenta={todasLasVentas}
                             categorias={categorias}
                             mostrarHistorialMovimientos={true}
                         />
@@ -769,6 +892,26 @@ const createStyles = (colors) => StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 0.2
     },
+    cuentaComentarioContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 6,
+        marginTop: 8,
+        paddingHorizontal: 4,
+        paddingVertical: 6,
+        backgroundColor: colors.surfaceVariant,
+        borderRadius: 6,
+        borderLeftWidth: 2,
+        borderLeftColor: colors.primary,
+    },
+    cuentaComentario: {
+        flex: 1,
+        fontSize: 11,
+        color: colors.text,
+        fontStyle: 'italic',
+        fontWeight: '500',
+        lineHeight: 15,
+    },
     cuentaInfoGrid: {
         flexDirection: 'row',
         backgroundColor: colors.surfaceVariant,
@@ -853,6 +996,13 @@ const createStyles = (colors) => StyleSheet.create({
         marginBottom: 1,
         borderRadius: 6
     },
+    miniMovimientoContent: {
+        flex: 1,
+    },
+    miniMovimientoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     miniMovIcono: {
         width: 26,
         height: 26,
@@ -881,6 +1031,20 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 14,
         fontWeight: '800',
         letterSpacing: -0.3
+    },
+    miniMovComentarioContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        marginLeft: 36,
+        gap: 4,
+    },
+    miniMovComentario: {
+        flex: 1,
+        fontSize: 11,
+        color: colors.textSecondary,
+        fontStyle: 'italic',
+        fontWeight: '500',
     },
     montoRojo: { color: '#FF6B6B' },
     montoVerde: { color: '#4CAF50' },

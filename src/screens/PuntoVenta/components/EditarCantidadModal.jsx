@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { obtenerNombreProductoCompleto } from '../../../shared/utils/helpers';
 
 export default function EditarCantidadModal({ visible, onClose, producto, onGuardar }) {
     const { colors } = useTheme();
@@ -50,7 +51,9 @@ export default function EditarCantidadModal({ visible, onClose, producto, onGuar
 
                             <View style={styles.content}>
                                 <Text style={styles.title}>Editar Cantidad</Text>
-                                <Text style={styles.productoNombre}>{producto.nombre}</Text>
+                                <Text style={styles.productoNombre}>
+                                    {obtenerNombreProductoCompleto(producto)}
+                                </Text>
 
                                 <View style={[styles.inputContainer, excedeStock && styles.inputContainerError]}>
                                     <Ionicons name="cube-outline" size={24} color={excedeStock ? "#FF6B6B" : "#29B6F6"} style={styles.inputIcon} />

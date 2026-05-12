@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import { formatCurrency } from '../../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../../shared/utils/helpers';
 
 export default function DetalleVentaModal({ visible, venta, onClose }) {
     const { colors } = useTheme();
@@ -68,7 +68,9 @@ export default function DetalleVentaModal({ visible, venta, onClose }) {
                             {venta.productos.map((producto, index) => (
                                 <View key={index} style={styles.productoCard}>
                                     <View style={styles.productoInfo}>
-                                        <Text style={styles.productoNombre}>{producto.nombre}</Text>
+                                        <Text style={styles.productoNombre}>
+                                            {obtenerNombreProductoCompleto(producto)}
+                                        </Text>
                                         <Text style={styles.productoCategoria}>
                                             {producto.categoria || 'Sin categoría'}
                                         </Text>

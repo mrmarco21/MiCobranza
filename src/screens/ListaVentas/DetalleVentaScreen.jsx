@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TouchableW
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../shared/hooks/useTheme';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import { useToast } from '../../shared/context/ToastContext';
 
@@ -201,7 +201,9 @@ export default function DetalleVentaScreen({ route, navigation }) {
                         return (
                             <View key={index} style={styles.tableRow}>
                                 <View style={styles.colProducto}>
-                                    <Text style={styles.productoNombre}>{producto.nombre}</Text>
+                                    <Text style={styles.productoNombre}>
+                                        {obtenerNombreProductoCompleto(producto)}
+                                    </Text>
                                 </View>
                                 <View style={styles.colPrecio}>
                                     {precioModificado ? (
@@ -481,8 +483,10 @@ const createStyles = (colors) => StyleSheet.create({
         alignItems: 'center',
     },
     colProducto: { flex: 1 },
-    colPrecio: { width: 45,
-         alignItems: 'flex-end' },
+    colPrecio: {
+        width: 45,
+        alignItems: 'flex-end'
+    },
     colCantidad: { width: 36, textAlign: 'center' },
     colTotal: { width: 68, textAlign: 'right' },
     productoNombre: {

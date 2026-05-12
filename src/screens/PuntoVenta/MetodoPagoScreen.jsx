@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Status
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import { useTheme } from '../../shared/hooks/useTheme';
 import { obtenerCuentaActiva, abrirNuevaCuenta } from '../../services/cuentasService';
@@ -145,6 +145,10 @@ export default function MetodoPagoScreen({ route, navigation }) {
                     productos: productosSeleccionados.map(p => ({
                         id: p.id,
                         nombre: p.nombre,
+                        marca: p.marca || '',
+                        modelo: p.modelo || '',
+                        color: p.color || '',
+                        talla: p.talla || '',
                         cantidad: p.cantidad || 1,
                         precioVenta: p.precioVenta,
                         categoria: p.categoria || 'ropa-otros'
@@ -244,8 +248,12 @@ export default function MetodoPagoScreen({ route, navigation }) {
             // Crear el comentario con los productos
             console.log('🔍 Productos seleccionados antes de guardar:', productosSeleccionados);
             const comentarioProductos = productosSeleccionados.map(p => {
-                console.log('📦 Producto:', {
+                console.log('📦 Producto completo:', {
                     nombre: p.nombre,
+                    marca: p.marca,
+                    modelo: p.modelo,
+                    color: p.color,
+                    talla: p.talla,
                     categoria: p.categoria,
                     categoriaType: typeof p.categoria
                 });
@@ -254,12 +262,14 @@ export default function MetodoPagoScreen({ route, navigation }) {
                     month: '2-digit',
                     year: 'numeric'
                 });
-                // Formato: "Nombre (S/Precio) x Cantidad [Fecha] {categoria}"
-                // Asegurar que la categoría esté en minúsculas para consistencia
+                // Formato: "Nombre Completo (S/Precio) x Cantidad [Fecha] {categoria}"
+                // Usar nombre completo del producto
+                const nombreCompleto = obtenerNombreProductoCompleto(p);
+                console.log('✅ Nombre completo generado:', nombreCompleto);
                 const categoria = (p.categoria || 'ropa-otros').toLowerCase();
                 const cantidad = p.cantidad || 1;
                 console.log('💾 Guardando con categoría:', categoria);
-                return `${p.nombre} (S/${p.precioVenta.toFixed(2)}) x ${cantidad} [${fecha}] {${categoria}}`;
+                return `${nombreCompleto} (S/${p.precioVenta.toFixed(2)}) x ${cantidad} [${fecha}] {${categoria}}`;
             }).join(' | ');
 
             console.log('📝 Comentario final:', comentarioProductos);
@@ -281,6 +291,10 @@ export default function MetodoPagoScreen({ route, navigation }) {
                 productos: productosSeleccionados.map(p => ({
                     id: p.id,
                     nombre: p.nombre,
+                    marca: p.marca || '',
+                    modelo: p.modelo || '',
+                    color: p.color || '',
+                    talla: p.talla || '',
                     cantidad: p.cantidad || 1,
                     precioVenta: p.precioVenta,
                     categoria: p.categoria || 'ropa-otros'
@@ -344,16 +358,30 @@ export default function MetodoPagoScreen({ route, navigation }) {
             const numeroDocumento = await generarNumeroDocumento();
 
             // Crear el comentario con los productos
+            console.log('🔍 [PARCIAL] Productos seleccionados antes de guardar:', productosSeleccionados);
             const comentarioProductos = productosSeleccionados.map(p => {
+                console.log('📦 [PARCIAL] Producto completo:', {
+                    nombre: p.nombre,
+                    marca: p.marca,
+                    modelo: p.modelo,
+                    color: p.color,
+                    talla: p.talla,
+                    categoria: p.categoria
+                });
                 const fecha = new Date().toLocaleDateString('es-PE', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
                 });
+                // Usar nombre completo del producto
+                const nombreCompleto = obtenerNombreProductoCompleto(p);
+                console.log('✅ [PARCIAL] Nombre completo generado:', nombreCompleto);
                 const categoria = (p.categoria || 'ropa-otros').toLowerCase();
                 const cantidad = p.cantidad || 1;
-                return `${p.nombre} (S/${p.precioVenta.toFixed(2)}) x ${cantidad} [${fecha}] {${categoria}}`;
+                return `${nombreCompleto} (S/${p.precioVenta.toFixed(2)}) x ${cantidad} [${fecha}] {${categoria}}`;
             }).join(' | ');
+
+            console.log('📝 [PARCIAL] Comentario final:', comentarioProductos);
 
             // IMPORTANTE: Primero registrar el CARGO del total de la venta
             await registrarMovimiento(
@@ -369,11 +397,16 @@ export default function MetodoPagoScreen({ route, navigation }) {
                 month: '2-digit',
                 year: 'numeric'
             });
+            // Incluir el comentario del usuario si existe
+            const comentarioAbono = comentario.trim()
+                ? `${comentario.trim()} [${fechaAbono}]`
+                : `Pago inicial [${fechaAbono}]`;
+
             await registrarMovimiento(
                 cuenta.id,
                 'ABONO',
                 montoPagado,
-                `Pago inicial [${fechaAbono}]`
+                comentarioAbono
             );
 
             // Guardar la venta como PARCIAL
@@ -385,6 +418,10 @@ export default function MetodoPagoScreen({ route, navigation }) {
                 productos: productosSeleccionados.map(p => ({
                     id: p.id,
                     nombre: p.nombre,
+                    marca: p.marca || '',
+                    modelo: p.modelo || '',
+                    color: p.color || '',
+                    talla: p.talla || '',
                     cantidad: p.cantidad || 1,
                     precioVenta: p.precioVenta,
                     categoria: p.categoria || 'ropa-otros'

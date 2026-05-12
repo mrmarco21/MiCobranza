@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCorto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import EmptyState from '../../shared/components/EmptyState';
 import { useTheme } from '../../shared/hooks/useTheme';
@@ -141,7 +141,7 @@ export default function BorradoresScreen({ navigation }) {
                 <View style={styles.productosList}>
                     {item.productos.slice(0, 3).map((producto, index) => (
                         <Text key={index} style={styles.productoItem} numberOfLines={1}>
-                            • {producto.nombre} x{producto.cantidad}
+                            • {obtenerNombreProductoCorto(producto)} x{producto.cantidad}
                         </Text>
                     ))}
                     {item.productos.length > 3 && (

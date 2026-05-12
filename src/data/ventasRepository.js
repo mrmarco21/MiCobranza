@@ -13,6 +13,10 @@ const VENTAS_KEY = KEYS.VENTAS;
  *   productos: Array<{
  *     id: string,
  *     nombre: string,
+ *     marca: string,
+ *     modelo: string,
+ *     color: string,
+ *     talla: string,
  *     cantidad: number,
  *     precioVenta: number,
  *     categoria: string

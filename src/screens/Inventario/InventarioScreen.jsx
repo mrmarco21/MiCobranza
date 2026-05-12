@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { obtenerProductos } from '../../services/productosService';
 import * as categoriasRepo from '../../data/categoriasRepository';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import EmptyState from '../../shared/components/EmptyState';
 import { useTheme } from '../../shared/hooks/useTheme';
@@ -24,21 +24,22 @@ export default function InventarioScreen({ navigation }) {
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null); // null = "Todo"
 
     // Función para aplicar filtros (definida antes del useEffect)
-    const aplicarFiltros = React.useCallback((prods, textoBusqueda, categoriaId) => {
+    const aplicarFiltros = React.useCallback(async (prods, textoBusqueda, categoriaId) => {
         let resultado = prods;
 
-        // Filtrar por categoría
-        if (categoriaId !== null) {
-            resultado = resultado.filter(p => p.categoria === categoriaId);
+        // Filtrar por búsqueda primero (búsqueda flexible)
+        if (textoBusqueda.trim() !== '') {
+            try {
+                const productosRepo = await import('../../data/productosRepository');
+                resultado = await productosRepo.buscar(textoBusqueda);
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+            }
         }
 
-        // Filtrar por búsqueda
-        if (textoBusqueda.trim() !== '') {
-            const textoLower = textoBusqueda.toLowerCase();
-            resultado = resultado.filter(p =>
-                p.nombre.toLowerCase().includes(textoLower) ||
-                p.id.toLowerCase().includes(textoLower)
-            );
+        // Luego filtrar por categoría
+        if (categoriaId !== null) {
+            resultado = resultado.filter(p => p.categoria === categoriaId);
         }
 
         return resultado;
@@ -46,8 +47,12 @@ export default function InventarioScreen({ navigation }) {
 
     // Efecto para aplicar filtros cuando cambian productos, búsqueda o categoría
     useEffect(() => {
-        const filtrados = aplicarFiltros(productos, busqueda, categoriaSeleccionada);
-        setProductosFiltrados(filtrados);
+        const aplicarFiltrosAsync = async () => {
+            const filtrados = await aplicarFiltros(productos, busqueda, categoriaSeleccionada);
+            setProductosFiltrados(filtrados);
+        };
+
+        aplicarFiltrosAsync();
     }, [productos, busqueda, categoriaSeleccionada, aplicarFiltros]);
 
     useFocusEffect(
@@ -137,7 +142,7 @@ export default function InventarioScreen({ navigation }) {
 
     const handleBuscar = (texto) => {
         setBusqueda(texto);
-        // El filtro se aplicará automáticamente por el useEffect
+        // El filtro se aplicará automáticamente por el useEffect con búsqueda flexible
     };
 
     const handleCategoriaPress = (categoriaId) => {
@@ -196,13 +201,31 @@ export default function InventarioScreen({ navigation }) {
 
     const renderProducto = ({ item }) => {
         const sinStock = item.stock === 0;
+        const stockBajo = item.stock > 0 && item.stock <= (item.stockMinimo || 5);
+
+        // Construir string de códigos (SKU + códigos alternativos)
+        const codigos = [];
+        if (item.sku) codigos.push(item.sku);
+        if (item.codigosAlternativos && item.codigosAlternativos.length > 0) {
+            codigos.push(...item.codigosAlternativos);
+        }
+        const codigosTexto = codigos.length > 0 ? codigos.join(' / ') : `ID: ${item.id.substring(5, 15)}`;
 
         return (
-            <View style={[styles.productoCard, sinStock && styles.productoCardDisabled]}>
+            <View
+                style={[styles.productoCard, sinStock && styles.productoCardDisabled]}
+            >
                 <View style={styles.productoLeft}>
-                    <View style={styles.imagenContainer}>
-                        {item.imagen ? (
-                            <Image source={{ uri: item.imagen }} style={styles.imagen} />
+                    <TouchableOpacity
+                        style={styles.imagenContainer}
+                        onPress={() => navigation.navigate('DetalleProducto', { productoId: item.id })}
+                        activeOpacity={0.7}
+                    >
+                        {(item.imagenes && item.imagenes.length > 0) || item.imagen ? (
+                            <Image
+                                source={{ uri: item.imagenes && item.imagenes.length > 0 ? item.imagenes[0] : item.imagen }}
+                                style={styles.imagen}
+                            />
                         ) : (
                             <View style={styles.imagenPlaceholder}>
                                 <Ionicons name="image-outline" size={32} color="#95A5A6" />
@@ -211,21 +234,60 @@ export default function InventarioScreen({ navigation }) {
                         <View style={styles.verBtn}>
                             <Text style={styles.verTexto}>Ver</Text>
                         </View>
-                    </View>
+                    </TouchableOpacity>
 
                     <View style={styles.productoInfo}>
-                        <Text style={styles.codigoTexto}>ID: {item.id.substring(5, 15)}</Text>
-                        <Text style={styles.stockTexto}>
-                            Stock: {item.stock} {obtenerNombreCategoria(item.categoria)}
-                        </Text>
+                        {/* Nombre completo del producto (incluye color, modelo, talla) */}
                         <Text style={styles.productoNombre} numberOfLines={2}>
-                            {item.nombre}
+                            {obtenerNombreProductoCompleto(item)}
+                        </Text>
+
+                        {/* Códigos del producto (SKU / Códigos de barra) */}
+                        <Text style={styles.codigoTexto} numberOfLines={1}>
+                            {codigosTexto}
+                        </Text>
+
+                        {/* Stock con indicador visual */}
+                        <View style={styles.stockContainer}>
+                            <Ionicons
+                                name={sinStock ? "alert-circle" : stockBajo ? "warning" : "checkmark-circle"}
+                                size={14}
+                                color={sinStock ? "#FF6B6B" : stockBajo ? "#FF9800" : "#4CAF50"}
+                            />
+                            <Text style={[
+                                styles.stockTexto,
+                                sinStock && styles.stockTextoSinStock,
+                                stockBajo && styles.stockTextoBajo
+                            ]}>
+                                Stock: {item.stock} {item.unidadMedida || 'unid.'}
+                            </Text>
+                        </View>
+
+                        {/* Categoría */}
+                        <Text style={styles.categoriaTexto}>
+                            {obtenerNombreCategoria(item.categoria)}
                         </Text>
                     </View>
                 </View>
 
                 <View style={styles.productoRight}>
                     <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>
+
+                    {/* Estado del producto */}
+                    {/* {item.estado && (
+                        <View style={[
+                            styles.estadoBadge,
+                            item.estado === 'Activo' ? styles.estadoBadgeActivo : styles.estadoBadgeInactivo
+                        ]}>
+                            <Text style={[
+                                styles.estadoBadgeTexto,
+                                item.estado === 'Activo' ? styles.estadoBadgeTextoActivo : styles.estadoBadgeTextoInactivo
+                            ]}>
+                                {item.estado}
+                            </Text>
+                        </View>
+                    )} */}
+
                     <TouchableOpacity
                         style={styles.menuBtn}
                         onPress={(e) => handleMenuPress(item, e)}
@@ -499,20 +561,51 @@ const createStyles = (colors) => StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
     },
-    codigoTexto: {
-        fontSize: 10,
-        color: colors.textTertiary,
-        marginBottom: 2,
+    productoNombre: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.text,
+        lineHeight: 18,
+        marginBottom: 6,
     },
-    stockTexto: {
+    codigoTexto: {
+        fontSize: 11,
+        color: colors.textTertiary,
+        marginBottom: 6,
+        fontWeight: '500',
+    },
+    detallesTexto: {
         fontSize: 11,
         color: colors.textSecondary,
         marginBottom: 4,
+        fontStyle: 'italic',
     },
-    productoNombre: {
-        fontSize: 13,
-        color: colors.text,
-        lineHeight: 18,
+    stockContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginBottom: 2,
+    },
+    stockTexto: {
+        fontSize: 12,
+        color: '#4CAF50',
+        fontWeight: '600',
+    },
+    stockTextoSinStock: {
+        color: '#FF6B6B',
+    },
+    stockTextoBajo: {
+        color: '#FF9800',
+    },
+    categoriaTexto: {
+        fontSize: 10,
+        color: colors.textTertiary,
+        backgroundColor: colors.surfaceVariant,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginTop: 2,
     },
     productoRight: {
         alignItems: 'flex-end',
@@ -522,6 +615,28 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         color: colors.text,
+    },
+    estadoBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+        marginVertical: 4,
+    },
+    estadoBadgeActivo: {
+        backgroundColor: '#E8F5E9',
+    },
+    estadoBadgeInactivo: {
+        backgroundColor: '#FFEBEE',
+    },
+    estadoBadgeTexto: {
+        fontSize: 10,
+        fontWeight: '600',
+    },
+    estadoBadgeTextoActivo: {
+        color: '#4CAF50',
+    },
+    estadoBadgeTextoInactivo: {
+        color: '#F44336',
     },
     menuBtn: {
         padding: 4,

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import { useTheme } from '../../shared/hooks/useTheme';
 import { useToast } from '../../shared/context/ToastContext';
@@ -401,7 +401,7 @@ export default function PuntoVentaScreen({ route, navigation }) {
 
                     <View style={styles.productoInfoSeleccionado}>
                         <Text style={styles.productoNombreSeleccionado} numberOfLines={2}>
-                            {item.nombre}
+                            {obtenerNombreProductoCompleto(item)}
                         </Text>
                         <View style={styles.precioContainer}>
                             {precioModificado && (

@@ -132,6 +132,11 @@ export default function MovimientosDiariosScreen({ navigation }) {
         const colorLight = getCategoriaColorLight(mov.categoria);
         const icon = getCategoriaIcon(mov.categoria);
 
+        // Verificar si tiene múltiples métodos de pago
+        const tieneMultiplesMetodos = mov.metodosPagoDetalle &&
+            typeof mov.metodosPagoDetalle === 'object' &&
+            Object.values(mov.metodosPagoDetalle).filter(m => m > 0).length > 1;
+
         return (
             <View key={mov.id} style={styles.movimientoCard}>
                 <View style={[styles.movimientoIcono, { backgroundColor: colorLight }]}>
@@ -164,10 +169,33 @@ export default function MovimientosDiariosScreen({ navigation }) {
                     </Text>
 
                     <View style={styles.movimientoFooter}>
-                        <View style={styles.movimientoMetodo}>
-                            <Ionicons name={getMetodoPagoIcon(mov.metodoPago)} size={12} color={colors.textSecondary} />
-                            <Text style={styles.movimientoMetodoText}>{mov.metodoPago}</Text>
-                        </View>
+                        {tieneMultiplesMetodos ? (
+                            <View style={styles.metodosMultiples}>
+                                {mov.metodosPagoDetalle.efectivo > 0 && (
+                                    <View style={styles.metodoChip}>
+                                        <Ionicons name="cash" size={10} color="#43A047" />
+                                        <Text style={styles.metodoChipText}>{formatCurrency(mov.metodosPagoDetalle.efectivo)}</Text>
+                                    </View>
+                                )}
+                                {mov.metodosPagoDetalle.yape > 0 && (
+                                    <View style={styles.metodoChip}>
+                                        <Ionicons name="phone-portrait" size={10} color="#9C27B0" />
+                                        <Text style={styles.metodoChipText}>{formatCurrency(mov.metodosPagoDetalle.yape)}</Text>
+                                    </View>
+                                )}
+                                {mov.metodosPagoDetalle.transferencia > 0 && (
+                                    <View style={styles.metodoChip}>
+                                        <Ionicons name="swap-horizontal" size={10} color="#1976D2" />
+                                        <Text style={styles.metodoChipText}>{formatCurrency(mov.metodosPagoDetalle.transferencia)}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        ) : (
+                            <View style={styles.movimientoMetodo}>
+                                <Ionicons name={getMetodoPagoIcon(mov.metodoPago)} size={12} color={colors.textSecondary} />
+                                <Text style={styles.movimientoMetodoText}>{mov.metodoPago}</Text>
+                            </View>
+                        )}
                         <Text style={styles.movimientoHora}>
                             {new Date(mov.fecha).toLocaleTimeString('es-PE', {
                                 hour: '2-digit',
@@ -530,7 +558,7 @@ const createStyles = (colors) => StyleSheet.create({
     },
     resumenGrid: {
         flexDirection: 'row',
-        justifyContent: 'center',   
+        justifyContent: 'center',
         alignItems: 'center',
     },
     resumenGridItem: {
@@ -777,6 +805,28 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 11,
         color: colors.textSecondary,
         fontWeight: '600',
+    },
+    metodosMultiples: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        flex: 1,
+    },
+    metodoChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        backgroundColor: colors.background,
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    metodoChipText: {
+        fontSize: 10,
+        color: colors.text,
+        fontWeight: '700',
     },
     movimientoHora: {
         fontSize: 11,

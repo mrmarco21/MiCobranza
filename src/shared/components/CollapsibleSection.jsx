@@ -5,6 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function CollapsibleSection({
     title,
+    subtitle,
     description,
     icon,
     iconColor = '#45beffff',
@@ -41,7 +42,12 @@ export default function CollapsibleSection({
                 <View style={styles.headerLeft}>
                     <Ionicons name={icon} size={24} color={iconColor} />
                     <View style={styles.headerText}>
-                        <Text style={styles.title}>{title}</Text>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.title}>{title}</Text>
+                            {subtitle && (
+                                <Text style={styles.subtitle}>{subtitle}</Text>
+                            )}
+                        </View>
                         {!expanded && description && (
                             <Text style={styles.description} numberOfLines={1}>
                                 {description}
@@ -86,10 +92,21 @@ const createStyles = (colors) => StyleSheet.create({
         marginLeft: 12,
         flex: 1,
     },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
     title: {
         fontSize: 18,
         fontWeight: 'bold',
         color: colors.text,
+    },
+    subtitle: {
+        fontSize: 13,
+        color: colors.textSecondary,
+        marginLeft: 6,
+        fontStyle: 'italic',
     },
     description: {
         fontSize: 13,

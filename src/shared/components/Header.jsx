@@ -93,23 +93,26 @@ export default function Header({ title, subtitle, subtitleSecondary, showBack = 
                     {/* Múltiples botones a la derecha */}
                     {rightButtons && rightButtons.length > 0 ? (
                         <View style={styles.rightButtonsContainer}>
-                            {rightButtons.map((button, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.rightButton}
-                                    onPress={button.onPress}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons name={button.icon} size={24} color={whiteBackground ? "#2C3E50" : "#fff"} />
-                                    {button.badge && button.badge > 0 && (
-                                        <View style={styles.badge}>
-                                            <Text style={styles.badgeText}>
-                                                {button.badge > 99 ? '99+' : button.badge}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                            {rightButtons.map((button, index) => {
+                                const IconComponent = button.iconComponent || Ionicons;
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={styles.rightButton}
+                                        onPress={button.onPress}
+                                        activeOpacity={0.7}
+                                    >
+                                        <IconComponent name={button.icon} size={24} color={whiteBackground ? "#2C3E50" : "#fff"} />
+                                        {button.badge && button.badge > 0 && (
+                                            <View style={styles.badge}>
+                                                <Text style={styles.badgeText}>
+                                                    {button.badge > 99 ? '99+' : button.badge}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </View>
                     ) : rightIcon && onRightPress ? (
                         <TouchableOpacity

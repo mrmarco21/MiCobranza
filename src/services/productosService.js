@@ -33,16 +33,16 @@ const validarProducto = (producto) => {
   return true;
 };
 
-// Registrar nuevo producto
-export const registrarProducto = async (productoData, imagenUri = null) => {
+// Registrar nuevo producto con múltiples imágenes
+export const registrarProducto = async (productoData, imagenesUris = []) => {
   validarProducto(productoData);
-  return await productosRepo.create(productoData, imagenUri);
+  return await productosRepo.create(productoData, imagenesUris);
 };
 
-// Actualizar producto existente
-export const actualizarProducto = async (id, productoData, imagenUri = null) => {
+// Actualizar producto existente con múltiples imágenes
+export const actualizarProducto = async (id, productoData, imagenesUris = []) => {
   validarProducto(productoData);
-  const producto = await productosRepo.update(id, productoData, imagenUri);
+  const producto = await productosRepo.update(id, productoData, imagenesUris);
   
   if (!producto) {
     throw new Error('Producto no encontrado');

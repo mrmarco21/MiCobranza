@@ -68,26 +68,43 @@ export const getById = async (id) => {
   return productos.find(p => p.id === id) || null;
 };
 
-// Crear producto con imagen
-export const create = async (productoData, imagenUri = null) => {
+// Crear producto con múltiples imágenes
+export const create = async (productoData, imagenesUris = []) => {
   const productos = await getAll();
   
   const productoId = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  let imagenPath = null;
-  if (imagenUri) {
-    imagenPath = await saveImageToFileSystem(imagenUri, productoId);
+  // Guardar todas las imágenes
+  const imagenesPaths = [];
+  if (imagenesUris && imagenesUris.length > 0) {
+    for (let i = 0; i < imagenesUris.length; i++) {
+      const imagenPath = await saveImageToFileSystem(imagenesUris[i], `${productoId}_${i}`);
+      if (imagenPath) {
+        imagenesPaths.push(imagenPath);
+      }
+    }
   }
 
   const nuevoProducto = {
     id: productoId,
+    sku: productoData.sku || productoId,
+    codigosAlternativos: productoData.codigosAlternativos || [],
     nombre: productoData.nombre,
     categoria: productoData.categoria,
+    marca: productoData.marca || '',
+    descripcion: productoData.descripcion || '',
+    talla: productoData.talla || '',
+    color: productoData.color || '',
+    modelo: productoData.modelo || '',
     precioCompra: parseFloat(productoData.precioCompra) || 0,
     precioVenta: parseFloat(productoData.precioVenta) || 0,
     stock: parseInt(productoData.stock) || 0,
     stockMinimo: parseInt(productoData.stockMinimo) || 5,
-    imagen: imagenPath,
+    unidadMedida: productoData.unidadMedida || 'Unidad',
+    proveedor: productoData.proveedor || '',
+    estado: productoData.estado || 'Activo',
+    imagen: imagenesPaths.length > 0 ? imagenesPaths[0] : null, // Imagen principal (retrocompatibilidad)
+    imagenes: imagenesPaths, // Array de todas las imágenes
     fechaCreacion: new Date().toISOString(),
     activo: true,
   };
@@ -101,34 +118,55 @@ export const create = async (productoData, imagenUri = null) => {
   return nuevoProducto;
 };
 
-// Actualizar producto
-export const update = async (id, productoData, imagenUri = null) => {
+// Actualizar producto con múltiples imágenes
+export const update = async (id, productoData, imagenesUris = []) => {
   const productos = await getAll();
   const index = productos.findIndex(p => p.id === id);
   
   if (index === -1) return null;
 
-  let imagenPath = productos[index].imagen; // Mantener imagen actual por defecto
+  // Mantener imágenes actuales por defecto
+  let imagenesPaths = productos[index].imagenes || [];
   
-  if (imagenUri) {
-    // Si hay una nueva imagen, eliminar la anterior
-    if (productos[index].imagen) {
-      await deleteImageFromFileSystem(productos[index].imagen);
+  // Si se proporcionan nuevas imágenes
+  if (imagenesUris && imagenesUris.length > 0) {
+    // Eliminar imágenes anteriores del sistema de archivos
+    if (productos[index].imagenes && productos[index].imagenes.length > 0) {
+      for (const imgPath of productos[index].imagenes) {
+        await deleteImageFromFileSystem(imgPath);
+      }
     }
     
-    // Guardar la nueva imagen
-    imagenPath = await saveImageToFileSystem(imagenUri, id);
+    // Guardar las nuevas imágenes
+    imagenesPaths = [];
+    for (let i = 0; i < imagenesUris.length; i++) {
+      const imagenPath = await saveImageToFileSystem(imagenesUris[i], `${id}_${i}`);
+      if (imagenPath) {
+        imagenesPaths.push(imagenPath);
+      }
+    }
   }
 
   productos[index] = {
     ...productos[index],
+    sku: productoData.sku || productos[index].sku,
+    codigosAlternativos: productoData.codigosAlternativos || productos[index].codigosAlternativos || [],
     nombre: productoData.nombre,
     categoria: productoData.categoria,
+    marca: productoData.marca || '',
+    descripcion: productoData.descripcion || '',
+    talla: productoData.talla || '',
+    color: productoData.color || '',
+    modelo: productoData.modelo || '',
     precioCompra: parseFloat(productoData.precioCompra),
     precioVenta: parseFloat(productoData.precioVenta),
     stock: parseInt(productoData.stock),
     stockMinimo: parseInt(productoData.stockMinimo),
-    imagen: imagenPath,
+    unidadMedida: productoData.unidadMedida || 'Unidad',
+    proveedor: productoData.proveedor || '',
+    estado: productoData.estado || 'Activo',
+    imagen: imagenesPaths.length > 0 ? imagenesPaths[0] : null, // Imagen principal
+    imagenes: imagenesPaths, // Array de todas las imágenes
   };
 
   await setData(KEYS.PRODUCTOS, productos);
@@ -146,8 +184,13 @@ export const deleteProducto = async (id) => {
   
   if (index === -1) return false;
   
-  // Eliminar imagen asociada
-  if (productos[index].imagen) {
+  // Eliminar todas las imágenes asociadas
+  if (productos[index].imagenes && productos[index].imagenes.length > 0) {
+    for (const imgPath of productos[index].imagenes) {
+      await deleteImageFromFileSystem(imgPath);
+    }
+  } else if (productos[index].imagen) {
+    // Retrocompatibilidad: eliminar imagen única
     await deleteImageFromFileSystem(productos[index].imagen);
   }
   
@@ -166,15 +209,36 @@ export const getActivos = async () => {
   return productos.filter(p => p.activo);
 };
 
-// Buscar productos por nombre o categoría
+// Buscar productos por nombre, SKU, marca, categoría, códigos alternativos (búsqueda flexible)
 export const buscar = async (termino) => {
   const productos = await getActivos();
-  const terminoLower = termino.toLowerCase();
+  const terminoLower = termino.toLowerCase().trim();
   
-  return productos.filter(p => 
-    p.nombre.toLowerCase().includes(terminoLower) ||
-    p.categoria.toLowerCase().includes(terminoLower)
-  );
+  // Si no hay término de búsqueda, devolver todos
+  if (!terminoLower) return productos;
+  
+  // Dividir el término en palabras para búsqueda más flexible
+  const palabras = terminoLower.split(/\s+/);
+  
+  return productos.filter(p => {
+    // Incluir códigos alternativos en la búsqueda
+    const codigosAlternativosTexto = (p.codigosAlternativos || []).join(' ');
+    
+    const textoCompleto = `
+      ${p.nombre} 
+      ${p.sku || ''} 
+      ${p.marca || ''} 
+      ${p.categoria || ''} 
+      ${p.descripcion || ''}
+      ${p.talla || ''}
+      ${p.color || ''}
+      ${p.modelo || ''}
+      ${codigosAlternativosTexto}
+    `.toLowerCase();
+    
+    // El producto debe contener todas las palabras buscadas (en cualquier orden)
+    return palabras.every(palabra => textoCompleto.includes(palabra));
+  });
 };
 
 // Obtener productos por categoría

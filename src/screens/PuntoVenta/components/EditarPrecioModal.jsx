@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../shared/hooks/useTheme';
-import { formatCurrency } from '../../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../../shared/utils/helpers';
 
 export default function EditarPrecioModal({ visible, onClose, producto, onGuardar }) {
     const { colors } = useTheme();
@@ -44,7 +44,9 @@ export default function EditarPrecioModal({ visible, onClose, producto, onGuarda
 
                             <View style={styles.content}>
                                 <Text style={styles.title}>Editar Precio</Text>
-                                <Text style={styles.productoNombre}>{producto.nombre}</Text>
+                                <Text style={styles.productoNombre}>
+                                    {obtenerNombreProductoCompleto(producto)}
+                                </Text>
 
                                 <View style={styles.inputContainer}>
                                     <Ionicons name="cash-outline" size={24} color="#29B6F6" style={styles.inputIcon} />

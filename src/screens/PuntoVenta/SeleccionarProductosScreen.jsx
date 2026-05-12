@@ -1,14 +1,15 @@
 ﻿import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, TextInput, StatusBar, Modal, Animated } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, TextInput, StatusBar, Modal, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { obtenerProductos, buscarProductos } from '../../services/productosService';
 import * as categoriasRepo from '../../data/categoriasRepository';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import EmptyState from '../../shared/components/EmptyState';
+import BarcodeScannerModal from '../../shared/components/BarcodeScannerModal';
 import { useTheme } from '../../shared/hooks/useTheme';
 
 export default function SeleccionarProductosScreen({ route, navigation }) {
@@ -25,6 +26,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
     const [productosChecked, setProductosChecked] = useState([]); // IDs de productos con checkbox marcado
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('all'); // 'all' o ID de categoría
+    const [scannerVisible, setScannerVisible] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -75,6 +77,25 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
 
         // Aplicar filtro de categoría si hay uno seleccionado
         aplicarFiltroCategoria(resultados);
+    };
+
+    const handleBarcodeScanned = async (barcode) => {
+        // Buscar producto por código de barras
+        setBusqueda(barcode);
+        const busquedaResultados = await buscarProductos(barcode);
+        const resultados = busquedaResultados.filter(p => p.stock > 0);
+
+        if (resultados.length > 0) {
+            // Si se encuentra un producto, agregarlo automáticamente
+            handleAgregarProducto(resultados[0]);
+        } else {
+            // Si no se encuentra, mostrar mensaje
+            Alert.alert(
+                'Producto no encontrado',
+                `No se encontró ningún producto con el código de barras: ${barcode}`,
+                [{ text: 'OK' }]
+            );
+        }
     };
 
     const aplicarFiltroCategoria = (productosBase) => {
@@ -221,7 +242,11 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                 </TouchableOpacity>
 
                 <View style={styles.productoContent}>
-                    <View style={styles.imagenContainer}>
+                    <TouchableOpacity
+                        style={styles.imagenContainer}
+                        onPress={() => navigation.navigate('DetalleProducto', { productoId: item.id })}
+                        activeOpacity={0.7}
+                    >
                         {item.imagen ? (
                             <Image source={{ uri: item.imagen }} style={styles.imagen} />
                         ) : (
@@ -229,10 +254,10 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                                 <Ionicons name="image-outline" size={32} color="#95A5A6" />
                             </View>
                         )}
-                        <TouchableOpacity style={styles.verBtn}>
+                        <View style={styles.verBtn}>
                             <Text style={styles.verTexto}>Ver</Text>
-                        </TouchableOpacity>
-                    </View>
+                        </View>
+                    </TouchableOpacity>
 
                     <View style={styles.productoInfo}>
                         <Text style={styles.stockTexto}>
@@ -240,7 +265,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                         </Text>
                         <Text style={styles.codigoTexto}>({item.id.substring(0, 15)})</Text>
                         <Text style={styles.productoNombre} numberOfLines={2}>
-                            {item.nombre}
+                            {obtenerNombreProductoCompleto(item)}
                         </Text>
                     </View>
 
@@ -269,6 +294,11 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                 showBack
                 whiteBackground
                 rightButtons={[
+                    {
+                        icon: 'barcode-scan',
+                        onPress: () => setScannerVisible(true),
+                        iconComponent: MaterialCommunityIcons
+                    },
                     {
                         icon: 'options-outline',
                         onPress: () => setMostrarFiltros(true)
@@ -400,6 +430,13 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            {/* Modal de escáner de código de barras */}
+            <BarcodeScannerModal
+                visible={scannerVisible}
+                onClose={() => setScannerVisible(false)}
+                onBarcodeScanned={handleBarcodeScanned}
+            />
         </SafeAreaView>
     );
 }

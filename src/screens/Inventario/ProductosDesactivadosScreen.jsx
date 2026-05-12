@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { getData, setData, KEYS } from '../../data/storage';
-import { formatCurrency } from '../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import Header from '../../shared/components/Header';
 import EmptyState from '../../shared/components/EmptyState';
 import { useTheme } from '../../shared/hooks/useTheme';
@@ -36,7 +36,7 @@ export default function ProductosDesactivadosScreen({ navigation }) {
     const handleReactivarProducto = async (producto) => {
         Alert.alert(
             'Reactivar producto',
-            `¿Deseas reactivar "${producto.nombre}"?`,
+            `¿Deseas reactivar "${obtenerNombreProductoCompleto(producto)}"?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
@@ -75,7 +75,7 @@ export default function ProductosDesactivadosScreen({ navigation }) {
     const handleEliminarPermanente = async (producto) => {
         Alert.alert(
             'Eliminar permanentemente',
-            `¿Estás seguro de eliminar permanentemente "${producto.nombre}"? Esta acción no se puede deshacer.`,
+            `¿Estás seguro de eliminar permanentemente "${obtenerNombreProductoCompleto(producto)}"? Esta acción no se puede deshacer.`,
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
@@ -117,7 +117,7 @@ export default function ProductosDesactivadosScreen({ navigation }) {
 
                     <View style={styles.productoInfo}>
                         <Text style={styles.productoNombre} numberOfLines={2}>
-                            {item.nombre}
+                            {obtenerNombreProductoCompleto(item)}
                         </Text>
                         <Text style={styles.categoriaTexto}>{item.categoria}</Text>
                         <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>

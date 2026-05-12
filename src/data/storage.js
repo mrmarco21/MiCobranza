@@ -5,6 +5,7 @@ const KEYS = {
   CUENTAS: 'cuentas',
   MOVIMIENTOS: 'movimientos',
   CATEGORIAS: 'categorias',
+  UNIDADES_MEDIDA: 'unidades_medida',
   PIN: 'user_pin',
   PIN_ATTEMPTS: 'pin_attempts',
   STORE_NAME: 'store_name',

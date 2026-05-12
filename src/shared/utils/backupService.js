@@ -5,6 +5,38 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KEYS } from '../../data/storage';
 
 /**
+ * Convierte una imagen del sistema de archivos a Base64
+ */
+const imageToBase64 = async (imagePath) => {
+  try {
+    if (!imagePath) return null;
+    
+    // Si ya es Base64, devolverla tal cual
+    if (imagePath.startsWith('data:image')) {
+      return imagePath;
+    }
+    
+    // Verificar que el archivo existe
+    const fileInfo = await FileSystem.getInfoAsync(imagePath);
+    if (!fileInfo.exists) {
+      console.warn(`Imagen no encontrada: ${imagePath}`);
+      return null;
+    }
+    
+    // Leer como Base64
+    const base64 = await FileSystem.readAsStringAsync(imagePath, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    
+    // Retornar con el prefijo data:image
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    console.error('Error al convertir imagen a Base64:', error);
+    return null;
+  }
+};
+
+/**
  * Exporta todos los datos de la app a un archivo JSON
  */
 export const exportData = async () => {
@@ -29,8 +61,48 @@ export const exportData = async () => {
     const storeLogo = await AsyncStorage.getItem('store_logo');
     const lockTimeout = await AsyncStorage.getItem('lock_timeout');
 
+    // Procesar productos para incluir imágenes en Base64
+    let productosConImagenes = productos ? JSON.parse(productos) : [];
+    if (productosConImagenes.length > 0) {
+      console.log('📸 Exportando imágenes de productos...');
+      let totalImagenes = 0;
+      
+      productosConImagenes = await Promise.all(
+        productosConImagenes.map(async (producto) => {
+          const productoExportado = { ...producto };
+          
+          // Convertir imagen principal (retrocompatibilidad)
+          if (producto.imagen) {
+            productoExportado.imagen = await imageToBase64(producto.imagen);
+            if (productoExportado.imagen) totalImagenes++;
+          }
+          
+          // Convertir array de imágenes (múltiples imágenes)
+          if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+            const imagenesBase64 = await Promise.all(
+              producto.imagenes.map(async (imagenPath) => {
+                const base64 = await imageToBase64(imagenPath);
+                if (base64) totalImagenes++;
+                return base64;
+              })
+            );
+            productoExportado.imagenes = imagenesBase64.filter(img => img !== null);
+          }
+          
+          return productoExportado;
+        })
+      );
+      console.log(`✅ ${totalImagenes} imágenes exportadas de ${productosConImagenes.length} productos`);
+    }
+
+    // Procesar logo de la tienda
+    let storeLogoBase64 = storeLogo;
+    if (storeLogo && !storeLogo.startsWith('data:image')) {
+      storeLogoBase64 = await imageToBase64(storeLogo);
+    }
+
     const backupData = {
-      version: '2.0', // Nueva versión con todos los datos
+      version: '2.2', // Nueva versión con soporte para múltiples imágenes por producto
       exportDate: new Date().toISOString(),
       data: {
         // Datos principales
@@ -38,8 +110,8 @@ export const exportData = async () => {
         cuentas: cuentas ? JSON.parse(cuentas) : [],
         movimientos: movimientos ? JSON.parse(movimientos) : [],
         
-        // Inventario y ventas
-        productos: productos ? JSON.parse(productos) : [],
+        // Inventario y ventas (con imágenes en Base64)
+        productos: productosConImagenes,
         ventas: ventas ? JSON.parse(ventas) : [],
         categorias: categorias ? JSON.parse(categorias) : [],
         
@@ -50,9 +122,9 @@ export const exportData = async () => {
         // Borradores
         borradores: borradores ? JSON.parse(borradores) : [],
         
-        // Configuración
+        // Configuración (con logo en Base64)
         storeName: storeName || 'Mi Cobranza',
-        storeLogo: storeLogo || null,
+        storeLogo: storeLogoBase64 || null,
         lockTimeout: lockTimeout || '60000',
       },
     };
@@ -153,6 +225,44 @@ export const importData = async () => {
 };
 
 /**
+ * Convierte una imagen Base64 a archivo en el sistema de archivos
+ */
+const base64ToImage = async (base64Data, productId) => {
+  try {
+    if (!base64Data) return null;
+    
+    // Si no es Base64, asumir que es una ruta válida
+    if (!base64Data.startsWith('data:image')) {
+      return base64Data;
+    }
+    
+    // Crear directorio de imágenes si no existe
+    const IMAGES_DIR = `${FileSystem.documentDirectory}product_images/`;
+    const dirInfo = await FileSystem.getInfoAsync(IMAGES_DIR);
+    if (!dirInfo.exists) {
+      await FileSystem.makeDirectoryAsync(IMAGES_DIR, { intermediates: true });
+    }
+    
+    // Extraer el Base64 puro (sin el prefijo data:image)
+    const base64Pure = base64Data.split(',')[1];
+    
+    // Generar nombre único para la imagen
+    const fileName = `${productId}_${Date.now()}.jpg`;
+    const destPath = `${IMAGES_DIR}${fileName}`;
+    
+    // Guardar como archivo
+    await FileSystem.writeAsStringAsync(destPath, base64Pure, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    
+    return destPath;
+  } catch (error) {
+    console.error('Error al convertir Base64 a imagen:', error);
+    return null;
+  }
+};
+
+/**
  * Aplica los datos importados (sobrescribe los actuales)
  */
 export const applyImportedData = async (importedData) => {
@@ -168,8 +278,56 @@ export const applyImportedData = async (importedData) => {
     await AsyncStorage.setItem(KEYS.CUENTAS, JSON.stringify(cuentas || []));
     await AsyncStorage.setItem(KEYS.MOVIMIENTOS, JSON.stringify(movimientos || []));
     
-    // Guardar inventario y ventas
-    if (productos) await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productos));
+    // Procesar productos para restaurar imágenes desde Base64
+    if (productos && productos.length > 0) {
+      console.log('📸 Restaurando imágenes de productos...');
+      let totalImagenes = 0;
+      
+      const productosConImagenesRestauradas = await Promise.all(
+        productos.map(async (producto) => {
+          const productoRestaurado = { ...producto };
+          
+          // Restaurar imagen principal (retrocompatibilidad)
+          if (producto.imagen && producto.imagen.startsWith('data:image')) {
+            const imagenPath = await base64ToImage(producto.imagen, producto.id);
+            productoRestaurado.imagen = imagenPath;
+            if (imagenPath) totalImagenes++;
+          }
+          
+          // Restaurar array de imágenes (múltiples imágenes)
+          if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+            const imagenesRestauradas = [];
+            for (let i = 0; i < producto.imagenes.length; i++) {
+              const imagenBase64 = producto.imagenes[i];
+              if (imagenBase64 && imagenBase64.startsWith('data:image')) {
+                const imagenPath = await base64ToImage(imagenBase64, `${producto.id}_${i}`);
+                if (imagenPath) {
+                  imagenesRestauradas.push(imagenPath);
+                  totalImagenes++;
+                }
+              } else if (imagenBase64) {
+                // Si no es Base64, mantener la ruta (compatibilidad con backups antiguos)
+                imagenesRestauradas.push(imagenBase64);
+              }
+            }
+            productoRestaurado.imagenes = imagenesRestauradas;
+            
+            // Actualizar imagen principal si no existe
+            if (!productoRestaurado.imagen && imagenesRestauradas.length > 0) {
+              productoRestaurado.imagen = imagenesRestauradas[0];
+            }
+          }
+          
+          return productoRestaurado;
+        })
+      );
+      
+      await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productosConImagenesRestauradas));
+      console.log(`✅ ${totalImagenes} imágenes restauradas de ${productosConImagenesRestauradas.length} productos`);
+    } else if (productos) {
+      await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productos));
+    }
+    
     if (ventas) await AsyncStorage.setItem(KEYS.VENTAS, JSON.stringify(ventas));
     if (categorias) await AsyncStorage.setItem(KEYS.CATEGORIAS, JSON.stringify(categorias));
     
@@ -185,8 +343,14 @@ export const applyImportedData = async (importedData) => {
       await AsyncStorage.setItem('store_name', storeName);
     }
 
+    // Restaurar logo de la tienda desde Base64
     if (storeLogo) {
-      await AsyncStorage.setItem('store_logo', storeLogo);
+      if (storeLogo.startsWith('data:image')) {
+        const logoPath = await base64ToImage(storeLogo, 'store_logo');
+        await AsyncStorage.setItem('store_logo', logoPath || storeLogo);
+      } else {
+        await AsyncStorage.setItem('store_logo', storeLogo);
+      }
     }
     
     if (lockTimeout) {
@@ -260,18 +424,54 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar productos
     if (productos && productos.length > 0) {
+      console.log('📸 Restaurando imágenes de productos (fusión)...');
       const currentProductos = await AsyncStorage.getItem(KEYS.PRODUCTOS);
       const existingProductos = currentProductos ? JSON.parse(currentProductos) : [];
       const mergedProductos = [...existingProductos];
+      let totalImagenes = 0;
       
-      productos.forEach((newItem) => {
+      // Procesar cada producto importado
+      for (const newItem of productos) {
         if (!mergedProductos.find((item) => item.id === newItem.id)) {
-          mergedProductos.push(newItem);
+          const productoRestaurado = { ...newItem };
+          
+          // Restaurar imagen principal
+          if (newItem.imagen && newItem.imagen.startsWith('data:image')) {
+            const imagenPath = await base64ToImage(newItem.imagen, newItem.id);
+            productoRestaurado.imagen = imagenPath;
+            if (imagenPath) totalImagenes++;
+          }
+          
+          // Restaurar array de imágenes (múltiples imágenes)
+          if (newItem.imagenes && Array.isArray(newItem.imagenes) && newItem.imagenes.length > 0) {
+            const imagenesRestauradas = [];
+            for (let i = 0; i < newItem.imagenes.length; i++) {
+              const imagenBase64 = newItem.imagenes[i];
+              if (imagenBase64 && imagenBase64.startsWith('data:image')) {
+                const imagenPath = await base64ToImage(imagenBase64, `${newItem.id}_${i}`);
+                if (imagenPath) {
+                  imagenesRestauradas.push(imagenPath);
+                  totalImagenes++;
+                }
+              } else if (imagenBase64) {
+                imagenesRestauradas.push(imagenBase64);
+              }
+            }
+            productoRestaurado.imagenes = imagenesRestauradas;
+            
+            // Actualizar imagen principal si no existe
+            if (!productoRestaurado.imagen && imagenesRestauradas.length > 0) {
+              productoRestaurado.imagen = imagenesRestauradas[0];
+            }
+          }
+          
+          mergedProductos.push(productoRestaurado);
         }
-      });
+      }
       
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(mergedProductos));
       added.productos = mergedProductos.length - existingProductos.length;
+      console.log(`✅ ${added.productos} productos nuevos con ${totalImagenes} imágenes restauradas`);
     }
 
     // Fusionar ventas

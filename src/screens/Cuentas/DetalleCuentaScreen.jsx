@@ -6,8 +6,9 @@ import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as cuentasRepo from '../../data/cuentasRepository';
 import * as categoriasRepo from '../../data/categoriasRepository';
+import * as ventasRepo from '../../data/ventasRepository';
 import { obtenerMovimientosDeCuenta } from '../../services/movimientosService';
-import { formatDate, formatCurrency } from '../../shared/utils/helpers';
+import { formatDate, formatCurrency, obtenerNombreProductoCompleto } from '../../shared/utils/helpers';
 import MovimientoItem from '../Movimientos/components/MovimientoItem';
 import EmptyState from '../../shared/components/EmptyState';
 import Header from '../../shared/components/Header';
@@ -23,9 +24,11 @@ export default function DetalleCuentaScreen({ route, navigation }) {
     const [categorias, setCategorias] = useState([]);
     const [modalDetalleVisible, setModalDetalleVisible] = useState(false);
     const [movimientoSeleccionado, setMovimientoSeleccionado] = useState(null);
+    const [productosVenta, setProductosVenta] = useState([]); // Productos de la venta asociada
 
     // Estados para compartir imagen
     const [modalCompartirVisible, setModalCompartirVisible] = useState(false);
+    const [ventaParaCompartir, setVentaParaCompartir] = useState({});
     const viewShotRef = useRef();
 
     useEffect(() => {
@@ -41,8 +44,22 @@ export default function DetalleCuentaScreen({ route, navigation }) {
         setCategorias(cats);
     };
 
-    const handleMovimientoPress = (movimiento) => {
+    const handleMovimientoPress = async (movimiento) => {
         setMovimientoSeleccionado(movimiento);
+
+        // Si es un CARGO, obtener la venta asociada para mostrar los productos completos
+        if (movimiento.tipo === 'CARGO') {
+            const ventas = await ventasRepo.getAll();
+            const ventaAsociada = ventas.find(v => v.cuentaId === cuentaId && v.tipo !== 'CONTADO');
+            if (ventaAsociada && ventaAsociada.productos) {
+                setProductosVenta(ventaAsociada.productos);
+            } else {
+                setProductosVenta([]);
+            }
+        } else {
+            setProductosVenta([]);
+        }
+
         setModalDetalleVisible(true);
     };
 
@@ -51,8 +68,9 @@ export default function DetalleCuentaScreen({ route, navigation }) {
         if (!comentario) return [];
         const partes = comentario.split(' | ');
         return partes.map(parte => {
-            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 2 [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            // Formato nuevo con cantidad y categoría ID: "LAPICERO - Layconsa - Borrable - AZUL (S/25.00) x 2 [01/01/2026] {ropa-otros}"
+            // Usar .+ (greedy) en lugar de .+? (non-greedy) para capturar todo el nombre hasta el paréntesis
+            const matchCompleto = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchCompleto) {
                 return {
                     descripcion: matchCompleto[1].trim(),
@@ -63,7 +81,7 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                 };
             }
             // Formato con categoría pero sin cantidad (datos antiguos): "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"
-            const matchSinCantidad = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            const matchSinCantidad = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchSinCantidad) {
                 return {
                     descripcion: matchSinCantidad[1].trim(),
@@ -74,7 +92,7 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                 };
             }
             // Formato con fecha pero sin categoría ni cantidad (datos antiguos)
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            const matchConFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
                 return {
                     descripcion: matchConFecha[1].trim(),
@@ -85,7 +103,7 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                 };
             }
             // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            const matchSinFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)$/);
             if (matchSinFecha) {
                 return {
                     descripcion: matchSinFecha[1].trim(),
@@ -111,6 +129,16 @@ export default function DetalleCuentaScreen({ route, navigation }) {
     };
 
     const compartirCuenta = async () => {
+        // Obtener la venta asociada a esta cuenta
+        const todasVentas = await ventasRepo.getAll();
+        const ventaAsociada = todasVentas.find(v => v.cuentaId === cuentaId && v.tipo !== 'CONTADO');
+
+        const ventasPorCuenta = {};
+        if (ventaAsociada) {
+            ventasPorCuenta[cuentaId] = ventaAsociada;
+        }
+
+        setVentaParaCompartir(ventasPorCuenta);
         setModalCompartirVisible(true);
 
         // Esperar un momento para que el modal se renderice
@@ -318,7 +346,52 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                                     </Text>
                                 </View>
 
-                                {movimientoSeleccionado.tipo === 'CARGO' && tienePrendasDesglosadas ? (
+                                {movimientoSeleccionado.tipo === 'CARGO' && productosVenta.length > 0 ? (
+                                    <View style={styles.prendasContainer}>
+                                        <Text style={styles.prendasTitulo}>Detalle de productos</Text>
+
+                                        {/* Header de la tabla */}
+                                        <View style={styles.prendasTableHeader}>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColProducto]}>PRODUCTO</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColPrecio]}>PRECIO</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColCantidad]}>#</Text>
+                                            <Text style={[styles.prendasTableHeaderText, styles.prendasColTotal]}>TOTAL</Text>
+                                        </View>
+
+                                        {/* Filas de productos */}
+                                        {productosVenta.map((producto, index) => {
+                                            const cantidad = producto.cantidad || 1;
+                                            const precioUnitario = producto.precioVenta || 0;
+                                            const totalLinea = precioUnitario * cantidad;
+                                            const nombreCompleto = obtenerNombreProductoCompleto(producto);
+
+                                            return (
+                                                <View key={index} style={styles.prendaTableRow}>
+                                                    <View style={styles.prendasColProducto}>
+                                                        <Text style={styles.prendaDescripcion}>{nombreCompleto}</Text>
+                                                    </View>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColPrecio]}>
+                                                        {formatCurrency(precioUnitario)}
+                                                    </Text>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColCantidad]}>
+                                                        {cantidad}
+                                                    </Text>
+                                                    <Text style={[styles.prendaTableText, styles.prendasColTotal]}>
+                                                        {formatCurrency(totalLinea)}
+                                                    </Text>
+                                                </View>
+                                            );
+                                        })}
+
+                                        {/* Footer con total */}
+                                        <View style={styles.prendasTableFooter}>
+                                            <Text style={styles.prendasFooterLabel}>Total:</Text>
+                                            <Text style={styles.prendasFooterValue}>
+                                                {formatCurrency(movimientoSeleccionado.monto)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ) : movimientoSeleccionado.tipo === 'CARGO' && tienePrendasDesglosadas ? (
                                     <View style={styles.prendasContainer}>
                                         <Text style={styles.prendasTitulo}>Detalle de productos</Text>
 
@@ -340,12 +413,12 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                                                 <View key={index} style={styles.prendaTableRow}>
                                                     <View style={styles.prendasColProducto}>
                                                         <Text style={styles.prendaDescripcion}>{prenda.descripcion}</Text>
-                                                        {prenda.fecha && (
+                                                        {/* {prenda.fecha && (
                                                             <View style={styles.prendaFechaContainer}>
                                                                 <Ionicons name="calendar-outline" size={10} color={colors.textSecondary} />
                                                                 <Text style={styles.prendaFecha}>{prenda.fecha}</Text>
                                                             </View>
-                                                        )}
+                                                        )} */}
                                                     </View>
                                                     <Text style={[styles.prendaTableText, styles.prendasColPrecio]}>
                                                         {precioUnitario !== null ? formatCurrency(precioUnitario) : '-'}
@@ -428,6 +501,7 @@ export default function DetalleCuentaScreen({ route, navigation }) {
                                 movimientosPorCuenta={{
                                     [cuenta.id]: movimientos
                                 }}
+                                ventasPorCuenta={ventaParaCompartir}
                                 categorias={categorias}
                                 mostrarHistorialMovimientos={true}
                             />

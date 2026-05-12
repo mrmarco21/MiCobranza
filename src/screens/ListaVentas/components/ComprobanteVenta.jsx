@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { formatCurrency } from '../../../shared/utils/helpers';
+import { formatCurrency, obtenerNombreProductoCompleto } from '../../../shared/utils/helpers';
 
 export default function ComprobanteVenta({ venta, storeName, storeLogo, deudaActual, estadoPago }) {
     // Formatear fecha
@@ -79,7 +79,7 @@ export default function ComprobanteVenta({ venta, storeName, storeLogo, deudaAct
                     return (
                         <View key={index} style={styles.tablaFila}>
                             <Text style={[styles.tablaTexto, styles.productoNombre, { flex: 2.5 }]}>
-                                {producto.nombre}
+                                {obtenerNombreProductoCompleto(producto)}
                             </Text>
                             <Text style={[styles.tablaTexto, { flex: 1, textAlign: 'right' }]}>
                                 {formatCurrency(producto.precioVenta)}

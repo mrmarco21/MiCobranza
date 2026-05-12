@@ -21,6 +21,7 @@ import CollapsibleSection from '../../shared/components/CollapsibleSection';
 import { exportData, importData, applyImportedData, mergeImportedData } from '../../shared/utils/backupService';
 import { clearAllData } from '../../data/storage';
 import AutoBackupManager from './components/AutoBackupManager';
+import GestionCategoriasUnidades from './components/GestionCategoriasUnidades';
 
 const LOCK_TIMEOUT_KEY = 'lock_timeout';
 const PIN_KEY = 'user_pin';
@@ -561,6 +562,21 @@ export default function ConfiguracionScreen({ navigation }) {
                     </View>
                 </CollapsibleSection>
 
+                {/* Sección de Gestión de Categorías y Unidades */}
+                <CollapsibleSection
+                    title="Categorías y Unidades"
+                    description="Gestiona categorías y unidades de medida"
+                    icon="list-outline"
+                    iconColor="#45beffff"
+                    defaultExpanded={false}
+                >
+                    <Text style={styles.sectionDescription}>
+                        Administra las categorías de productos y las unidades de medida disponibles en tu inventario.
+                    </Text>
+
+                    <GestionCategoriasUnidades showToast={showToast} />
+                </CollapsibleSection>
+
                 {/* Sección de Respaldo y Restauración */}
                 <CollapsibleSection
                     title="Respaldo y Restauración"
@@ -628,7 +644,7 @@ export default function ConfiguracionScreen({ navigation }) {
                     <View style={styles.backupInfo}>
                         <Ionicons name="shield-checkmark" size={18} color="#4CAF50" />
                         <Text style={styles.backupInfoText}>
-                            Los respaldos incluyen todos tus datos: clientes, cuentas, movimientos, productos, ventas, gastos y configuración. El PIN no se exporta por seguridad.
+                            Los respaldos incluyen todos tus datos: clientes, cuentas, movimientos, productos (con sus imágenes), ventas, gastos y configuración. El PIN no se exporta por seguridad.
                         </Text>
                     </View>
                 </CollapsibleSection>

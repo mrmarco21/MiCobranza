@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatCurrency, formatDate } from '../../../shared/utils/helpers';
+import { formatCurrency, formatDate, obtenerNombreProductoCompleto } from '../../../shared/utils/helpers';
 
 export default function ResumenClienteImagen({
     clientaNombre,
@@ -8,6 +8,7 @@ export default function ResumenClienteImagen({
     totalDeuda = 0,
     movimientosPorCuenta = {},
     categorias = [],
+    ventasPorCuenta = {}, // Nueva prop: ventas asociadas a cada cuenta
     mostrarHistorialMovimientos = true // Nueva prop para controlar si se muestra el historial
 }) {
     // Separar cuentas activas y cerradas (excluyendo anuladas)
@@ -19,8 +20,9 @@ export default function ResumenClienteImagen({
         if (!comentario) return [];
         const partes = comentario.split(' | ');
         return partes.map(parte => {
-            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 2 [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            // Formato nuevo con cantidad y categoría ID: "LAPICERO - Layconsa - Borrable - AZUL (S/25.00) x 2 [01/01/2026] {ropa-otros}"
+            // Usar .+ (greedy) en lugar de .+? (non-greedy) para capturar todo el nombre hasta el paréntesis
+            const matchCompleto = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchCompleto) {
                 return {
                     descripcion: matchCompleto[1].trim(),
@@ -31,7 +33,7 @@ export default function ResumenClienteImagen({
                 };
             }
             // Formato con categoría pero sin cantidad (datos antiguos)
-            const matchSinCantidad = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            const matchSinCantidad = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchSinCantidad) {
                 return {
                     descripcion: matchSinCantidad[1].trim(),
@@ -42,7 +44,7 @@ export default function ResumenClienteImagen({
                 };
             }
             // Formato con fecha pero sin categoría ni cantidad
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            const matchConFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
                 return {
                     descripcion: matchConFecha[1].trim(),
@@ -53,7 +55,7 @@ export default function ResumenClienteImagen({
                 };
             }
             // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            const matchSinFecha = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)$/);
             if (matchSinFecha) {
                 return {
                     descripcion: matchSinFecha[1].trim(),
@@ -72,8 +74,22 @@ export default function ResumenClienteImagen({
         return comentario.replace(/\s*\[\d{2}\/\d{2}\/\d{4}\]$/, '').trim();
     };
 
-    // Obtener productos de una cuenta
+    // Obtener productos de una cuenta desde la venta asociada
     const obtenerProductosDeCuenta = (cuentaId) => {
+        // Primero intentar obtener de la venta
+        const venta = ventasPorCuenta[cuentaId];
+        if (venta && venta.productos && venta.productos.length > 0) {
+            // Usar productos de la venta con nombres completos
+            return venta.productos.map(p => ({
+                descripcion: obtenerNombreProductoCompleto(p),
+                monto: p.precioVenta,
+                cantidad: p.cantidad || 1,
+                fecha: null,
+                categoria: p.categoria
+            }));
+        }
+
+        // Fallback: parsear del comentario (para ventas antiguas)
         const movimientos = movimientosPorCuenta[cuentaId] || [];
         const cargos = movimientos.filter(m => m.tipo === 'CARGO');
 

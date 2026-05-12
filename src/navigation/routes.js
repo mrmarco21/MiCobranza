@@ -31,6 +31,7 @@ const ROUTES = {
     // ── Inventario ───────────────────────────────────────────────
     INVENTARIO: 'Inventario',
     ADD_PRODUCTO: 'AddProducto',
+    DETALLE_PRODUCTO: 'DetalleProducto',
     PRODUCTOS_DESACTIVADOS: 'ProductosDesactivados',
 
     // ── Punto de Venta ───────────────────────────────────────────

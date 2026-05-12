@@ -253,8 +253,8 @@ export default function CobroScreen({ route, navigation }) {
                                 ? `${comentario.trim()} ${fechaStr}`
                                 : fechaStr;
 
-                            // Preparar objeto de métodos de pago
-                            const metodosPagoObj = {
+                            // Preparar objeto de métodos de pago totales
+                            const metodosPagoTotales = {
                                 efectivo: 0,
                                 yape: 0,
                                 transferencia: 0
@@ -262,17 +262,27 @@ export default function CobroScreen({ route, navigation }) {
 
                             metodosPago.forEach(metodo => {
                                 if (metodo.id === 'efectivo') {
-                                    metodosPagoObj.efectivo = metodo.monto;
+                                    metodosPagoTotales.efectivo = metodo.monto;
                                 } else if (metodo.id === 'yape') {
-                                    metodosPagoObj.yape = metodo.monto;
+                                    metodosPagoTotales.yape = metodo.monto;
                                 } else if (metodo.id === 'transferencia') {
-                                    metodosPagoObj.transferencia = metodo.monto;
+                                    metodosPagoTotales.transferencia = metodo.monto;
                                 }
                             });
 
                             for (const cuenta of cuentasActivas) {
                                 const monto = parseFloat(montoPorCuenta[cuenta.id]) || 0;
                                 if (monto > 0) {
+                                    // Calcular la proporción de este abono respecto al total
+                                    const proporcion = monto / totalCobro;
+
+                                    // Distribuir los métodos de pago proporcionalmente
+                                    const metodosPagoObj = {
+                                        efectivo: metodosPagoTotales.efectivo * proporcion,
+                                        yape: metodosPagoTotales.yape * proporcion,
+                                        transferencia: metodosPagoTotales.transferencia * proporcion
+                                    };
+
                                     await registrarMovimiento(cuenta.id, 'ABONO', monto, descripcionFinal, metodosPagoObj);
                                 }
                             }
@@ -378,35 +388,7 @@ export default function CobroScreen({ route, navigation }) {
                         </View>
                     </View>
 
-                    {/* ── DISTRIBUCIÓN RÁPIDA (solo con 2+ cuentas) ── */}
-                    {cuentasActivas.length >= 2 && (
-                        <View style={styles.seccion}>
-                            <View style={styles.seccionTituloRow}>
-                                <Ionicons name="flash-outline" size={15} color={colors.primary} />
-                                <Text style={styles.seccionTitulo}>Distribución rápida</Text>
-                            </View>
-                            <View style={styles.distribuirCard}>
-                                <Text style={styles.distribuirHint}>Ingresa el monto total y lo distribuimos entre tus cuentas automáticamente</Text>
-                                <View style={styles.distribuirRow}>
-                                    <View style={styles.distribuirInputWrapper}>
-                                        <Text style={styles.distribuirCurrency}>S/</Text>
-                                        <TextInput
-                                            style={styles.distribuirInput}
-                                            value={montoTotal}
-                                            onChangeText={setMontoTotal}
-                                            placeholder="0.00"
-                                            placeholderTextColor={colors.textSecondary}
-                                            keyboardType="decimal-pad"
-                                        />
-                                    </View>
-                                    <TouchableOpacity style={styles.botonDistribuir} onPress={distribuirMontoEquitativo} activeOpacity={0.8}>
-                                        <Ionicons name="git-compare-outline" size={16} color="#FFF" />
-                                        <Text style={styles.botonDistribuirTexto}>Distribuir</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    )}
+
 
                     {/* ── CUENTAS ACTIVAS ── */}
                     <View style={styles.seccion}>

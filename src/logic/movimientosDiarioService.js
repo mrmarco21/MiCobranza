@@ -2,6 +2,7 @@ import * as ventasRepo from '../data/ventasRepository';
 import * as gastosRepo from '../data/gastosRepository';
 import * as movimientosRepo from '../data/movimientosRepository';
 import * as cuentasRepo from '../data/cuentasRepository';
+import * as clientasRepo from '../data/clientasRepository';
 
 /**
  * Obtiene todos los movimientos de efectivo de un día específico
@@ -32,6 +33,9 @@ export const obtenerMovimientosDiarios = async (fecha = new Date()) => {
 
   // Obtener todas las cuentas para relacionar abonos con clientes
   const cuentas = await cuentasRepo.getAll();
+  
+  // Obtener todas las clientas para obtener sus nombres
+  const clientas = await clientasRepo.getAll();
 
   // Procesar movimientos
   const movimientos = [];
@@ -111,70 +115,38 @@ export const obtenerMovimientosDiarios = async (fecha = new Date()) => {
   // 3. Agregar abonos (cobros de deudas)
   abonosDelDia.forEach(abono => {
     const cuenta = cuentas.find(c => c.id === abono.cuentaId);
+    const clienta = cuenta ? clientas.find(cl => cl.id === cuenta.clientaId) : null;
+    const nombreCliente = clienta?.nombre || 'Cliente';
     
-    // Si el abono tiene métodos de pago desglosados, crear un movimiento por cada método
+    // Determinar el método de pago principal (el que tiene mayor monto)
+    let metodoPagoPrincipal = 'EFECTIVO';
     if (abono.metodosPago && typeof abono.metodosPago === 'object') {
       const metodos = abono.metodosPago;
+      const maxMonto = Math.max(metodos.efectivo || 0, metodos.yape || 0, metodos.transferencia || 0);
       
-      if (metodos.efectivo > 0) {
-        movimientos.push({
-          id: `abono-${abono.id}-efectivo`,
-          tipo: 'INGRESO',
-          categoria: 'COBRO_DEUDA',
-          descripcion: abono.comentario || 'Cobro de deuda',
-          monto: metodos.efectivo,
-          metodoPago: 'EFECTIVO',
-          clienteNombre: cuenta?.clientaNombre || 'Cliente',
-          fecha: abono.fecha,
-          abonoId: abono.id,
-          cuentaId: abono.cuentaId,
-        });
+      if (maxMonto === metodos.yape) {
+        metodoPagoPrincipal = 'YAPE';
+      } else if (maxMonto === metodos.transferencia) {
+        metodoPagoPrincipal = 'TRANSFERENCIA';
+      } else {
+        metodoPagoPrincipal = 'EFECTIVO';
       }
-      
-      if (metodos.yape > 0) {
-        movimientos.push({
-          id: `abono-${abono.id}-yape`,
-          tipo: 'INGRESO',
-          categoria: 'COBRO_DEUDA',
-          descripcion: abono.comentario || 'Cobro de deuda',
-          monto: metodos.yape,
-          metodoPago: 'YAPE',
-          clienteNombre: cuenta?.clientaNombre || 'Cliente',
-          fecha: abono.fecha,
-          abonoId: abono.id,
-          cuentaId: abono.cuentaId,
-        });
-      }
-      
-      if (metodos.transferencia > 0) {
-        movimientos.push({
-          id: `abono-${abono.id}-transferencia`,
-          tipo: 'INGRESO',
-          categoria: 'COBRO_DEUDA',
-          descripcion: abono.comentario || 'Cobro de deuda',
-          monto: metodos.transferencia,
-          metodoPago: 'TRANSFERENCIA',
-          clienteNombre: cuenta?.clientaNombre || 'Cliente',
-          fecha: abono.fecha,
-          abonoId: abono.id,
-          cuentaId: abono.cuentaId,
-        });
-      }
-    } else {
-      // Si no tiene desglose, usar el método de pago simple
-      movimientos.push({
-        id: `abono-${abono.id}`,
-        tipo: 'INGRESO',
-        categoria: 'COBRO_DEUDA',
-        descripcion: abono.comentario || 'Cobro de deuda',
-        monto: abono.monto,
-        metodoPago: abono.metodoPago || 'EFECTIVO',
-        clienteNombre: cuenta?.clientaNombre || 'Cliente',
-        fecha: abono.fecha,
-        abonoId: abono.id,
-        cuentaId: abono.cuentaId,
-      });
     }
+    
+    // Crear UN SOLO movimiento por abono con el monto total
+    movimientos.push({
+      id: `abono-${abono.id}`,
+      tipo: 'INGRESO',
+      categoria: 'COBRO_DEUDA',
+      descripcion: abono.comentario || 'Cobro de deuda',
+      monto: abono.monto,
+      metodoPago: metodoPagoPrincipal,
+      clienteNombre: nombreCliente,
+      fecha: abono.fecha,
+      abonoId: abono.id,
+      cuentaId: abono.cuentaId,
+      metodosPagoDetalle: abono.metodosPago, // Guardar el detalle para mostrarlo en la UI
+    });
   });
 
   // 4. Agregar gastos (egresos)
