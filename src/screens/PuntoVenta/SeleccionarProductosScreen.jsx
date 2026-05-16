@@ -133,12 +133,12 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
     };
 
     const handleAgregarProducto = (producto) => {
-        console.log('🔍 SeleccionarProductos - Agregar individual:', {
-            nombre: producto.nombre,
-            categoria: producto.categoria,
-            categoriaType: typeof producto.categoria,
-            todasLasProps: Object.keys(producto)
-        });
+        // console.log('🔍 SeleccionarProductos - Agregar individual:', {
+        //     nombre: producto.nombre,
+        //     categoria: producto.categoria,
+        //     categoriaType: typeof producto.categoria,
+        //     todasLasProps: Object.keys(producto)
+        // });
 
         const existe = productosSeleccionados.find(p => p.id === producto.id);
         let nuevosProductos;
@@ -160,11 +160,11 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
             ];
         }
 
-        console.log('📤 SeleccionarProductos - Enviando producto individual:', nuevosProductos.map(p => ({
-            nombre: p.nombre,
-            categoria: p.categoria,
-            categoriaType: typeof p.categoria
-        })));
+        // console.log('📤 SeleccionarProductos - Enviando producto individual:', nuevosProductos.map(p => ({
+        //     nombre: p.nombre,
+        //     categoria: p.categoria,
+        //     categoriaType: typeof p.categoria
+        // })));
 
         // Regresar inmediatamente a Punto de Venta con el producto agregado
         navigation.navigate('PuntoVenta', {
@@ -187,12 +187,12 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
         productosChecked.forEach(productoId => {
             const producto = productos.find(p => p.id === productoId);
             if (producto) {
-                console.log('🔍 SeleccionarProductos - Producto encontrado:', {
-                    nombre: producto.nombre,
-                    categoria: producto.categoria,
-                    categoriaType: typeof producto.categoria,
-                    todasLasProps: Object.keys(producto)
-                });
+                // console.log('🔍 SeleccionarProductos - Producto encontrado:', {
+                //     nombre: producto.nombre,
+                //     categoria: producto.categoria,
+                //     categoriaType: typeof producto.categoria,
+                //     todasLasProps: Object.keys(producto)
+                // });
                 const existe = nuevosProductos.find(p => p.id === productoId);
                 if (existe) {
                     // Si ya existe, incrementar cantidad (sin exceder stock)
@@ -210,11 +210,11 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
             }
         });
 
-        console.log('📤 SeleccionarProductos - Enviando productos:', nuevosProductos.map(p => ({
-            nombre: p.nombre,
-            categoria: p.categoria,
-            categoriaType: typeof p.categoria
-        })));
+        // console.log('📤 SeleccionarProductos - Enviando productos:', nuevosProductos.map(p => ({
+        //     nombre: p.nombre,
+        //     categoria: p.categoria,
+        //     categoriaType: typeof p.categoria
+        // })));
 
         // Navegar de vuelta con los productos
         navigation.navigate('PuntoVenta', {

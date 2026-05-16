@@ -175,7 +175,7 @@ export default function MenuModal({ visible, onClose, navigation }) {
                                 <Image source={{ uri: storeLogo }} style={styles.logoImage} />
                             ) : (
                                 <Image
-                                    source={require('../../../assets/icon_app.jpg')}
+                                    source={require('../../../assets/icon_app.png')}
                                     style={styles.logoImage}
                                 />
                             )}
@@ -213,7 +213,7 @@ export default function MenuModal({ visible, onClose, navigation }) {
 
                     {/* Footer */}
                     <View style={[styles.footer, { paddingBottom: insets.bottom + 8 }]}>
-                        <Text style={styles.footerText}>Versión 0.0.3</Text>
+                        <Text style={styles.footerText}>Versión 0.0.6</Text>
                     </View>
                 </Animated.View>
             </Animated.View>

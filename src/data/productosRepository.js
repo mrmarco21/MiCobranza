@@ -298,7 +298,7 @@ export const migrateBase64ImagesToFiles = async () => {
       
       // Si el producto tiene una imagen en formato Base64
       if (producto.imagen && producto.imagen.startsWith('data:image')) {
-        console.log(`Migrando imagen del producto: ${producto.nombre}`);
+        // console.log(`Migrando imagen del producto: ${producto.nombre}`);
         
         // Guardar como archivo
         const imagenPath = await saveImageToFileSystem(producto.imagen, producto.id);
@@ -312,9 +312,9 @@ export const migrateBase64ImagesToFiles = async () => {
     
     if (migrated > 0) {
       await setData(KEYS.PRODUCTOS, productos);
-      console.log(`✅ Migración completada: ${migrated} imágenes convertidas a archivos`);
+      // console.log(`✅ Migración completada: ${migrated} imágenes convertidas a archivos`);
     } else {
-      console.log('✅ No hay imágenes para migrar');
+      // console.log('✅ No hay imágenes para migrar');
     }
     
     return { success: true, migrated };

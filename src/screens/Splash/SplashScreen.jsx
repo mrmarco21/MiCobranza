@@ -114,7 +114,7 @@ export default function SplashScreen({ onFinish }) {
                     />
                 ) : (
                     <Image
-                        source={require('../../../assets/icon_app.jpg')}
+                        source={require('../../../assets/icon_app.png')}
                         style={styles.logo}
                         resizeMode="contain"
                     />

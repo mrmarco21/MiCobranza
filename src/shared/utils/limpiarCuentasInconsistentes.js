@@ -9,11 +9,11 @@ import * as movimientosRepo from '../../data/movimientosRepository';
 
 export const limpiarCuentasInconsistentes = async () => {
   try {
-    console.log('🧹 Iniciando limpieza de cuentas inconsistentes...');
+    // console.log('🧹 Iniciando limpieza de cuentas inconsistentes...');
     
     // Obtener todas las cuentas
     const todasLasCuentas = await cuentasRepo.getAll();
-    console.log(`📊 Total de cuentas: ${todasLasCuentas.length}`);
+    // console.log(`📊 Total de cuentas: ${todasLasCuentas.length}`);
     
     // Obtener todas las ventas
     const todasLasVentas = await ventasRepo.getAll();
@@ -36,12 +36,12 @@ export const limpiarCuentasInconsistentes = async () => {
       
       // Si todas las ventas están anuladas O no tiene movimientos, cerrar/anular la cuenta
       if ((todasAnuladas || noTieneMovimientos) && cuenta.estado === 'ACTIVA') {
-        console.log(`🔧 Corrigiendo cuenta ${cuenta.id}:`, {
-          ventasAsociadas: ventasAsociadas.length,
-          todasAnuladas,
-          movimientos: movimientosCuenta.length,
-          saldoActual: cuenta.saldo
-        });
+        // console.log(`🔧 Corrigiendo cuenta ${cuenta.id}:`, {
+        //   ventasAsociadas: ventasAsociadas.length,
+        //   todasAnuladas,
+        //   movimientos: movimientosCuenta.length,
+        //   saldoActual: cuenta.saldo
+        // });
         
         // Eliminar todos los movimientos de esta cuenta
         for (const movimiento of movimientosCuenta) {
@@ -57,11 +57,11 @@ export const limpiarCuentasInconsistentes = async () => {
         });
         
         cuentasCorregidas++;
-        console.log(`✅ Cuenta ${cuenta.id} ${todasAnuladas ? 'anulada' : 'cerrada'} correctamente`);
+        // console.log(`✅ Cuenta ${cuenta.id} ${todasAnuladas ? 'anulada' : 'cerrada'} correctamente`);
       }
     }
     
-    console.log(`🎉 Limpieza completada. Cuentas corregidas: ${cuentasCorregidas}`);
+    // console.log(`🎉 Limpieza completada. Cuentas corregidas: ${cuentasCorregidas}`);
     return { success: true, cuentasCorregidas };
     
   } catch (error) {

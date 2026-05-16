@@ -22,11 +22,11 @@ export const useImageMigration = () => {
         const migrationCompleted = await AsyncStorage.getItem(MIGRATION_KEY);
         
         if (migrationCompleted === 'true') {
-          console.log('✅ Migración de imágenes ya completada anteriormente');
+          // console.log('✅ Migración de imágenes ya completada anteriormente');
           return;
         }
 
-        console.log('🔄 Iniciando migración de imágenes Base64 a archivos...');
+        // console.log('🔄 Iniciando migración de imágenes Base64 a archivos...');
         
         // Ejecutar migración
         const result = await migrateBase64ImagesToFiles();
@@ -36,7 +36,7 @@ export const useImageMigration = () => {
           await AsyncStorage.setItem(MIGRATION_KEY, 'true');
           
           if (result.migrated > 0) {
-            console.log(`✅ Migración exitosa: ${result.migrated} imágenes migradas`);
+            // console.log(`✅ Migración exitosa: ${result.migrated} imágenes migradas`);
           }
         } else {
           console.error('❌ Error en migración:', result.error);
@@ -55,5 +55,5 @@ export const useImageMigration = () => {
  */
 export const resetMigration = async () => {
   await AsyncStorage.removeItem(MIGRATION_KEY);
-  console.log('🔄 Flag de migración reseteado');
+  // console.log('🔄 Flag de migración reseteado');
 };

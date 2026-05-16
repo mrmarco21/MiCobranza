@@ -28,7 +28,7 @@ export default function ComprobanteVenta({ venta, storeName, storeLogo, deudaAct
             {/* Header con logo y nombre */}
             <View style={styles.header}>
                 <Image
-                    source={require('../../../../assets/icon_app.jpg')}
+                    source={require('../../../../assets/icon_app.png')}
                     style={styles.logo}
                 />
                 <Text style={styles.storeName}>{storeName}</Text>

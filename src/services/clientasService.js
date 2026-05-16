@@ -26,15 +26,15 @@ export const obtenerclientasConSaldo = async () => {
     // Obtener TODAS las cuentas del cliente
     const todasLasCuentas = await cuentasRepo.getByClienta(clienta.id);
     
-    console.log(`👤 Cliente ${clienta.nombre}:`, {
-      totalCuentas: todasLasCuentas.length,
-      cuentas: todasLasCuentas.map(c => ({ id: c.id, estado: c.estado, saldo: c.saldo }))
-    });
+    // console.log(`👤 Cliente ${clienta.nombre}:`, {
+    //   totalCuentas: todasLasCuentas.length,
+    //   cuentas: todasLasCuentas.map(c => ({ id: c.id, estado: c.estado, saldo: c.saldo }))
+    // });
     
     // Filtrar solo las cuentas activas con saldo > 0
     const cuentasActivas = todasLasCuentas.filter(c => c.estado === 'ACTIVA' && c.saldo > 0);
     
-    console.log(`  ✅ Cuentas activas con saldo > 0:`, cuentasActivas.length);
+    // console.log(`  ✅ Cuentas activas con saldo > 0:`, cuentasActivas.length);
     
     // Sumar el saldo de TODAS las cuentas activas
     const saldoTotal = cuentasActivas.reduce((sum, cuenta) => sum + cuenta.saldo, 0);

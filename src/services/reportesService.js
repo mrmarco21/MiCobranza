@@ -62,13 +62,13 @@ const parsearPrendas = (comentario) => {
         const matchConCantidad = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
         if (matchConCantidad) {
             const categoria = matchConCantidad[5].toLowerCase();
-            console.log('✅ Prenda parseada con cantidad y categoría:', {
-                descripcion: matchConCantidad[1].trim(),
-                monto: parseFloat(matchConCantidad[2]),
-                cantidad: parseInt(matchConCantidad[3]),
-                categoria: categoria,
-                comentarioOriginal: parte
-            });
+            // console.log('✅ Prenda parseada con cantidad y categoría:', {
+            //     descripcion: matchConCantidad[1].trim(),
+            //     monto: parseFloat(matchConCantidad[2]),
+            //     cantidad: parseInt(matchConCantidad[3]),
+            //     categoria: categoria,
+            //     comentarioOriginal: parte
+            // });
             return {
                 descripcion: matchConCantidad[1].trim(),
                 monto: parseFloat(matchConCantidad[2]),
@@ -82,11 +82,11 @@ const parsearPrendas = (comentario) => {
         const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
         if (matchCompleto) {
             const categoria = matchCompleto[4].toLowerCase();
-            console.log('✅ Prenda parseada con categoría (sin cantidad):', {
-                descripcion: matchCompleto[1].trim(),
-                categoria: categoria,
-                comentarioOriginal: parte
-            });
+            // console.log('✅ Prenda parseada con categoría (sin cantidad):', {
+            //     descripcion: matchCompleto[1].trim(),
+            //     categoria: categoria,
+            //     comentarioOriginal: parte
+            // });
             return {
                 descripcion: matchCompleto[1].trim(),
                 monto: parseFloat(matchCompleto[2]),
@@ -99,7 +99,7 @@ const parsearPrendas = (comentario) => {
         // Formato con fecha pero sin categoría (datos antiguos)
         const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
         if (matchConFecha) {
-            console.log('⚠️ Prenda sin categoría (formato antiguo con fecha):', parte);
+            // console.log('⚠️ Prenda sin categoría (formato antiguo con fecha):', parte);
             return {
                 descripcion: matchConFecha[1].trim(),
                 monto: parseFloat(matchConFecha[2]),
@@ -112,7 +112,7 @@ const parsearPrendas = (comentario) => {
         // Formato antiguo sin fecha
         const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
         if (matchSinFecha) {
-            console.log('⚠️ Prenda sin categoría (formato antiguo sin fecha):', parte);
+            // console.log('⚠️ Prenda sin categoría (formato antiguo sin fecha):', parte);
             return {
                 descripcion: matchSinFecha[1].trim(),
                 monto: parseFloat(matchSinFecha[2]),
@@ -122,7 +122,7 @@ const parsearPrendas = (comentario) => {
             };
         }
         
-        console.log('❌ Prenda con formato no reconocido:', parte);
+        // console.log('❌ Prenda con formato no reconocido:', parte);
         return { descripcion: parte, monto: null, cantidad: 1, fecha: null, categoria: 'ropa-otros' };
     }).filter(p => p.descripcion);
 };
@@ -488,7 +488,7 @@ export const exportarReporteCSV = async (reporte) => {
         
         return uri;
     } catch (error) {
-        console.log('Error exportando:', error);
+        // console.log('Error exportando:', error);
         throw error;
     }
 };
@@ -530,7 +530,7 @@ const buscarProductoEnInventario = (descripcion, productos) => {
     );
     
     if (producto) {
-        console.log('✅ Match exacto encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
+        // console.log('✅ Match exacto encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
         return producto;
     }
     
@@ -542,7 +542,7 @@ const buscarProductoEnInventario = (descripcion, productos) => {
     });
     
     if (producto) {
-        console.log('✅ Match por similitud encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
+        // console.log('✅ Match por similitud encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
         return producto;
     }
     
@@ -558,12 +558,12 @@ const buscarProductoEnInventario = (descripcion, productos) => {
         });
         
         if (producto) {
-            console.log('✅ Match por palabras clave encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
+            // console.log('✅ Match por palabras clave encontrado:', { descripcion, productoNombre: producto.nombre, categoria: producto.categoria });
             return producto;
         }
     }
     
-    console.log('⚠️ No se encontró producto en inventario para:', descripcion);
+    // console.log('⚠️ No se encontró producto en inventario para:', descripcion);
     return null;
 };
 
@@ -576,7 +576,7 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
     const productosRepo = await import('../data/productosRepository');
     const productos = await productosRepo.getAll();
     
-    console.log('📦 Total productos en inventario:', productos.length);
+    // console.log('📦 Total productos en inventario:', productos.length);
     
     // Obtener TODOS los movimientos de tipo CARGO, sin filtrar por fecha del movimiento
     const cargos = movimientos.filter(m => m.tipo === 'CARGO');
@@ -599,13 +599,13 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
         // Calcular proporción pagada de esta cuenta
         const proporcionPagada = totalCargos > 0 ? totalAbonos / totalCargos : 0;
         
-        console.log('💰 Calculando proporción de pago:', {
-            cuentaId: cargo.cuentaId,
-            totalCargos,
-            totalAbonos,
-            proporcionPagada,
-            saldoCuenta
-        });
+        // console.log('💰 Calculando proporción de pago:', {
+        //     cuentaId: cargo.cuentaId,
+        //     totalCargos,
+        //     totalAbonos,
+        //     proporcionPagada,
+        //     saldoCuenta
+        // });
         
         prendas.forEach(prenda => {
             // Si la prenda tiene fecha en el comentario, verificar que esté en el rango
@@ -669,17 +669,17 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
             // Calcular pendiente como diferencia para mantener el total exacto
             montoPendienteProducto = montoTotal - montoPagadoProducto;
             
-            console.log('📦 Procesando prenda:', {
-                descripcion: prenda.descripcion,
-                categoriaOriginal: prenda.categoria,
-                categoriaActual: categoria,
-                cantidad,
-                precioUnitario,
-                montoTotal,
-                proporcionPagada,
-                montoPagadoProducto,
-                montoPendienteProducto
-            });
+            // console.log('📦 Procesando prenda:', {
+            //     descripcion: prenda.descripcion,
+            //     categoriaOriginal: prenda.categoria,
+            //     categoriaActual: categoria,
+            //     cantidad,
+            //     precioUnitario,
+            //     montoTotal,
+            //     proporcionPagada,
+            //     montoPagadoProducto,
+            //     montoPendienteProducto
+            // });
             
             resumen[categoria].cantidad += cantidad;
             resumen[categoria].total += montoTotal;
@@ -700,7 +700,7 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
         });
     });
 
-    console.log('📊 Resumen final por categoría:', JSON.stringify(resumen, null, 2));
+    // console.log('📊 Resumen final por categoría:', JSON.stringify(resumen, null, 2));
 
     return resumen;
 };

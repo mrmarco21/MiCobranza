@@ -109,7 +109,7 @@ export const crearRespaldoAutomatico = async () => {
     // Limpiar respaldos antiguos
     await limpiarRespaldosAntiguos();
     
-    console.log('✅ Respaldo automático creado:', fileName);
+    // console.log('✅ Respaldo automático creado:', fileName);
     return { success: true, fileName, fileUri };
   } catch (error) {
     console.error('❌ Error al crear respaldo automático:', error);
@@ -137,7 +137,7 @@ const limpiarRespaldosAntiguos = async () => {
       
       for (const file of filesToDelete) {
         await FileSystem.deleteAsync(AUTO_BACKUP_DIR + file);
-        console.log('🗑️ Respaldo antiguo eliminado:', file);
+        // console.log('🗑️ Respaldo antiguo eliminado:', file);
       }
     }
   } catch (error) {

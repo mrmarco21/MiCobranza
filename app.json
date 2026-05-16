@@ -2,13 +2,13 @@
   "expo": {
     "name": "MiCobranza",
     "slug": "MiCobranza",
-    "version": "1.0.4",
+    "version": "1.0.6",
     "orientation": "portrait",
-    "icon": "./assets/icon_app.jpg",
+    "icon": "./assets/icon_app.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/icon_app.jpg",
+      "image": "./assets/icon_app.png",
       "resizeMode": "contain",
       "backgroundColor": "#9b59b6"
     },
@@ -17,9 +17,9 @@
     },
     "android": {
       "package": "com.mrmarco62.MiCobranza",
-      "versionCode": 5,
+      "versionCode": 7,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon_app.jpg",
+        "foregroundImage": "./assets/icon_app.png",
         "backgroundColor": "#9b59b6"
       },
       "edgeToEdgeEnabled": true
@@ -34,7 +34,8 @@
     },
     "owner": "mrmarco62",
     "plugins": [
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ]
   }
 }

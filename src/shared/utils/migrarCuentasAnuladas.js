@@ -9,11 +9,11 @@ import * as movimientosRepo from '../../data/movimientosRepository';
 
 export const migrarCuentasAnuladas = async () => {
   try {
-    console.log('🔄 Iniciando migración de cuentas anuladas...');
+    // console.log('🔄 Iniciando migración de cuentas anuladas...');
     
     // Obtener todas las cuentas
     const todasLasCuentas = await cuentasRepo.getAll();
-    console.log(`📊 Total de cuentas: ${todasLasCuentas.length}`);
+    // console.log(`📊 Total de cuentas: ${todasLasCuentas.length}`);
     
     // Obtener todas las ventas
     const todasLasVentas = await ventasRepo.getAll();
@@ -46,12 +46,12 @@ export const migrarCuentasAnuladas = async () => {
       const fueAnulada = cuenta.estado === 'CERRADA' && (todasAnuladas || noTieneMovimientos);
       
       if (fueAnulada) {
-        console.log(`🔧 Migrando cuenta ${cuenta.id}:`, {
-          ventasAsociadas: ventasAsociadas.length,
-          todasAnuladas,
-          movimientos: movimientosCuenta.length,
-          estado: cuenta.estado
-        });
+        // console.log(`🔧 Migrando cuenta ${cuenta.id}:`, {
+        //   ventasAsociadas: ventasAsociadas.length,
+        //   todasAnuladas,
+        //   movimientos: movimientosCuenta.length,
+        //   estado: cuenta.estado
+        // });
         
         // Marcar la cuenta como anulada
         await cuentasRepo.update(cuenta.id, {
@@ -59,19 +59,19 @@ export const migrarCuentasAnuladas = async () => {
         });
         
         cuentasMigradas++;
-        console.log(`✅ Cuenta ${cuenta.id} marcada como anulada`);
-      } else {
-        // Marcar explícitamente como NO anulada
-        await cuentasRepo.update(cuenta.id, {
-          anulada: false
-        });
+      //   console.log(`✅ Cuenta ${cuenta.id} marcada como anulada`);
+      // } else {
+      //   // Marcar explícitamente como NO anulada
+      //   await cuentasRepo.update(cuenta.id, {
+      //     anulada: false
+      //   });
       }
     }
     
-    console.log(`🎉 Migración completada.`);
-    console.log(`   - Cuentas migradas (marcadas como anuladas): ${cuentasMigradas}`);
-    console.log(`   - Cuentas ya migradas: ${cuentasYaMigradas}`);
-    console.log(`   - Total procesadas: ${todasLasCuentas.length}`);
+    // console.log(`🎉 Migración completada.`);
+    // console.log(`   - Cuentas migradas (marcadas como anuladas): ${cuentasMigradas}`);
+    // console.log(`   - Cuentas ya migradas: ${cuentasYaMigradas}`);
+    // console.log(`   - Total procesadas: ${todasLasCuentas.length}`);
     
     return { 
       success: true, 

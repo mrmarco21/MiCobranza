@@ -20,12 +20,12 @@ class EventEmitter {
         }
         this.listeners[event].push(callback);
         
-        console.log(`✅ [EventEmitter] Nuevo listener para ${event}. Total: ${this.listeners[event].length}`);
+        // console.log(`✅ [EventEmitter] Nuevo listener para ${event}. Total: ${this.listeners[event].length}`);
 
         // Retornar función para desuscribirse
         return () => {
             this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
-            console.log(`❌ [EventEmitter] Listener removido de ${event}. Total: ${this.listeners[event].length}`);
+            // console.log(`❌ [EventEmitter] Listener removido de ${event}. Total: ${this.listeners[event].length}`);
         };
     }
 
@@ -35,19 +35,19 @@ class EventEmitter {
      * @param {*} data - Datos a pasar a los listeners
      */
     emit(event, data) {
-        console.log(`📢 [EventEmitter] Emitiendo evento: ${event}`, data?.nombre || data?.id || '');
+        // console.log(`📢 [EventEmitter] Emitiendo evento: ${event}`, data?.nombre || data?.id || '');
         
         if (this.listeners[event]) {
-            console.log(`👂 [EventEmitter] ${this.listeners[event].length} listeners para ${event}`);
+            // console.log(`👂 [EventEmitter] ${this.listeners[event].length} listeners para ${event}`);
             this.listeners[event].forEach(callback => {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error en listener de evento ${event}:`, error);
+                    // console.error(`Error en listener de evento ${event}:`, error);
                 }
             });
         } else {
-            console.log(`⚠️ [EventEmitter] No hay listeners para ${event}`);
+            // console.log(`⚠️ [EventEmitter] No hay listeners para ${event}`);
         }
     }
 

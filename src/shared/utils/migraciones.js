@@ -43,7 +43,7 @@ export const migrarNumeroCuentas = async () => {
     // Guardar cambios si hubo modificaciones
     if (cambiosRealizados) {
       await setData(KEYS.CUENTAS, cuentas);
-      console.log('Migración de numeroCuenta completada');
+      // console.log('Migración de numeroCuenta completada');
     }
 
     return true;
@@ -61,7 +61,7 @@ export const migrarNumeroCuentas = async () => {
  */
 export const migrarCategoriasProductosVendidos = async () => {
   try {
-    console.log('🔄 Iniciando migración de categorías en productos vendidos...');
+    // console.log('🔄 Iniciando migración de categorías en productos vendidos...');
     
     const movimientos = await getData(KEYS.MOVIMIENTOS);
     const productos = await getData(KEYS.PRODUCTOS);
@@ -103,7 +103,7 @@ export const migrarCategoriasProductosVendidos = async () => {
           
           const categoria = productoEncontrado?.categoria || 'ropa-otros';
           
-          console.log(`  📦 Actualizando: "${nombreProducto}" → categoría: ${categoria}`);
+          // console.log(`  📦 Actualizando: "${nombreProducto}" → categoría: ${categoria}`);
           
           return `${nombreProducto} (S/${precio}) [${fecha}] {${categoria}}`;
         }
@@ -125,7 +125,7 @@ export const migrarCategoriasProductosVendidos = async () => {
           const fechaMov = new Date(movimiento.fecha);
           const fechaStr = `${String(fechaMov.getDate()).padStart(2, '0')}/${String(fechaMov.getMonth() + 1).padStart(2, '0')}/${fechaMov.getFullYear()}`;
           
-          console.log(`  📦 Actualizando (sin fecha): "${nombreProducto}" → categoría: ${categoria}, fecha: ${fechaStr}`);
+          // console.log(`  📦 Actualizando (sin fecha): "${nombreProducto}" → categoría: ${categoria}, fecha: ${fechaStr}`);
           
           return `${nombreProducto} (S/${precio}) [${fechaStr}] {${categoria}}`;
         }
@@ -148,9 +148,9 @@ export const migrarCategoriasProductosVendidos = async () => {
     // Guardar cambios si hubo modificaciones
     if (cambiosRealizados > 0) {
       await setData(KEYS.MOVIMIENTOS, movimientosActualizados);
-      console.log(`✅ Migración completada: ${cambiosRealizados} movimientos actualizados de ${movimientosRevisados} revisados`);
+      // console.log(`✅ Migración completada: ${cambiosRealizados} movimientos actualizados de ${movimientosRevisados} revisados`);
     } else {
-      console.log(`ℹ️ No se encontraron movimientos que necesiten actualización (${movimientosRevisados} revisados)`);
+      // console.log(`ℹ️ No se encontraron movimientos que necesiten actualización (${movimientosRevisados} revisados)`);
     }
     
     return {

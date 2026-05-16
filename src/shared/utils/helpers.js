@@ -33,10 +33,10 @@ export const sumarMontos = (movimientos) => {
  * @returns {string} Nombre completo del producto en mayúsculas
  */
 export const obtenerNombreProductoCompleto = (producto) => {
-  console.log('🔧 [Helper] obtenerNombreProductoCompleto recibió:', producto);
+  // console.log('🔧 [Helper] obtenerNombreProductoCompleto recibió:', producto);
   
   if (!producto) {
-    console.log('⚠️ [Helper] Producto es null o undefined');
+    // console.log('⚠️ [Helper] Producto es null o undefined');
     return '';
   }
   

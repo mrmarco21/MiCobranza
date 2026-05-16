@@ -386,7 +386,7 @@ export default function PinScreen({ onSuccess }) {
             {/* Logo en la parte superior */}
             <View style={styles.logoSection}>
                 <Image
-                    source={require('../../../assets/icon_app.jpg')}
+                    source={require('../../../assets/icon_app.png')}
                     style={styles.pinLogo}
                 />
             </View>

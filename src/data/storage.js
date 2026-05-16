@@ -28,7 +28,7 @@ export const setData = async (key, data) => {
 // Función para limpiar todos los datos
 export const clearAllData = async () => {
   await AsyncStorage.clear();
-  console.log('Todos los datos han sido eliminados');
+  // console.log('Todos los datos han sido eliminados');
 };
 
 // Funciones para manejo de PIN

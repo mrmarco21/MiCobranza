@@ -61,7 +61,7 @@ export default function InventarioScreen({ navigation }) {
 
             // Suscribirse a eventos de actualización de productos
             const unsubscribeUpdated = eventEmitter.on(EVENTS.PRODUCTO_UPDATED, (productoActualizado) => {
-                console.log('📦 [Inventario] Producto actualizado:', productoActualizado.nombre);
+                // console.log('📦 [Inventario] Producto actualizado:', productoActualizado.nombre);
                 setProductos(prev => {
                     const nuevosProductos = prev.map(p => p.id === productoActualizado.id ? productoActualizado : p);
                     return nuevosProductos;
@@ -71,7 +71,7 @@ export default function InventarioScreen({ navigation }) {
             });
 
             const unsubscribeCreated = eventEmitter.on(EVENTS.PRODUCTO_CREATED, (nuevoProducto) => {
-                console.log('📦 [Inventario] Producto creado:', nuevoProducto.nombre);
+                // console.log('📦 [Inventario] Producto creado:', nuevoProducto.nombre);
                 setProductos(prev => [...prev, nuevoProducto]);
                 // Agregar a filtrados si cumple con los filtros actuales
                 setProductosFiltrados(prev => {
@@ -84,13 +84,13 @@ export default function InventarioScreen({ navigation }) {
             });
 
             const unsubscribeDeleted = eventEmitter.on(EVENTS.PRODUCTO_DELETED, ({ id }) => {
-                console.log('📦 [Inventario] Producto eliminado:', id);
+                // console.log('📦 [Inventario] Producto eliminado:', id);
                 setProductos(prev => prev.filter(p => p.id !== id));
                 setProductosFiltrados(prev => prev.filter(p => p.id !== id));
             });
 
             const unsubscribeBatchUpdated = eventEmitter.on(EVENTS.PRODUCTOS_BATCH_UPDATED, (productosActualizados) => {
-                console.log('📦 [Inventario] Actualización masiva de productos:', productosActualizados.length);
+                // console.log('📦 [Inventario] Actualización masiva de productos:', productosActualizados.length);
                 setProductos(prev => {
                     const nuevosProductos = [...prev];
                     productosActualizados.forEach(productoActualizado => {
@@ -185,7 +185,7 @@ export default function InventarioScreen({ navigation }) {
             setProductos(prev => prev.filter(p => p.id !== productoSeleccionado.id));
             setProductosFiltrados(prev => prev.filter(p => p.id !== productoSeleccionado.id));
 
-            console.log('✅ Producto desactivado:', productoSeleccionado.nombre);
+            // console.log('✅ Producto desactivado:', productoSeleccionado.nombre);
         } catch (error) {
             console.error('❌ Error al desactivar producto:', error);
         }

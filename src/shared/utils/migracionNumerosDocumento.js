@@ -9,12 +9,12 @@ import { KEYS } from '../../data/storage';
  */
 export const migrarNumerosDocumento = async () => {
   try {
-    console.log('🔄 Iniciando migración de números de documento...');
+    // console.log('🔄 Iniciando migración de números de documento...');
     
     // Obtener todas las ventas
     const ventasStr = await AsyncStorage.getItem(KEYS.VENTAS);
     if (!ventasStr) {
-      console.log('✅ No hay ventas para migrar');
+      // console.log('✅ No hay ventas para migrar');
       return { success: true, migradas: 0 };
     }
     
@@ -61,16 +61,16 @@ export const migrarNumerosDocumento = async () => {
         venta.numeroDocumento = nuevoNumero;
         ventasMigradas++;
         
-        console.log(`📝 Migrado: ${venta.numeroDocumento} (${new Date(venta.fecha).toLocaleDateString()})`);
+        // console.log(`📝 Migrado: ${venta.numeroDocumento} (${new Date(venta.fecha).toLocaleDateString()})`);
       });
     });
     
     // Guardar ventas actualizadas
     if (ventasMigradas > 0) {
       await AsyncStorage.setItem(KEYS.VENTAS, JSON.stringify(ventas));
-      console.log(`✅ Migración completada: ${ventasMigradas} ventas actualizadas`);
+      // console.log(`✅ Migración completada: ${ventasMigradas} ventas actualizadas`);
     } else {
-      console.log('✅ No hay ventas que migrar');
+      // console.log('✅ No hay ventas que migrar');
     }
     
     return { success: true, migradas: ventasMigradas };

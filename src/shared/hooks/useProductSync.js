@@ -14,11 +14,11 @@ export const useProductSync = (setProductosCallback) => {
             const productoEnLista = prevProductos.find(p => p.id === productoActualizado.id);
             
             if (!productoEnLista) {
-                console.log(`⏭️ [Sync] Producto no está en la lista, ignorando`);
+                // console.log(`⏭️ [Sync] Producto no está en la lista, ignorando`);
                 return prevProductos;
             }
 
-            console.log(`🔄 [Sync] Actualizando: ${productoActualizado.nombre}`);
+            // console.log(`🔄 [Sync] Actualizando: ${productoActualizado.nombre}`);
 
             return prevProductos.map(p => {
                 if (p.id === productoActualizado.id) {
@@ -44,7 +44,7 @@ export const useProductSync = (setProductosCallback) => {
         setProductosCallback(prevProductos => {
             const productoEliminado = prevProductos.find(p => p.id === data.id);
             if (productoEliminado) {
-                console.log(`🗑️ [Sync] Eliminando: ${productoEliminado.nombre}`);
+                // console.log(`🗑️ [Sync] Eliminando: ${productoEliminado.nombre}`);
                 return prevProductos.filter(p => p.id !== data.id);
             }
             return prevProductos;
@@ -52,7 +52,7 @@ export const useProductSync = (setProductosCallback) => {
     }, [setProductosCallback]);
 
     const actualizarProductosBatch = useCallback((productosActualizados) => {
-        console.log(`📥 [Sync] Evento batch recibido para ${productosActualizados.length} productos`);
+        // console.log(`📥 [Sync] Evento batch recibido para ${productosActualizados.length} productos`);
         
         setProductosCallback(prevProductos => {
             let cambios = false;
@@ -60,7 +60,7 @@ export const useProductSync = (setProductosCallback) => {
                 const productoActualizado = productosActualizados.find(pa => pa.id === p.id);
                 if (productoActualizado) {
                     cambios = true;
-                    console.log(`🔄 [Sync Batch] Actualizando: ${productoActualizado.nombre}`);
+                    // console.log(`🔄 [Sync Batch] Actualizando: ${productoActualizado.nombre}`);
                     
                     const precioFueEditado = p.precioVentaOriginal &&
                         p.precioVenta !== p.precioVentaOriginal;
@@ -80,7 +80,7 @@ export const useProductSync = (setProductosCallback) => {
     }, [setProductosCallback]);
 
     useEffect(() => {
-        console.log('🎧 [Sync] Suscribiéndose a eventos de productos');
+        // console.log('🎧 [Sync] Suscribiéndose a eventos de productos');
         
         // Suscribirse a eventos
         const unsubscribeUpdate = eventEmitter.on(EVENTS.PRODUCTO_UPDATED, actualizarProducto);
@@ -89,7 +89,7 @@ export const useProductSync = (setProductosCallback) => {
 
         // Limpiar suscripciones
         return () => {
-            console.log('🔌 [Sync] Desuscribiéndose de eventos de productos');
+            // console.log('🔌 [Sync] Desuscribiéndose de eventos de productos');
             unsubscribeUpdate();
             unsubscribeDelete();
             unsubscribeBatch();

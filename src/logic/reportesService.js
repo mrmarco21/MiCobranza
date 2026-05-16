@@ -54,11 +54,11 @@ const parsearPrendas = (comentario) => {
         const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
         if (matchCompleto) {
             const categoria = matchCompleto[4].toLowerCase();
-            console.log('✅ Prenda parseada con categoría:', {
-                descripcion: matchCompleto[1].trim(),
-                categoria: categoria,
-                comentarioOriginal: parte
-            });
+            // console.log('✅ Prenda parseada con categoría:', {
+            //     descripcion: matchCompleto[1].trim(),
+            //     categoria: categoria,
+            //     comentarioOriginal: parte
+            // });
             return {
                 descripcion: matchCompleto[1].trim(),
                 monto: parseFloat(matchCompleto[2]),
@@ -70,7 +70,7 @@ const parsearPrendas = (comentario) => {
         // Formato con fecha pero sin categoría (datos antiguos)
         const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
         if (matchConFecha) {
-            console.log('⚠️ Prenda sin categoría (formato antiguo con fecha):', parte);
+            // console.log('⚠️ Prenda sin categoría (formato antiguo con fecha):', parte);
             return {
                 descripcion: matchConFecha[1].trim(),
                 monto: parseFloat(matchConFecha[2]),
@@ -82,7 +82,7 @@ const parsearPrendas = (comentario) => {
         // Formato antiguo sin fecha
         const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
         if (matchSinFecha) {
-            console.log('⚠️ Prenda sin categoría (formato antiguo sin fecha):', parte);
+            // console.log('⚠️ Prenda sin categoría (formato antiguo sin fecha):', parte);
             return {
                 descripcion: matchSinFecha[1].trim(),
                 monto: parseFloat(matchSinFecha[2]),
@@ -91,7 +91,7 @@ const parsearPrendas = (comentario) => {
             };
         }
         
-        console.log('❌ Prenda con formato no reconocido:', parte);
+        // console.log('❌ Prenda con formato no reconocido:', parte);
         return { descripcion: parte, monto: null, fecha: null, categoria: 'ropa-otros' };
     }).filter(p => p.descripcion);
 };
@@ -457,7 +457,7 @@ export const exportarReporteCSV = async (reporte) => {
         
         return uri;
     } catch (error) {
-        console.log('Error exportando:', error);
+        // console.log('Error exportando:', error);
         throw error;
     }
 };

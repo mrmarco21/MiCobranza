@@ -38,6 +38,7 @@ const imageToBase64 = async (imagePath) => {
 
 /**
  * Exporta todos los datos de la app a un archivo JSON
+ * Optimizado para evitar OutOfMemoryError procesando en lotes pequeños
  */
 export const exportData = async () => {
   try {
@@ -62,36 +63,56 @@ export const exportData = async () => {
     const lockTimeout = await AsyncStorage.getItem('lock_timeout');
 
     // Procesar productos para incluir imágenes en Base64
+    // OPTIMIZACIÓN: Procesar en lotes pequeños para evitar OutOfMemoryError
     let productosConImagenes = productos ? JSON.parse(productos) : [];
     if (productosConImagenes.length > 0) {
-      console.log('📸 Exportando imágenes de productos...');
+      console.log('📸 Exportando imágenes de productos en lotes...');
       let totalImagenes = 0;
+      const BATCH_SIZE = 5; // Procesar 5 productos a la vez
+      const productosExportados = [];
       
-      productosConImagenes = await Promise.all(
-        productosConImagenes.map(async (producto) => {
-          const productoExportado = { ...producto };
-          
-          // Convertir imagen principal (retrocompatibilidad)
-          if (producto.imagen) {
-            productoExportado.imagen = await imageToBase64(producto.imagen);
-            if (productoExportado.imagen) totalImagenes++;
-          }
-          
-          // Convertir array de imágenes (múltiples imágenes)
-          if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            const imagenesBase64 = await Promise.all(
-              producto.imagenes.map(async (imagenPath) => {
+      for (let i = 0; i < productosConImagenes.length; i += BATCH_SIZE) {
+        const batch = productosConImagenes.slice(i, i + BATCH_SIZE);
+        
+        const batchProcesado = await Promise.all(
+          batch.map(async (producto) => {
+            const productoExportado = { ...producto };
+            
+            // Convertir imagen principal (retrocompatibilidad)
+            if (producto.imagen) {
+              productoExportado.imagen = await imageToBase64(producto.imagen);
+              if (productoExportado.imagen) totalImagenes++;
+            }
+            
+            // Convertir array de imágenes (múltiples imágenes)
+            if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+              const imagenesBase64 = [];
+              // Procesar imágenes una por una para evitar sobrecarga de memoria
+              for (const imagenPath of producto.imagenes) {
                 const base64 = await imageToBase64(imagenPath);
-                if (base64) totalImagenes++;
-                return base64;
-              })
-            );
-            productoExportado.imagenes = imagenesBase64.filter(img => img !== null);
-          }
-          
-          return productoExportado;
-        })
-      );
+                if (base64) {
+                  imagenesBase64.push(base64);
+                  totalImagenes++;
+                }
+              }
+              productoExportado.imagenes = imagenesBase64;
+            }
+            
+            return productoExportado;
+          })
+        );
+        
+        productosExportados.push(...batchProcesado);
+        
+        // Liberar memoria entre lotes
+        if (global.gc) {
+          global.gc();
+        }
+        
+        console.log(`Procesados ${Math.min(i + BATCH_SIZE, productosConImagenes.length)}/${productosConImagenes.length} productos`);
+      }
+      
+      productosConImagenes = productosExportados;
       console.log(`✅ ${totalImagenes} imágenes exportadas de ${productosConImagenes.length} productos`);
     }
 
@@ -134,11 +155,14 @@ export const exportData = async () => {
     const fileName = `micobranza_backup_${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}.json`;
     const fileUri = FileSystem.documentDirectory + fileName;
 
-    // Escribir archivo
+    // Escribir archivo en modo optimizado (sin pretty print para ahorrar memoria)
+    console.log('💾 Escribiendo archivo de backup...');
     await FileSystem.writeAsStringAsync(
       fileUri,
-      JSON.stringify(backupData, null, 2)
+      JSON.stringify(backupData) // Sin espacios ni saltos de línea para reducir tamaño
     );
+
+    console.log('✅ Backup creado exitosamente');
 
     // Compartir archivo
     if (await Sharing.isAvailableAsync()) {
@@ -280,7 +304,7 @@ export const applyImportedData = async (importedData) => {
     
     // Procesar productos para restaurar imágenes desde Base64
     if (productos && productos.length > 0) {
-      console.log('📸 Restaurando imágenes de productos...');
+      // console.log('📸 Restaurando imágenes de productos...');
       let totalImagenes = 0;
       
       const productosConImagenesRestauradas = await Promise.all(
@@ -323,7 +347,7 @@ export const applyImportedData = async (importedData) => {
       );
       
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productosConImagenesRestauradas));
-      console.log(`✅ ${totalImagenes} imágenes restauradas de ${productosConImagenesRestauradas.length} productos`);
+      // console.log(`✅ ${totalImagenes} imágenes restauradas de ${productosConImagenesRestauradas.length} productos`);
     } else if (productos) {
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productos));
     }
@@ -424,7 +448,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar productos
     if (productos && productos.length > 0) {
-      console.log('📸 Restaurando imágenes de productos (fusión)...');
+      // console.log('📸 Restaurando imágenes de productos (fusión)...');
       const currentProductos = await AsyncStorage.getItem(KEYS.PRODUCTOS);
       const existingProductos = currentProductos ? JSON.parse(currentProductos) : [];
       const mergedProductos = [...existingProductos];
@@ -471,7 +495,7 @@ export const mergeImportedData = async (importedData) => {
       
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(mergedProductos));
       added.productos = mergedProductos.length - existingProductos.length;
-      console.log(`✅ ${added.productos} productos nuevos con ${totalImagenes} imágenes restauradas`);
+      // console.log(`✅ ${added.productos} productos nuevos con ${totalImagenes} imágenes restauradas`);
     }
 
     // Fusionar ventas

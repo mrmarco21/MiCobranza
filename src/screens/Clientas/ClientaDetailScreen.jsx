@@ -134,16 +134,16 @@ export default function ClientaDetailScreen({ route, navigation }) {
 
     // Parsear prendas
     const parsearPrendas = (comentario) => {
-        console.log('🔍 [ClientaDetail] parsearPrendas recibió comentario:', comentario);
+        // console.log('🔍 [ClientaDetail] parsearPrendas recibió comentario:', comentario);
         if (!comentario) return [];
         const partes = comentario.split(' | ');
         console.log('🔍 [ClientaDetail] Partes separadas:', partes);
         return partes.map((parte, idx) => {
-            console.log(`🔍 [ClientaDetail] Procesando parte ${idx}:`, parte);
+            // console.log(`🔍 [ClientaDetail] Procesando parte ${idx}:`, parte);
             // Formato nuevo con cantidad y categoría ID: "LAPICERO - Layconsa - Borrable - AZUL (S/25.00) x 2 [01/01/2026] {ropa-otros}"
             // Usar .+ (greedy) en lugar de .+? (non-greedy) para capturar todo el nombre hasta el paréntesis
             const matchCompleto = parte.match(/^(.+)\s+\(S\/(\d+\.?\d*)\)\s*x\s*(\d+)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
-            console.log(`🔍 [ClientaDetail] Match completo parte ${idx}:`, matchCompleto);
+            // console.log(`🔍 [ClientaDetail] Match completo parte ${idx}:`, matchCompleto);
             if (matchCompleto) {
                 const resultado = {
                     descripcion: matchCompleto[1].trim(),
@@ -152,7 +152,7 @@ export default function ClientaDetailScreen({ route, navigation }) {
                     fecha: matchCompleto[4],
                     categoria: matchCompleto[5]
                 };
-                console.log(`✅ [ClientaDetail] Resultado parte ${idx}:`, resultado);
+                // console.log(`✅ [ClientaDetail] Resultado parte ${idx}:`, resultado);
                 return resultado;
             }
             // Formato con categoría pero sin cantidad (datos antiguos): "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"

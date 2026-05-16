@@ -493,7 +493,7 @@ export default function ConfiguracionScreen({ navigation }) {
                                 <Image source={{ uri: storeLogo }} style={styles.logoImage} />
                             ) : (
                                 <Image
-                                    source={require('../../../assets/icon_app.jpg')}
+                                    source={require('../../../assets/icon_app.png')}
                                     style={styles.logoImage}
                                 />
                             )}

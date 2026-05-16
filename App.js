@@ -67,14 +67,14 @@ export default function App() {
       const migracionCategoriasCompletada = await AsyncStorage.getItem(MIGRATION_CATEGORIAS_KEY);
       
       if (!migracionCategoriasCompletada) {
-        console.log('🔄 Ejecutando migración de categorías en productos vendidos...');
+        // console.log('🔄 Ejecutando migración de categorías en productos vendidos...');
         const resultado = await migrarCategoriasProductosVendidos();
         
         if (resultado.success) {
           await AsyncStorage.setItem(MIGRATION_CATEGORIAS_KEY, 'true');
-          console.log('✅ Migración de categorías completada exitosamente');
+          // console.log('✅ Migración de categorías completada exitosamente');
         } else {
-          console.error('❌ Error en migración de categorías:', resultado.error);
+          // console.error('❌ Error en migración de categorías:', resultado.error);
         }
       }
 
@@ -85,23 +85,23 @@ export default function App() {
         const necesita = await necesitaMigracion();
         
         if (necesita) {
-          console.log('🔄 Ejecutando migración de números de documento...');
+          // console.log('🔄 Ejecutando migración de números de documento...');
           const resultado = await migrarNumerosDocumento();
           
           if (resultado.success) {
             await AsyncStorage.setItem(MIGRATION_NUMEROS_DOC_KEY, 'true');
-            console.log(`✅ Migración de números de documento completada: ${resultado.migradas} ventas actualizadas`);
+            // console.log(`✅ Migración de números de documento completada: ${resultado.migradas} ventas actualizadas`);
           } else {
-            console.error('❌ Error en migración de números de documento:', resultado.error);
+            // console.error('❌ Error en migración de números de documento:', resultado.error);
           }
         } else {
           // Marcar como completada si no hay nada que migrar
           await AsyncStorage.setItem(MIGRATION_NUMEROS_DOC_KEY, 'true');
-          console.log('✅ No hay números de documento para migrar');
+          // console.log('✅ No hay números de documento para migrar');
         }
       }
     } catch (error) {
-      console.error('❌ Error ejecutando migraciones:', error);
+      // console.error('❌ Error ejecutando migraciones:', error);
     }
   };
 
