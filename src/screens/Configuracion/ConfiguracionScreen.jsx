@@ -257,7 +257,7 @@ export default function ConfiguracionScreen({ navigation }) {
     const handleExportData = async () => {
         showModal({
             title: 'Exportar Datos',
-            message: 'Se creará un archivo con todos tus datos (clientes, cuentas, movimientos). Podrás guardarlo donde quieras.',
+            message: 'Se creará un archivo ZIP con TODOS tus datos e imágenes. Podrás compartirlo directamente por WhatsApp, Drive, Email, etc.',
             icon: 'download-outline',
             iconColor: '#45beffff',
             buttons: [
@@ -273,7 +273,7 @@ export default function ConfiguracionScreen({ navigation }) {
                         if (result.success) {
                             showModal({
                                 title: 'Exportación Exitosa',
-                                message: `Archivo "${result.fileName}" creado correctamente. Guárdalo en un lugar seguro.`,
+                                message: result.message || `Archivo ZIP creado: ${result.fileName}`,
                                 icon: 'checkmark-circle',
                                 iconColor: '#4CAF50',
                                 buttons: [{ text: 'OK', style: 'primary' }],

@@ -213,7 +213,7 @@ export default function MenuModal({ visible, onClose, navigation }) {
 
                     {/* Footer */}
                     <View style={[styles.footer, { paddingBottom: insets.bottom + 8 }]}>
-                        <Text style={styles.footerText}>Versión 0.0.6</Text>
+                        <Text style={styles.footerText}>Versión 0.0.7</Text>
                     </View>
                 </Animated.View>
             </Animated.View>

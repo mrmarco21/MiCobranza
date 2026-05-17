@@ -4,7 +4,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KEYS } from '../../data/storage';
 import { Alert } from 'react-native';
-import JSZip from 'jszip';
 
 /**
  * Convierte una imagen del sistema de archivos a Base64
@@ -277,79 +276,32 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
     
     console.log('✅ Backup completo creado');
     
-    // ========== CREAR ARCHIVO ZIP ==========
-    console.log('🗜️ Comprimiendo archivos en ZIP...');
-    const zip = new JSZip();
-    
-    // Leer y agregar cada archivo al ZIP
-    const archivosParaZip = [
-      'parte1_datos.json',
-      'parte2_productos.json',
-      ...archivosImagenes,
-      'parte4_config.json',
-      'LEEME.txt'
-    ];
-    
-    for (const archivo of archivosParaZip) {
-      try {
-        const contenido = await FileSystem.readAsStringAsync(`${backupDir}${archivo}`);
-        zip.file(archivo, contenido);
-        console.log(`  ✅ ${archivo} agregado al ZIP`);
-      } catch (error) {
-        console.warn(`  ⚠️ No se pudo agregar ${archivo}:`, error.message);
-      }
-    }
-    
-    // Generar el ZIP como Base64
-    console.log('📦 Generando archivo ZIP...');
-    const zipBase64 = await zip.generateAsync({ 
-      type: 'base64',
-      compression: 'DEFLATE',
-      compressionOptions: { level: 6 } // Compresión media (balance entre tamaño y velocidad)
-    });
-    
-    // Guardar el ZIP
-    const zipFileName = `micobranza_backup_${timestamp}.zip`;
-    const zipFilePath = `${FileSystem.documentDirectory}${zipFileName}`;
-    
-    await FileSystem.writeAsStringAsync(zipFilePath, zipBase64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    
-    console.log('✅ Archivo ZIP creado:', zipFileName);
-    
-    // Limpiar archivos temporales
-    console.log('🧹 Limpiando archivos temporales...');
-    try {
-      await FileSystem.deleteAsync(backupDir, { idempotent: true });
-      console.log('✅ Archivos temporales eliminados');
-    } catch (cleanError) {
-      console.warn('⚠️ No se pudieron eliminar archivos temporales:', cleanError.message);
-    }
-    
-    // Compartir el archivo ZIP
+    // Compartir la carpeta completa (Android soporta compartir directorios)
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(zipFilePath, {
-        mimeType: 'application/zip',
-        dialogTitle: 'Guardar backup completo de Mi Cobranza',
-        UTI: 'public.zip-archive',
-      });
+      try {
+        // Intentar compartir el directorio completo
+        await Sharing.shareAsync(backupDir, {
+          mimeType: 'application/octet-stream',
+          dialogTitle: `Guardar backup completo de Mi Cobranza (${4 + archivosImagenes.length} archivos)`,
+        });
+      } catch (shareError) {
+        console.warn('No se pudo compartir la carpeta, intentando con archivo individual:', shareError);
+        // Si falla compartir la carpeta, compartir el archivo de configuración
+        await Sharing.shareAsync(`${backupDir}parte4_config.json`, {
+          mimeType: 'application/json',
+          dialogTitle: 'Guardar backup de Mi Cobranza (Parte 4 - Config)',
+          UTI: 'public.json',
+        });
+      }
     }
     
     return { 
       success: true, 
-      fileName: zipFileName,
-      zipFilePath,
+      backupDir,
       timestamp,
       totalParts: 4 + archivosImagenes.length,
       summary: parte4.summary,
-      message: `Backup completo creado: ${zipFileName}\n\n` +
-               `📊 Contenido:\n` +
-               `• Productos: ${parte4.summary.productos}\n` +
-               `• Imágenes: ${parte4.summary.totalImagenes}\n` +
-               `• Clientas: ${parte4.summary.clientas}\n` +
-               `• Cuentas: ${parte4.summary.cuentas}\n\n` +
-               `✅ Archivo ZIP listo para compartir`,
+      message: `Backup creado con ${4 + archivosImagenes.length} archivos. Guarda TODOS los archivos juntos.`,
     };
   } catch (error) {
     console.error('Error al exportar datos:', error);
@@ -358,14 +310,13 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
 };
 
 /**
- * Importa datos desde un archivo JSON o ZIP
- * Soporta: versión antigua (2.x), multi-parte (3.0) y ZIP
+ * Importa datos desde un archivo JSON (soporta versión antigua y nueva multi-parte)
  */
 export const importData = async () => {
   try {
-    // Seleccionar archivo (JSON o ZIP)
+    // Seleccionar archivo
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/json', 'application/zip', 'application/x-zip-compressed'],
+      type: 'application/json',
       copyToCacheDirectory: true,
     });
 
@@ -373,134 +324,8 @@ export const importData = async () => {
       return { success: false, canceled: true };
     }
 
-    const fileUri = result.assets[0].uri;
-    const fileName = result.assets[0].name || '';
-    
-    // ========== DETECTAR SI ES ZIP ==========
-    if (fileName.endsWith('.zip') || result.assets[0].mimeType?.includes('zip')) {
-      console.log('📦 Detectado archivo ZIP, descomprimiendo...');
-      
-      try {
-        // Leer el archivo ZIP como Base64
-        const zipBase64 = await FileSystem.readAsStringAsync(fileUri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        
-        // Descomprimir
-        const zip = new JSZip();
-        const zipContent = await zip.loadAsync(zipBase64, { base64: true });
-        
-        console.log('📂 Archivos en el ZIP:', Object.keys(zipContent.files).join(', '));
-        
-        // Buscar el archivo de configuración (parte4)
-        const configFile = zipContent.file('parte4_config.json');
-        if (!configFile) {
-          return {
-            success: false,
-            error: 'El archivo ZIP no contiene un backup válido (falta parte4_config.json)',
-          };
-        }
-        
-        // Leer configuración
-        const configContent = await configFile.async('string');
-        const configData = JSON.parse(configContent);
-        
-        if (configData.version !== '3.0') {
-          return {
-            success: false,
-            error: 'Versión de backup no compatible. Por favor usa un backup más reciente.',
-          };
-        }
-        
-        // Leer parte 1: Datos principales
-        console.log('📖 Leyendo datos principales...');
-        const parte1Content = await zipContent.file('parte1_datos.json').async('string');
-        const parte1 = JSON.parse(parte1Content);
-        
-        // Leer parte 2: Productos
-        console.log('📖 Leyendo productos...');
-        const parte2Content = await zipContent.file('parte2_productos.json').async('string');
-        const parte2 = JSON.parse(parte2Content);
-        
-        // Leer parte 3: Imágenes (múltiples archivos)
-        console.log('📖 Leyendo imágenes...');
-        const imageFilesList = configData.imageFilesList || [];
-        const productImages = {};
-        
-        for (const imageFile of imageFilesList) {
-          try {
-            const imageFileContent = await zipContent.file(imageFile).async('string');
-            const imagePart = JSON.parse(imageFileContent);
-            
-            // Mapear imágenes por ID de producto
-            for (const prodImg of imagePart.data.productImages) {
-              productImages[prodImg.id] = {
-                imagen: prodImg.imagen,
-                imagenes: prodImg.imagenes,
-              };
-            }
-            
-            console.log(`  ✅ ${imageFile} leído`);
-          } catch (imgError) {
-            console.warn(`  ⚠️ No se pudo leer ${imageFile}:`, imgError.message);
-          }
-        }
-        
-        // Combinar productos con sus imágenes
-        const productosCompletos = parte2.data.productos.map(producto => {
-          const imagenes = productImages[producto.id];
-          return {
-            ...producto,
-            imagen: imagenes?.imagen || producto.imagen,
-            imagenes: imagenes?.imagenes || producto.imagenes || [],
-          };
-        });
-        
-        // Preparar datos combinados
-        const combinedData = {
-          ...parte1.data,
-          productos: productosCompletos,
-          storeName: configData.data.storeName,
-          storeLogo: configData.data.storeLogo,
-          lockTimeout: configData.data.lockTimeout,
-        };
-        
-        console.log('✅ ZIP descomprimido y datos leídos correctamente');
-        
-        return {
-          success: true,
-          data: combinedData,
-          exportDate: configData.timestamp,
-          version: configData.version,
-          isMultiPart: true,
-          isZip: true,
-          itemCount: {
-            clientas: combinedData.clientas?.length || 0,
-            cuentas: combinedData.cuentas?.length || 0,
-            movimientos: combinedData.movimientos?.length || 0,
-            productos: combinedData.productos?.length || 0,
-            ventas: combinedData.ventas?.length || 0,
-            gastos: combinedData.gastos?.length || 0,
-            pedidos: combinedData.pedidos?.length || 0,
-            categorias: combinedData.categorias?.length || 0,
-            borradores: combinedData.borradores?.length || 0,
-          },
-        };
-        
-      } catch (zipError) {
-        console.error('Error al descomprimir ZIP:', zipError);
-        return {
-          success: false,
-          error: `No se pudo descomprimir el archivo ZIP: ${zipError.message}`,
-        };
-      }
-    }
-    
-    // ========== ARCHIVO JSON (versiones antiguas) ==========
-    console.log('📄 Detectado archivo JSON');
-    
     // Leer archivo
-    const fileContent = await FileSystem.readAsStringAsync(fileUri);
+    const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
     const backupData = JSON.parse(fileContent);
 
     // Validar estructura
@@ -511,19 +336,20 @@ export const importData = async () => {
       };
     }
 
-    // ========== BACKUP MULTI-PARTE (Versión 3.0) SIN ZIP ==========
+    // ========== BACKUP MULTI-PARTE (Versión 3.0) ==========
     if (backupData.version === '3.0') {
-      console.log('📦 Detectado backup multi-parte versión 3.0 (sin ZIP)');
+      console.log('📦 Detectado backup multi-parte versión 3.0');
       
       // Verificar que sea el archivo de configuración (parte 4)
       if (backupData.type !== 'config') {
         return {
           success: false,
-          error: 'Por favor selecciona el archivo "parte4_config.json" o el archivo ZIP completo.',
+          error: 'Por favor selecciona el archivo "parte4_config.json" para iniciar la importación.',
         };
       }
       
       // Obtener el directorio del archivo seleccionado
+      const fileUri = result.assets[0].uri;
       const dirPath = fileUri.substring(0, fileUri.lastIndexOf('/') + 1);
       
       console.log('📂 Directorio de backup:', dirPath);
@@ -591,7 +417,6 @@ export const importData = async () => {
           exportDate: backupData.timestamp,
           version: backupData.version,
           isMultiPart: true,
-          isZip: false,
           itemCount: {
             clientas: combinedData.clientas?.length || 0,
             cuentas: combinedData.cuentas?.length || 0,
@@ -609,7 +434,7 @@ export const importData = async () => {
         console.error('Error al leer partes del backup:', readError);
         return {
           success: false,
-          error: `No se pudieron leer todos los archivos del backup. Asegúrate de que todos los archivos estén en la misma carpeta o usa el archivo ZIP. Error: ${readError.message}`,
+          error: `No se pudieron leer todos los archivos del backup. Asegúrate de que todos los archivos estén en la misma carpeta. Error: ${readError.message}`,
         };
       }
     }
@@ -642,7 +467,6 @@ export const importData = async () => {
       exportDate: backupData.exportDate,
       version: backupData.version,
       isMultiPart: false,
-      isZip: false,
       itemCount: {
         clientas: clientas?.length || 0,
         cuentas: cuentas?.length || 0,
