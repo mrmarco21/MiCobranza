@@ -53,7 +53,8 @@ export default function ListaVentasScreen({ navigation, route }) {
         useCallback(() => {
             if (route.params?.clienteSeleccionado) {
                 setClienteSeleccionadoTemp(route.params.clienteSeleccionado);
-                setFiltroActivo(true); // Reabrir el modal
+                // Reabrir el modal inmediatamente
+                setFiltroActivo(true);
                 // Limpiar el parámetro
                 navigation.setParams({ clienteSeleccionado: undefined });
             }

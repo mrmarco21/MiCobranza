@@ -399,13 +399,11 @@ export default function FiltrosVentasModal({
                                     clienteSeleccionado && { borderColor: colors.primary }
                                 ]}
                                 onPress={() => {
-                                    onClose(); // Cerrar el modal primero
-                                    setTimeout(() => {
-                                        navigation.navigate('clientas', {
-                                            modoSeleccion: true,
-                                            returnScreen: 'ListaVentas', // Indicar a dónde volver
-                                        });
-                                    }, 300); // Esperar a que termine la animación del modal
+                                    // Navegar directamente sin cerrar el modal
+                                    navigation.navigate('clientas', {
+                                        modoSeleccion: true,
+                                        returnScreen: 'ListaVentas', // Indicar a dónde volver
+                                    });
                                 }}
                                 activeOpacity={0.8}
                             >

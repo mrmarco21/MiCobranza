@@ -1,5 +1,5 @@
 ﻿import { useState, useCallback, useEffect, useRef } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Keyboard, Alert, Modal } from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Keyboard, Alert, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { obtenerclientasConSaldo } from '../../services/clientasService';
@@ -9,6 +9,7 @@ import ClientaCard from '../Clientas/components/ClientaCard';
 import EmptyState from '../../shared/components/EmptyState';
 import Header from '../../shared/components/Header';
 import SortFilterModal from '../../shared/components/SortFilterModal';
+import CuentasMenuModal from './components/CuentasMenuModal';
 import { limpiarCuentasInconsistentes } from '../../shared/utils/limpiarCuentasInconsistentes';
 import { migrarCuentasAnuladas } from '../../shared/utils/migrarCuentasAnuladas';
 
@@ -20,6 +21,7 @@ export default function CuentasPendientesScreen({ navigation }) {
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const [showSortModal, setShowSortModal] = useState(false);
     const [showMantenimientoModal, setShowMantenimientoModal] = useState(false);
+    const [showMenuModal, setShowMenuModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('a-z');
     const [showSearchBar, setShowSearchBar] = useState(false);
     const searchInputRef = useRef(null);
@@ -174,12 +176,8 @@ export default function CuentasPendientesScreen({ navigation }) {
                         onPress: () => navigation.navigate('clientas')
                     },
                     {
-                        icon: 'refresh',
-                        onPress: () => setShowMantenimientoModal(true)
-                    },
-                    {
                         icon: 'ellipsis-vertical',
-                        onPress: () => setShowSortModal(true)
+                        onPress: () => setShowMenuModal(true)
                     }
                 ]}
             />
@@ -266,70 +264,79 @@ export default function CuentasPendientesScreen({ navigation }) {
                 showFilters={false}
             />
 
+            {/* Menu Modal */}
+            <CuentasMenuModal
+                visible={showMenuModal}
+                onClose={() => setShowMenuModal(false)}
+                onOrdenar={() => setShowSortModal(true)}
+                onMantenimiento={() => setShowMantenimientoModal(true)}
+                anchorPosition={{ top: 60, right: 10 }}
+            />
+
             {/* Modal de mantenimiento */}
             <Modal
                 visible={showMantenimientoModal}
                 transparent
-                animationType="fade"
+                animationType="none"
                 onRequestClose={() => setShowMantenimientoModal(false)}
             >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setShowMantenimientoModal(false)}
-                >
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Ionicons name="construct-outline" size={24} color={colors.primary} />
-                            <Text style={styles.modalTitle}>Mantenimiento</Text>
-                        </View>
+                <TouchableWithoutFeedback onPress={() => setShowMantenimientoModal(false)}>
+                    <View style={styles.modalOverlay}>
+                        <TouchableWithoutFeedback>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Ionicons name="construct-outline" size={24} color={colors.primary} />
+                                    <Text style={styles.modalTitle}>Mantenimiento</Text>
+                                </View>
 
-                        <TouchableOpacity
-                            style={styles.modalOption}
-                            onPress={() => {
-                                setShowMantenimientoModal(false);
-                                handleMigrarCuentasAnuladas();
-                            }}
-                        >
-                            <View style={styles.modalOptionIcon}>
-                                <Ionicons name="sync-outline" size={22} color="#45beffff" />
-                            </View>
-                            <View style={styles.modalOptionContent}>
-                                <Text style={styles.modalOptionTitle}>Migrar Cuentas Anuladas</Text>
-                                <Text style={styles.modalOptionDescription}>
-                                    Corrige la numeración de cuentas anuladas anteriormente
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                        </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.modalOption}
+                                    onPress={() => {
+                                        setShowMantenimientoModal(false);
+                                        handleMigrarCuentasAnuladas();
+                                    }}
+                                >
+                                    <View style={styles.modalOptionIcon}>
+                                        <Ionicons name="sync-outline" size={22} color="#45beffff" />
+                                    </View>
+                                    <View style={styles.modalOptionContent}>
+                                        <Text style={styles.modalOptionTitle}>Migrar Cuentas Anuladas</Text>
+                                        <Text style={styles.modalOptionDescription}>
+                                            Corrige la numeración de cuentas anuladas anteriormente
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                                </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.modalOption}
-                            onPress={() => {
-                                setShowMantenimientoModal(false);
-                                handleLimpiarCuentas();
-                            }}
-                        >
-                            <View style={styles.modalOptionIcon}>
-                                <Ionicons name="trash-outline" size={22} color="#FF9800" />
-                            </View>
-                            <View style={styles.modalOptionContent}>
-                                <Text style={styles.modalOptionTitle}>Limpiar Cuentas Inconsistentes</Text>
-                                <Text style={styles.modalOptionDescription}>
-                                    Cierra cuentas sin movimientos o con ventas anuladas
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                        </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.modalOption}
+                                    onPress={() => {
+                                        setShowMantenimientoModal(false);
+                                        handleLimpiarCuentas();
+                                    }}
+                                >
+                                    <View style={styles.modalOptionIcon}>
+                                        <Ionicons name="trash-outline" size={22} color="#FF9800" />
+                                    </View>
+                                    <View style={styles.modalOptionContent}>
+                                        <Text style={styles.modalOptionTitle}>Limpiar Cuentas Inconsistentes</Text>
+                                        <Text style={styles.modalOptionDescription}>
+                                            Cierra cuentas sin movimientos o con ventas anuladas
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                                </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.modalCancelButton}
-                            onPress={() => setShowMantenimientoModal(false)}
-                        >
-                            <Text style={styles.modalCancelText}>Cancelar</Text>
-                        </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.modalCancelButton}
+                                    onPress={() => setShowMantenimientoModal(false)}
+                                >
+                                    <Text style={styles.modalCancelText}>Cancelar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableWithoutFeedback>
                     </View>
-                </TouchableOpacity>
+                </TouchableWithoutFeedback>
             </Modal>
         </View>
     );
@@ -479,7 +486,7 @@ const createStyles = (colors) => StyleSheet.create({
     // Modal de mantenimiento
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,

@@ -633,7 +633,7 @@ export default function MetodoPagoScreen({ route, navigation }) {
                                                 <Ionicons
                                                     name={metodo.icon}
                                                     size={32}
-                                                    color={yaAgregado ? '#48C9B0' : '#7F8C8D'}
+                                                    color={yaAgregado ? '#29B6F6' : '#7F8C8D'}
                                                 />
                                                 <Text style={[
                                                     styles.metodoBtnTexto,
@@ -925,11 +925,11 @@ const createStyles = (colors) => StyleSheet.create({
     cambiarTexto: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#48C9B0',
+        color: '#29B6F6',
         textDecorationLine: 'underline',
     },
     genericoBtn: {
-        backgroundColor: '#48C9B0',
+        backgroundColor: '#29B6F6',
         borderRadius: 8,
         paddingVertical: 12,
         alignItems: 'center',
@@ -965,7 +965,7 @@ const createStyles = (colors) => StyleSheet.create({
         borderBottomColor: '#E0E0E0',
     },
     tabActive: {
-        borderBottomColor: '#48C9B0',
+        borderBottomColor: '#29B6F6',
     },
     tabTexto: {
         fontSize: 14,
@@ -973,7 +973,7 @@ const createStyles = (colors) => StyleSheet.create({
         color: '#7F8C8D',
     },
     tabTextoActive: {
-        color: '#48C9B0',
+        color: '#29B6F6',
     },
     contadoContainer: {
         marginTop: 20,
@@ -1062,10 +1062,11 @@ const createStyles = (colors) => StyleSheet.create({
         marginLeft: 4,
     },
     resumenTotal: {
-        backgroundColor: '#48C9B0',
+        backgroundColor: '#29B6F6',
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
+        borderRadius: 5,
     },
     resumenLabelTotal: {
         fontSize: 14,
@@ -1109,7 +1110,7 @@ const createStyles = (colors) => StyleSheet.create({
         borderColor: '#E0E0E0',
     },
     metodoBtnActivo: {
-        borderColor: '#48C9B0',
+        borderColor: '#29B6F6',
         backgroundColor: '#E8F8F5',
     },
     metodoBtnTexto: {
@@ -1119,7 +1120,7 @@ const createStyles = (colors) => StyleSheet.create({
         textAlign: 'center',
     },
     metodoBtnTextoActivo: {
-        color: '#48C9B0',
+        color: '#29B6F6',
     },
     creditoContainer: {
         marginTop: 20,
@@ -1289,7 +1290,7 @@ const createStyles = (colors) => StyleSheet.create({
     fechaTexto: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#48C9B0',
+        color: '#29B6F6',
     },
     cuotasListaContainer: {
         marginTop: 20,
@@ -1343,7 +1344,7 @@ const createStyles = (colors) => StyleSheet.create({
     cuotaFechaTexto: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#48C9B0',
+        color: '#29B6F6',
     },
     footerContainer: {
         position: 'absolute',
@@ -1357,7 +1358,7 @@ const createStyles = (colors) => StyleSheet.create({
         paddingTop: 12,
     },
     cobrarBtn: {
-        backgroundColor: '#48C9B0',
+        backgroundColor: '#29B6F6',
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
@@ -1431,7 +1432,7 @@ const createStyles = (colors) => StyleSheet.create({
     },
     modalBtnGuardar: {
         flex: 1,
-        backgroundColor: '#48C9B0',
+        backgroundColor: '#29B6F6',
         borderRadius: 8,
         paddingVertical: 12,
         alignItems: 'center',

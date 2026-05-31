@@ -32,6 +32,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
     const [editarCantidadModalVisible, setEditarCantidadModalVisible] = useState(false);
     const [productoAEditar, setProductoAEditar] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+    const [productoMenuVisible, setProductoMenuVisible] = useState(false);
+    const [productoMenuPosition, setProductoMenuPosition] = useState({ x: 0, y: 0 });
 
     // Sincronización automática en tiempo real
     useProductSync(setProductosSeleccionados);
@@ -171,12 +173,55 @@ export default function PuntoVentaScreen({ route, navigation }) {
     };
 
     const handleEliminarProducto = (productoId) => {
-        setProductosSeleccionados(productosSeleccionados.filter(p => p.id !== productoId));
+        const producto = productosSeleccionados.find(p => p.id === productoId);
+
+        Alert.alert(
+            'Eliminar producto',
+            `¿Deseas eliminar "${obtenerNombreProductoCompleto(producto)}" del carrito?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: () => {
+                        setProductosSeleccionados(productosSeleccionados.filter(p => p.id !== productoId));
+                        showToast({
+                            type: 'success',
+                            text: 'Producto eliminado',
+                            size: 'small',
+                            duration: 2000,
+                        });
+                    },
+                },
+            ]
+        );
     };
 
     const handleCambiarCantidad = (productoId, nuevaCantidad) => {
         if (nuevaCantidad <= 0) {
-            handleEliminarProducto(productoId);
+            // Mostrar alerta de confirmación antes de eliminar
+            const producto = productosSeleccionados.find(p => p.id === productoId);
+
+            Alert.alert(
+                'Eliminar producto',
+                `¿Deseas eliminar "${obtenerNombreProductoCompleto(producto)}" del carrito?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Eliminar',
+                        style: 'destructive',
+                        onPress: () => {
+                            setProductosSeleccionados(productosSeleccionados.filter(p => p.id !== productoId));
+                            showToast({
+                                type: 'success',
+                                text: 'Producto eliminado',
+                                size: 'small',
+                                duration: 2000,
+                            });
+                        },
+                    },
+                ]
+            );
         } else {
             setProductosSeleccionados(
                 productosSeleccionados.map(p =>
@@ -221,6 +266,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
                         showToast({
                             type: 'success',
                             text: 'Punto de venta limpiado',
+                            size: 'small',
+                            duration: 2000,
                         });
                     },
                 },
@@ -263,6 +310,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
             showToast({
                 type: 'success',
                 text: 'Borrador guardado exitosamente',
+                size: 'small',
+                duration: 2000,
             });
         } catch (error) {
             console.error('Error al guardar borrador:', error);
@@ -316,6 +365,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
             showToast({
                 type: 'success',
                 text: 'Productos actualizados',
+                size: 'small',
+                duration: 2000,
             });
         } catch (error) {
             console.error('Error al actualizar productos:', error);
@@ -359,6 +410,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
         showToast({
             type: 'success',
             text: 'Precio actualizado',
+            size: 'small',
+            duration: 2000,
         });
     };
 
@@ -378,10 +431,44 @@ export default function PuntoVentaScreen({ route, navigation }) {
         showToast({
             type: 'success',
             text: 'Cantidad actualizada',
+            size: 'small',
+            duration: 2000,
         });
     };
 
     const styles = createStyles(colors);
+
+    const handleProductoMenuPress = (producto, event) => {
+        event.stopPropagation();
+        event.target.measure((_fx, _fy, _width, height, px, py) => {
+            setProductoMenuPosition({ x: px - 150, y: py + height + 5 });
+            setProductoAEditar(producto);
+            setProductoMenuVisible(true);
+        });
+    };
+
+    const handleDescuentoProducto = () => {
+        setProductoMenuVisible(false);
+        // TODO: Implementar funcionalidad de descuento
+        showToast({
+            type: 'info',
+            text: 'Funcionalidad de descuento próximamente',
+        });
+    };
+
+    const handleVerDetalleProducto = () => {
+        setProductoMenuVisible(false);
+        if (productoAEditar) {
+            navigation.navigate('DetalleProducto', { productoId: productoAEditar.id });
+        }
+    };
+
+    const handleEliminarProductoMenu = () => {
+        setProductoMenuVisible(false);
+        if (productoAEditar) {
+            handleEliminarProducto(productoAEditar.id);
+        }
+    };
 
     const renderProductoSeleccionado = ({ item }) => {
         const precioModificado = item.precioVentaOriginal && item.precioVenta !== item.precioVentaOriginal;
@@ -403,6 +490,8 @@ export default function PuntoVentaScreen({ route, navigation }) {
                         <Text style={styles.productoNombreSeleccionado} numberOfLines={2}>
                             {obtenerNombreProductoCompleto(item)}
                         </Text>
+
+                        {/* Primera fila: Precio editable */}
                         <View style={styles.precioContainer}>
                             {precioModificado && (
                                 <Text style={styles.precioOriginalTachado}>
@@ -420,38 +509,51 @@ export default function PuntoVentaScreen({ route, navigation }) {
                                 <Ionicons name="pencil" size={14} color={precioModificado ? "#FF9800" : "#7F8C8D"} />
                             </TouchableOpacity>
                         </View>
+
+                        {/* Segunda fila: Controles de cantidad */}
+                        <View style={styles.cantidadControls}>
+                            <TouchableOpacity
+                                style={styles.cantidadBtn}
+                                onPress={() => handleCambiarCantidad(item.id, item.cantidad - 1)}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="remove" size={16} color="#2C3E50" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.cantidadEditableContainer}
+                                onPress={() => handleEditarCantidad(item)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.cantidadTextoControl}>{item.cantidad}</Text>
+                                <Ionicons name="pencil" size={12} color="#7F8C8D" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.cantidadBtn}
+                                onPress={() => handleCambiarCantidad(item.id, item.cantidad + 1)}
+                                activeOpacity={0.7}
+                                disabled={item.cantidad >= item.stock}
+                            >
+                                <Ionicons name="add" size={16} color="#2C3E50" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
 
                 <View style={styles.productoRightSeleccionado}>
+                    <TouchableOpacity
+                        style={styles.menuBtnProducto}
+                        onPress={(e) => handleProductoMenuPress(item, e)}
+                    >
+                        <Ionicons name="ellipsis-vertical" size={20} color="#636E72" />
+                    </TouchableOpacity>
+
                     <Text style={styles.subtotalTexto}>
                         {formatCurrency(item.precioVenta * item.cantidad)}
                     </Text>
-                    <View style={styles.cantidadControls}>
-                        <TouchableOpacity
-                            style={styles.cantidadBtn}
-                            onPress={() => handleCambiarCantidad(item.id, item.cantidad - 1)}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons name="remove" size={16} color="#2C3E50" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.cantidadEditableContainer}
-                            onPress={() => handleEditarCantidad(item)}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={styles.cantidadTextoControl}>{item.cantidad}</Text>
-                            <Ionicons name="pencil" size={12} color="#7F8C8D" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.cantidadBtn}
-                            onPress={() => handleCambiarCantidad(item.id, item.cantidad + 1)}
-                            activeOpacity={0.7}
-                            disabled={item.cantidad >= item.stock}
-                        >
-                            <Ionicons name="add" size={16} color="#2C3E50" />
-                        </TouchableOpacity>
-                    </View>
+
+                    <Text style={styles.stockTextoProducto}>
+                        Stock: {item.stock}
+                    </Text>
                 </View>
             </View>
         );
@@ -591,9 +693,48 @@ export default function PuntoVentaScreen({ route, navigation }) {
                         activeOpacity={0.7}
                     >
                         <Text style={styles.continuarTexto}>Continuar</Text>
-                        <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                        <Ionicons name="arrow-forward" size={20} color="#29B6F6" />
                     </TouchableOpacity>
                 </View>
+            )}
+
+            {/* Menú dropdown del producto */}
+            {productoMenuVisible && (
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setProductoMenuVisible(false)}
+                >
+                    <View style={[styles.menuDropdown, { top: productoMenuPosition.y, left: productoMenuPosition.x }]}>
+                        <TouchableOpacity
+                            style={styles.menuOption}
+                            onPress={handleDescuentoProducto}
+                        >
+                            {/* <Ionicons name="pricetag-outline" size={20} color={colors.text} /> */}
+                            <Text style={styles.menuOptionText}>Descuento</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.menuDivider} />
+
+                        <TouchableOpacity
+                            style={styles.menuOption}
+                            onPress={handleVerDetalleProducto}
+                        >
+                            {/* <Ionicons name="eye-outline" size={20} color={colors.text} /> */}
+                            <Text style={styles.menuOptionText}>Ver detalle</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.menuDivider} />
+
+                        <TouchableOpacity
+                            style={styles.menuOption}
+                            onPress={handleEliminarProductoMenu}
+                        >
+                            {/* <Ionicons name="trash-outline" size={20} color="#FF6B6B" /> */}
+                            <Text style={[styles.menuOptionText, { color: '#FF6B6B' }]}>Eliminar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
             )}
         </View>
     );
@@ -618,7 +759,7 @@ const createStyles = (colors) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        borderRadius: 8,
+        borderRadius: 5,
         paddingVertical: 0,
         paddingHorizontal: 10,
         gap: 8,
@@ -681,24 +822,26 @@ const createStyles = (colors) => StyleSheet.create({
     productoSeleccionadoCard: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: colors.card,
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
+        alignItems: 'flex-start',
+        paddingVertical: 14,
+        borderBottomWidth: 0.3,
+        borderBottomColor: "gray",
     },
     productoLeft: {
+        position: "relative",
         flexDirection: 'row',
         flex: 1,
         gap: 12,
+        // borderWidth: 2,
+        // borderColor: "red"
     },
     imagenContainerSmall: {
         width: 50,
         height: 50,
         borderRadius: 8,
         overflow: 'hidden',
+        // borderWidth: 1,
+        // borderColor: "gray",
     },
     imagen: {
         width: '100%',
@@ -714,14 +857,19 @@ const createStyles = (colors) => StyleSheet.create({
     },
     productoInfoSeleccionado: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
+        gap: 6,
     },
     productoNombreSeleccionado: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: colors.text,
-        marginBottom: 4,
         lineHeight: 18,
+    },
+    precioYTotalContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     precioContainer: {
         flexDirection: 'row',
@@ -737,11 +885,13 @@ const createStyles = (colors) => StyleSheet.create({
     precioEditableContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        paddingVertical: 2,
-        paddingHorizontal: 6,
-        borderRadius: 4,
+        gap: 6,
+        paddingVertical: 5,
+        paddingHorizontal: 7,
+        borderRadius: 5,
         backgroundColor: colors.surfaceVariant,
+        borderWidth: 0.3,
+        borderColor: "gray",
     },
     productoPrecioSeleccionado: {
         fontSize: 13,
@@ -752,19 +902,42 @@ const createStyles = (colors) => StyleSheet.create({
         color: '#FF9800',
         fontWeight: '700',
     },
-    productoRightSeleccionado: {
-        alignItems: 'flex-end',
+    subtotalTexto: {
+        fontSize: 15,
+        fontWeight: '600',   // antes '700'
+        color: colors.text,
+        marginTop: 8,
+    },
+    totalYStockContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: 8,
     },
-    subtotalTexto: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: colors.text,
-    },
     cantidadControls: {
+        // position: "absolute",
+        left: -65,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        // borderWidth:1,
+        // borderColor: "red",
+        marginLeft: 5,
+        marginRight: 80,
+    },
+    stockTextoProducto: {
+        fontSize: 11,
+        color: colors.textSecondary,
+        fontWeight: '500',
+        marginTop: 4,
+    },
+    productoRightSeleccionado: {
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        paddingTop: 4,
+    },
+    menuBtnProducto: {
+        padding: 4,
     },
     cantidadBtn: {
         width: 28,
@@ -778,12 +951,14 @@ const createStyles = (colors) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        paddingVertical: 4,
+        paddingVertical: 1,
         paddingHorizontal: 8,
         borderRadius: 4,
         backgroundColor: colors.surfaceVariant,
         minWidth: 40,
         justifyContent: 'center',
+        // borderWidth: 0.2,
+        // borderColor: "gray"
     },
     cantidadTextoControl: {
         fontSize: 14,
@@ -826,19 +1001,58 @@ const createStyles = (colors) => StyleSheet.create({
         alignItems: 'center',
         // alignContent: 'center',
         justifyContent: 'center',
-        backgroundColor: '#29B6F6',
+        // backgroundColor: '#29B6F6',
         borderRadius: 12,
-        paddingVertical: 12,
+        paddingVertical: 10,
         paddingHorizontal: 24,
         gap: 8,
         marginLeft: 66,
         marginRight: 66,
+        borderWidth: 1,
+        borderColor: '#29B6F6',
     },
     continuarTexto: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#FFF',
+        color: '#29B6F6',
         alignContent: 'center'
     },
+    modalOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'transparent',
+    },
+    menuDropdown: {
+        position: 'absolute',
+        backgroundColor: colors.card,
+        borderRadius: 8,
+        minWidth: 160,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    menuOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 11,
+        paddingHorizontal: 10,
+    },
+    menuOptionText: {
+        fontSize: 14,
+        color: colors.text,
+        fontWeight: '500',
+        marginLeft: 12,
+    },
+    menuDivider: {
+        height: 1,
+        backgroundColor: colors.border,
+        marginHorizontal: 8,
+    },
 });
-

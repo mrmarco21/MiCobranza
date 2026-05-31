@@ -11,11 +11,14 @@ import Header from '../../shared/components/Header';
 import EmptyState from '../../shared/components/EmptyState';
 import BarcodeScannerModal from '../../shared/components/BarcodeScannerModal';
 import { useTheme } from '../../shared/hooks/useTheme';
+import { useToast } from '../../shared/context/ToastContext';
 
 export default function SeleccionarProductosScreen({ route, navigation }) {
     const { productosYaSeleccionados = [] } = route.params || {};
     const { colors } = useTheme();
+    const { showToast } = useToast();
     const insets = useSafeAreaInsets();
+    const flatListRef = React.useRef(null);
 
     const [productos, setProductos] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
@@ -27,6 +30,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('all'); // 'all' o ID de categoría
     const [scannerVisible, setScannerVisible] = useState(false);
+    const [datosInicializados, setDatosInicializados] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -35,14 +39,17 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                 StatusBar.setBarStyle('dark-content', true);
             }, 0);
 
-            cargarDatos();
+            // Solo cargar datos la primera vez
+            if (!datosInicializados) {
+                cargarDatos();
+            }
 
             return () => {
                 // Limpiar el timer
                 clearTimeout(timerId);
                 // No cambiar el StatusBar aquí - dejar que PuntoVentaScreen lo maneje
             };
-        }, [])
+        }, [datosInicializados])
     );
 
     const cargarDatos = async () => {
@@ -57,6 +64,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
             setProductos(prodsConStock);
             setProductosFiltrados(prodsConStock);
             setCategorias(cats);
+            setDatosInicializados(true);
         } catch (error) {
             console.error('Error al cargar datos:', error);
         } finally {
@@ -166,19 +174,28 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
         //     categoriaType: typeof p.categoria
         // })));
 
+        // Mostrar toast de confirmación
+        showToast({
+            type: 'success',
+            text: 'Producto agregado',
+            duration: 2000,
+            size: 'small', // Toast más pequeño
+        });
+
         // Regresar inmediatamente a Punto de Venta con el producto agregado
         navigation.navigate('PuntoVenta', {
             productosSeleccionados: nuevosProductos
         });
     };
 
-    const handleToggleCheckbox = (productoId) => {
-        if (productosChecked.includes(productoId)) {
-            setProductosChecked(productosChecked.filter(id => id !== productoId));
-        } else {
-            setProductosChecked([...productosChecked, productoId]);
-        }
-    };
+    const handleToggleCheckbox = React.useCallback((productoId) => {
+        // Actualización inmediata del estado sin lógica adicional
+        setProductosChecked(prev =>
+            prev.includes(productoId)
+                ? prev.filter(id => id !== productoId)
+                : [...prev, productoId]
+        );
+    }, []);
 
     const handleAgregarSeleccionados = () => {
         // Agregar todos los productos checkeados
@@ -216,6 +233,15 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
         //     categoriaType: typeof p.categoria
         // })));
 
+        // Mostrar toast de confirmación
+        const cantidadAgregados = productosChecked.length;
+        showToast({
+            type: 'success',
+            text: cantidadAgregados === 1 ? 'Producto agregado' : `${cantidadAgregados} productos agregados`,
+            duration: 2000,
+            size: 'small', // Toast más pequeño
+        });
+
         // Navegar de vuelta con los productos
         navigation.navigate('PuntoVenta', {
             productosSeleccionados: nuevosProductos
@@ -226,22 +252,34 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
         setProductosChecked([]);
     };
 
-    const renderProducto = ({ item }) => {
-        const isChecked = productosChecked.includes(item.id);
+    const ProductoItem = React.memo(({ item }) => {
+        const [localChecked, setLocalChecked] = useState(productosChecked.includes(item.id));
+
+        // Sincronizar con el estado global
+        React.useEffect(() => {
+            setLocalChecked(productosChecked.includes(item.id));
+        }, [productosChecked]);
+
+        const handlePress = React.useCallback(() => {
+            // Actualizar estado local INMEDIATAMENTE para feedback visual instantáneo
+            setLocalChecked(prev => !prev);
+            // Actualizar estado global
+            handleToggleCheckbox(item.id);
+        }, [item.id]);
 
         return (
             <View style={styles.productoCard}>
-                <TouchableOpacity
-                    style={[styles.checkbox, isChecked && styles.checkboxChecked]}
-                    onPress={() => handleToggleCheckbox(item.id)}
-                    activeOpacity={0.7}
-                >
-                    {isChecked && (
-                        <Ionicons name="checkmark" size={16} color="#FFF" />
-                    )}
-                </TouchableOpacity>
+                <View style={styles.productoMainRow}>
+                    <TouchableOpacity
+                        style={[styles.checkbox, localChecked && styles.checkboxChecked]}
+                        onPress={handlePress}
+                        activeOpacity={0.6}
+                    >
+                        {localChecked && (
+                            <Ionicons name="checkmark" size={16} color="#FFF" />
+                        )}
+                    </TouchableOpacity>
 
-                <View style={styles.productoContent}>
                     <TouchableOpacity
                         style={styles.imagenContainer}
                         onPress={() => navigation.navigate('DetalleProducto', { productoId: item.id })}
@@ -259,64 +297,79 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                         </View>
                     </TouchableOpacity>
 
-                    <View style={styles.productoInfo}>
-                        <Text style={styles.stockTexto}>
-                            Stock: {item.stock} {obtenerNombreCategoria(item.categoria)}
-                        </Text>
-                        <Text style={styles.codigoTexto}>({item.id.substring(0, 15)})</Text>
+                    <View style={styles.productoInfoContainer}>
+                        <View style={styles.productoTopRow}>
+                            <Text style={styles.stockTexto}>
+                                Stock: {item.stock} {obtenerNombreCategoria(item.categoria)}
+                            </Text>
+                            <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>
+                        </View>
                         <Text style={styles.productoNombre} numberOfLines={2}>
+                            <Text style={styles.codigoTexto}>({item.id.substring(0, 15)}) </Text>
                             {obtenerNombreProductoCompleto(item)}
                         </Text>
                     </View>
+                </View>
 
-                    <View style={styles.productoRight}>
-                        <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>
-                        <TouchableOpacity
-                            style={styles.agregarBtn}
-                            onPress={() => handleAgregarProducto(item)}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={styles.agregarTexto}>Agregar</Text>
-                        </TouchableOpacity>
-                    </View>
+                <View style={styles.botonRow}>
+                    <TouchableOpacity
+                        style={styles.agregarBtn}
+                        onPress={() => handleAgregarProducto(item)}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.agregarTexto}>Agregar</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         );
-    };
+    });
+
+    const renderProducto = React.useCallback(({ item }) => {
+        return <ProductoItem item={item} />;
+    }, []);
 
     const styles = createStyles(colors);
 
     return (
         <SafeAreaView style={styles.container} edges={['bottom']}>
             <StatusBar barStyle="dark-content" />
-            <Header
-                title="Buscar"
-                showBack
-                whiteBackground
-                rightButtons={[
-                    {
-                        icon: 'barcode-scan',
-                        onPress: () => setScannerVisible(true),
-                        iconComponent: MaterialCommunityIcons
-                    },
-                    {
-                        icon: 'options-outline',
-                        onPress: () => setMostrarFiltros(true)
-                    }
-                ]}
-            />
+            <View style={styles.headerContainer}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#2C3E50" />
+                </TouchableOpacity>
 
-            {/* Barra de búsqueda */}
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="#7F8C8D" style={styles.searchIcon} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar"
-                    placeholderTextColor="#BDC3C7"
-                    value={busqueda}
-                    onChangeText={handleBuscar}
-                    autoFocus
-                />
+                {/* Barra de búsqueda en el header */}
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#7F8C8D" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Buscar productos..."
+                        placeholderTextColor="#BDC3C7"
+                        value={busqueda}
+                        onChangeText={handleBuscar}
+                        autoFocus
+                    />
+                </View>
+
+                <TouchableOpacity
+                    style={styles.headerIconButton}
+                    onPress={() => setScannerVisible(true)}
+                    activeOpacity={0.7}
+                >
+                    <MaterialCommunityIcons name="barcode-scan" size={24} color="#2C3E50" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.headerIconButton}
+                    onPress={() => setMostrarFiltros(true)}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="options-outline" size={24} color="#2C3E50" />
+                </TouchableOpacity>
             </View>
 
             {/* Lista de productos */}
@@ -326,6 +379,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                 </View>
             ) : productosFiltrados.length > 0 ? (
                 <FlatList
+                    ref={flatListRef}
                     data={productosFiltrados}
                     keyExtractor={(item) => item.id}
                     renderItem={renderProducto}
@@ -334,6 +388,13 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                         { paddingBottom: productosChecked.length > 0 ? 120 : 20 }
                     ]}
                     showsVerticalScrollIndicator={false}
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={10}
+                    updateCellsBatchingPeriod={50}
+                    windowSize={10}
+                    maintainVisibleContentPosition={{
+                        minIndexForVisible: 0,
+                    }}
                 />
             ) : (
                 <EmptyState
@@ -345,18 +406,18 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
             {/* Footer con botones cuando hay productos seleccionados */}
             {productosChecked.length > 0 && (
                 <View style={styles.footerContainer}>
-                    <View style={styles.footerInfo}>
+                    {/* <View style={styles.footerInfo}>
                         <Text style={styles.footerTexto}>
                             {productosChecked.length} {productosChecked.length === 1 ? 'producto seleccionado' : 'productos seleccionados'}
                         </Text>
-                    </View>
+                    </View> */}
                     <View style={styles.footerButtons}>
                         <TouchableOpacity
                             style={styles.eliminarBtn}
                             onPress={handleEliminarSeleccionados}
                             activeOpacity={0.7}
                         >
-                            <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+                            {/* <Ionicons name="trash-outline" size={20} color="#FF6B6B" /> */}
                             <Text style={styles.eliminarTexto}>Eliminar</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -365,7 +426,7 @@ export default function SeleccionarProductosScreen({ route, navigation }) {
                             activeOpacity={0.7}
                         >
                             <Ionicons name="checkmark" size={20} color="#FFF" />
-                            <Text style={styles.agregarProductosBtnTexto}>Agregar Productos</Text>
+                            <Text style={styles.agregarProductosBtnTexto}>Agregar Productos ({productosChecked.length} {})</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -446,40 +507,58 @@ const createStyles = (colors) => StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background,
     },
-    searchContainer: {
+    headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
-        marginHorizontal: 16,
-        marginVertical: 12,
         paddingHorizontal: 12,
-        paddingVertical: 10,
+        paddingTop: 35,
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        gap: 8,
+    },
+    backButton: {
+        padding: 8,
+    },
+    headerIconButton: {
+        padding: 8,
+    },
+    searchContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
     searchIcon: {
         marginRight: 8,
     },
     searchInput: {
         flex: 1,
-        fontSize: 16,
+        fontSize: 15,
         color: '#2C3E50',
         padding: 0,
     },
     listContainer: {
         paddingHorizontal: 8,
+        paddingTop: 8,
     },
     productoCard: {
-        flexDirection: 'row',
         backgroundColor: colors.card,
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 8,
+        borderRadius: 6,
+        padding: 8,
+        marginBottom: 6,
         marginHorizontal: 8,
-        borderWidth: 1,
-        borderColor: colors.border,
+        borderWidth: 0.2,
+        borderColor: "gray",
+    },
+    productoMainRow: {
+        flexDirection: 'row',
         alignItems: 'flex-start',
+        gap: 12,
     },
     checkbox: {
         width: 24,
@@ -487,8 +566,7 @@ const createStyles = (colors) => StyleSheet.create({
         borderRadius: 4,
         borderWidth: 2,
         borderColor: '#BDC3C7',
-        marginRight: 12,
-        marginTop: 4,
+        marginTop: 2,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -534,39 +612,42 @@ const createStyles = (colors) => StyleSheet.create({
         color: '#FFF',
         fontWeight: '600',
     },
-    productoInfo: {
+    productoInfoContainer: {
         flex: 1,
-        justifyContent: 'center',
+    },
+    productoTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 4,
     },
     stockTexto: {
         fontSize: 11,
         color: colors.textSecondary,
-        marginBottom: 2,
     },
     codigoTexto: {
-        fontSize: 10,
+        fontSize: 11,
         color: colors.textTertiary,
-        marginBottom: 4,
     },
     productoNombre: {
-        fontSize: 13,
+        fontSize: 12,
         color: colors.text,
-        lineHeight: 18,
-    },
-    productoRight: {
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        minHeight: 70,
+        lineHeight: 16,
     },
     productoPrecio: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '700',
         color: colors.text,
+    },
+    botonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 2,
     },
     agregarBtn: {
         backgroundColor: '#48C9B0',
         borderRadius: 6,
-        paddingVertical: 6,
+        paddingVertical: 4,
         paddingHorizontal: 16,
     },
     agregarTexto: {
@@ -589,11 +670,13 @@ const createStyles = (colors) => StyleSheet.create({
         left: 0,
         right: 0,
         backgroundColor: colors.card,
+        borderTopLeftRadius: 25,
+        borderTopRightRadius: 25,
         borderTopWidth: 1,
         borderTopColor: colors.border,
         paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 35,
+        paddingTop: 5,
+        paddingBottom: 30,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
@@ -611,16 +694,16 @@ const createStyles = (colors) => StyleSheet.create({
     },
     footerButtons: {
         flexDirection: 'row',
-        gap: 12,
+        gap: 8,
     },
     eliminarBtn: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFE5E5',
+        // backgroundColor: '#FFE5E5',
         borderRadius: 12,
-        paddingVertical: 12,
+        paddingVertical: 8,
         gap: 8,
     },
     eliminarTexto: {
@@ -633,15 +716,18 @@ const createStyles = (colors) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#48C9B0',
+        // backgroundColor: '#48C9B0',
         borderRadius: 12,
-        paddingVertical: 12,
+        paddingVertical: 10,
         gap: 8,
+        
     },
     agregarProductosBtnTexto: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#FFF',
+        color: '#48C9B0',
+        textDecoration: 'underline',
+        textDecorationColor: '#48C9B0',
     },
     modalOverlay: {
         flex: 1,

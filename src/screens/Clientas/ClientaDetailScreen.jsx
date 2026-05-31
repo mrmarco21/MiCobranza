@@ -304,9 +304,9 @@ export default function ClientaDetailScreen({ route, navigation }) {
                     {/* Tarjetas compactas */}
                     <View style={styles.resumenContainer}>
                         <View style={styles.resumenCard}>
-                            <View style={styles.resumenIconoWrapper}>
+                            {/* <View style={styles.resumenIconoWrapper}>
                                 <Ionicons name="trending-down" size={16} color="#FF6B6B" />
-                            </View>
+                            </View> */}
                             <Text style={styles.resumenLabel}>Deuda total</Text>
                             <Text style={styles.resumenMontoDeuda}>{formatCurrency(totalDeuda)}</Text>
                             {cuentasActivas.length > 1 && (
@@ -314,9 +314,9 @@ export default function ClientaDetailScreen({ route, navigation }) {
                             )}
                         </View>
                         <View style={styles.resumenCard}>
-                            <View style={[styles.resumenIconoWrapper, styles.resumenIconoAbono]}>
+                            {/* <View style={[styles.resumenIconoWrapper, styles.resumenIconoAbono]}>
                                 <Ionicons name="trending-up" size={16} color="#4CAF50" />
-                            </View>
+                            </View> */}
                             <Text style={styles.resumenLabel}>Total abonado</Text>
                             <Text style={styles.resumenMontoAbono}>{formatCurrency(totalAbonos)}</Text>
                         </View>
@@ -845,7 +845,7 @@ const createStyles = (colors) => StyleSheet.create({
         marginBottom: 4
     },
     resumenMontoDeuda: { fontSize: 18, fontWeight: '800', color: '#FF6B6B', letterSpacing: -0.5 },
-    resumenMontoAbono: { fontSize: 18, fontWeight: '800', color: '#4CAF50', letterSpacing: -0.5 },
+    resumenMontoAbono: { fontSize: 18, fontWeight: '800', color: '#4CAF50', letterSpacing: -0.5, paddingTop: 0 },
     resumenSubtexto: { fontSize: 9, color: colors.textSecondary, marginTop: 2, fontWeight: '500' },
     // Cuenta card - Diseño compacto
     cuentaCard: {

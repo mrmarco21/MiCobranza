@@ -3,7 +3,7 @@ import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedba
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../shared/hooks/useTheme';
 
-export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBorradores, onActualizar, anchorPosition }) {
+export default function CuentasMenuModal({ visible, onClose, onOrdenar, onMantenimiento, anchorPosition }) {
     const { colors } = useTheme();
     const styles = createStyles(colors);
 
@@ -25,42 +25,28 @@ export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBor
                                 style={styles.menuItem}
                                 onPress={() => {
                                     onClose();
-                                    onLimpiar();
+                                    onOrdenar();
                                 }}
                                 activeOpacity={0.7}
                             >
-                                {/* <Ionicons name="trash-outline" size={20} color="#FF6B6B" /> */}
-                                <Text style={styles.menuItemText}>Limpiar</Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.separator} />
-
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => {
-                                    onClose();
-                                    onBorradores();
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                {/* <Ionicons name="document-text-outline" size={20} color="#2C3E50" /> */}
-                                <Text style={styles.menuItemText}>Borradores</Text>
+                                <Text style={styles.menuItemText}>Ordenar</Text>
                                 <Ionicons name="chevron-forward" size={18} color="#95A5A6" style={styles.chevron} />
                             </TouchableOpacity>
-                            
+
                             <View style={styles.separator} />
 
                             <TouchableOpacity
                                 style={styles.menuItem}
                                 onPress={() => {
                                     onClose();
-                                    onActualizar();
+                                    onMantenimiento();
                                 }}
                                 activeOpacity={0.7}
                             >
-                                {/* <Ionicons name="refresh-outline" size={20} color="#29B6F6" /> */}
-                                <Text style={styles.menuItemText}>Actualizar</Text>
+                                <Text style={styles.menuItemText}>Mantenimiento</Text>
+                                <Ionicons name="chevron-forward" size={18} color="#95A5A6" style={styles.chevron} />
                             </TouchableOpacity>
+
                         </View>
                     </TouchableWithoutFeedback>
                 </View>

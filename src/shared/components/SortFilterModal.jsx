@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 
 export default function SortFilterModal({ visible, onClose, onApply, currentFilter, currentSort, showFilters = false }) {
     const { colors } = useTheme();
     const styles = createStyles(colors);
-    const scaleAnim = useRef(new Animated.Value(0)).current;
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const [modalVisible, setModalVisible] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState(currentFilter || 'all');
     const [selectedSort, setSelectedSort] = useState(currentSort || 'a-z');
 
@@ -16,42 +13,8 @@ export default function SortFilterModal({ visible, onClose, onApply, currentFilt
         if (visible) {
             setSelectedFilter(currentFilter || 'all');
             setSelectedSort(currentSort || 'a-z');
-            setModalVisible(true);
-            Animated.parallel([
-                Animated.spring(scaleAnim, {
-                    toValue: 1,
-                    useNativeDriver: true,
-                    tension: 100,
-                    friction: 8,
-                }),
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                })
-            ]).start();
-        } else {
-            Animated.parallel([
-                Animated.timing(scaleAnim, {
-                    toValue: 0,
-                    duration: 150,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(fadeAnim, {
-                    toValue: 0,
-                    duration: 150,
-                    useNativeDriver: true,
-                })
-            ]).start(() => {
-                setModalVisible(false);
-            });
         }
-    }, [visible]);
-
-    const handleApply = () => {
-        onApply({ filter: selectedFilter, sort: selectedSort });
-        onClose();
-    };
+    }, [visible, currentFilter, currentSort]);
 
     const handleOptionSelect = (type, value) => {
         if (type === 'filter') {
@@ -80,39 +43,59 @@ export default function SortFilterModal({ visible, onClose, onApply, currentFilt
         { value: 'lowest', label: 'Saldo menor', icon: 'trending-down' },
     ];
 
+    if (!visible) return null;
+
     return (
         <Modal
-            visible={modalVisible}
+            visible={visible}
             transparent
             animationType="none"
             onRequestClose={onClose}
         >
-            <TouchableOpacity
-                style={styles.overlay}
-                activeOpacity={1}
-                onPress={onClose}
-            >
-                <Animated.View
-                    style={[
-                        styles.dropdownContainer,
-                        {
-                            opacity: fadeAnim,
-                            transform: [{ scale: scaleAnim }]
-                        }
-                    ]}
-                >
-                    {/* Filtros */}
-                    {showFilters && (
-                        <>
+            <TouchableWithoutFeedback onPress={onClose}>
+                <View style={styles.overlay}>
+                    <TouchableWithoutFeedback>
+                        <View style={styles.dropdownContainer}>
+                            {/* Filtros */}
+                            {showFilters && (
+                                <>
+                                    <View style={styles.section}>
+                                        <Text style={styles.sectionTitle}>Filtrar</Text>
+                                    </View>
+
+                                    {filterOptions.map((option) => (
+                                        <TouchableOpacity
+                                            key={option.value}
+                                            style={styles.option}
+                                            onPress={() => handleOptionSelect('filter', option.value)}
+                                            activeOpacity={0.7}
+                                        >
+                                            <View style={styles.optionContent}>
+                                                <Text style={styles.optionLabel}>{option.label}</Text>
+                                            </View>
+                                            <View style={[
+                                                styles.radio,
+                                                selectedFilter === option.value && styles.radioSelected
+                                            ]}>
+                                                {selectedFilter === option.value && (
+                                                    <View style={styles.radioInner} />
+                                                )}
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Ordenar */}
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>Filtrar</Text>
+                                <Text style={styles.sectionTitle}>Ordenar</Text>
                             </View>
 
-                            {filterOptions.map((option) => (
+                            {sortOptions.map((option) => (
                                 <TouchableOpacity
                                     key={option.value}
                                     style={styles.option}
-                                    onPress={() => handleOptionSelect('filter', option.value)}
+                                    onPress={() => handleOptionSelect('sort', option.value)}
                                     activeOpacity={0.7}
                                 >
                                     <View style={styles.optionContent}>
@@ -120,44 +103,18 @@ export default function SortFilterModal({ visible, onClose, onApply, currentFilt
                                     </View>
                                     <View style={[
                                         styles.radio,
-                                        selectedFilter === option.value && styles.radioSelected
+                                        selectedSort === option.value && styles.radioSelected
                                     ]}>
-                                        {selectedFilter === option.value && (
+                                        {selectedSort === option.value && (
                                             <View style={styles.radioInner} />
                                         )}
                                     </View>
                                 </TouchableOpacity>
                             ))}
-                        </>
-                    )}
-
-                    {/* Ordenar */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Ordenar</Text>
-                    </View>
-
-                    {sortOptions.map((option) => (
-                        <TouchableOpacity
-                            key={option.value}
-                            style={styles.option}
-                            onPress={() => handleOptionSelect('sort', option.value)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.optionContent}>
-                                <Text style={styles.optionLabel}>{option.label}</Text>
-                            </View>
-                            <View style={[
-                                styles.radio,
-                                selectedSort === option.value && styles.radioSelected
-                            ]}>
-                                {selectedSort === option.value && (
-                                    <View style={styles.radioInner} />
-                                )}
-                            </View>
-                        </TouchableOpacity>
-                    ))}
-                </Animated.View>
-            </TouchableOpacity>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </View>
+            </TouchableWithoutFeedback>
         </Modal>
     );
 }
@@ -165,7 +122,7 @@ export default function SortFilterModal({ visible, onClose, onApply, currentFilt
 const createStyles = (colors) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'transparent',
         paddingTop: 60,
         paddingRight: 16,
         alignItems: 'flex-end',
@@ -177,9 +134,9 @@ const createStyles = (colors) => StyleSheet.create({
         maxWidth: 280,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 5,
     },
     section: {
         paddingHorizontal: 16,

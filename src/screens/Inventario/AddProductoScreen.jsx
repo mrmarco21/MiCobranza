@@ -90,9 +90,7 @@ export default function AddProductoScreen({ route, navigation }) {
     const cargarCategorias = async () => {
         const cats = await categoriasRepo.getCategorias();
         setCategorias(cats);
-        if (cats.length > 0 && !categoriaId) {
-            setCategoriaId(cats[0].id);
-        }
+        // No seleccionar ninguna categoría por defecto
     };
 
     const cargarUnidadesMedida = async () => {
@@ -346,8 +344,8 @@ export default function AddProductoScreen({ route, navigation }) {
         if (!categoriaId) {
             showModal({
                 type: 'error',
-                title: 'Campo requerido',
-                message: 'Debes seleccionar una categoría',
+                title: 'Categoría requerida',
+                message: 'Debes seleccionar una categoría para el producto',
             });
             return;
         }
@@ -498,18 +496,18 @@ export default function AddProductoScreen({ route, navigation }) {
                             value={nombre}
                             onChangeText={setNombre}
                             placeholder="Ej: Polo básico cuello redondo"
-                            icon={<Ionicons name="pricetag-outline" size={20} color="#636E72" />}
+                            // icon={<Ionicons name="pricetag-outline" size={20} color="#636E72" />}
                         />
                     </View>
 
                     {/* Categoría */}
                     <View style={styles.inputGroup}>
                         <FloatingLabelSelector
-                            label="Categoría *"
-                            value={categoriaSeleccionada?.nombre}
+                            label="Seleccione una categoría *"
+                            value={categoriaSeleccionada?.nombre || ''}
                             onPress={() => setModalCategoriasVisible(true)}
-                            placeholder="Selecciona una categoría"
-                            icon={<Ionicons name="grid-outline" size={20} color="#29B6F6" />}
+                            // placeholder="Selecciona una categoría"
+                            // icon={<Ionicons name="grid-outline" size={20} color="#29B6F6" />}
                         />
                     </View>
 
@@ -606,7 +604,7 @@ export default function AddProductoScreen({ route, navigation }) {
                     {/* Sección colapsable: Precios */}
                     <CollapsibleSection
                         title="Precios"
-                        icon="cash-outline"
+                        // icon="cash-outline"
                         iconColor="#4CAF50"
                         defaultExpanded={true}
                     >
@@ -624,7 +622,7 @@ export default function AddProductoScreen({ route, navigation }) {
                                 <Text style={styles.helperTextPrecio}>Costo por unidad</Text>
                             </View>
 
-                            <Ionicons name="arrow-forward" size={24} color="#95A5A6" style={styles.arrowIcon} />
+                            <Ionicons name="arrow-forward" size={20} color="#95A5A6" style={styles.arrowIcon} />
 
                             {/* Precio de venta */}
                             <View style={styles.precioBox}>
@@ -659,7 +657,7 @@ export default function AddProductoScreen({ route, navigation }) {
                     {/* Sección colapsable: Inventario */}
                     <CollapsibleSection
                         title="Inventario"
-                        icon="cube-outline"
+                        // icon="cube-outline"
                         iconColor="#9C27B0"
                         defaultExpanded={true}
                     >
@@ -672,7 +670,7 @@ export default function AddProductoScreen({ route, navigation }) {
                                     onChangeText={setStock}
                                     placeholder="0"
                                     keyboardType="number-pad"
-                                    // icon={<MaterialCommunityIcons name="package-variant" size={20} color="#636E72" />}
+                                // icon={<MaterialCommunityIcons name="package-variant" size={20} color="#636E72" />}
                                 />
                                 <Text style={styles.helperText}>Unidades disponibles</Text>
                             </View>
@@ -683,9 +681,9 @@ export default function AddProductoScreen({ route, navigation }) {
                                     label="Stock mínimo"
                                     value={stockMinimo}
                                     onChangeText={setStockMinimo}
-                                    placeholder="3"
+                                    placeholder="1"
                                     keyboardType="number-pad"
-                                    // icon={<MaterialCommunityIcons name="alert-outline" size={20} color="#FF9800" />}
+                                // icon={<MaterialCommunityIcons name="alert-outline" size={20} color="#FF9800" />}
                                 />
                                 <Text style={styles.helperText}>Alerta de reposición</Text>
                             </View>
@@ -697,7 +695,7 @@ export default function AddProductoScreen({ route, navigation }) {
                                 label="Unidad de medida"
                                 value={unidadMedida}
                                 onPress={() => setModalUnidadVisible(true)}
-                                icon={<MaterialCommunityIcons name="ruler" size={20} color="#9C27B0" />}
+                            // icon={<MaterialCommunityIcons name="ruler" size={20} color="#9C27B0" />}
                             />
                         </View>
 
@@ -1262,7 +1260,7 @@ const createStyles = (colors) => StyleSheet.create({
         flex: 1,
     },
     monedaSymbol: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '700',
         color: '#636E72',
     },
@@ -1354,7 +1352,7 @@ const createStyles = (colors) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 5,
-        paddingVertical: 10,
+        paddingVertical: 5,
         paddingHorizontal: 10,
         backgroundColor: colors.card,
         borderWidth: 1.5,
@@ -1392,7 +1390,7 @@ const createStyles = (colors) => StyleSheet.create({
         borderColor: colors.border,
         borderRadius: 10,
         paddingHorizontal: 12,
-        paddingVertical: 11,
+        paddingVertical: 5,
     },
     fechaTexto: {
         fontSize: 14,
@@ -1420,7 +1418,7 @@ const createStyles = (colors) => StyleSheet.create({
         borderWidth: 1.5,
         borderColor: colors.border,
         borderRadius: 12,
-        paddingVertical: 14,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
         gap: 8,
@@ -1435,7 +1433,7 @@ const createStyles = (colors) => StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#29B6F6',
         borderRadius: 12,
-        paddingVertical: 14,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
         gap: 8,

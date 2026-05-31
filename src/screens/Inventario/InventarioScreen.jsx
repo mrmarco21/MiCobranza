@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { obtenerProductos } from '../../services/productosService';
@@ -22,6 +22,10 @@ export default function InventarioScreen({ navigation }) {
     const [productoSeleccionado, setProductoSeleccionado] = useState(null);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null); // null = "Todo"
+
+    const flatListRef = useRef(null);
+    const scrollOffsetRef = useRef(0);  // guarda la posición Y del scroll
+    const shouldRestoreScroll = useRef(false); // flag para saber si debemos restaurar
 
     // Función para aplicar filtros (definida antes del useEffect)
     const aplicarFiltros = React.useCallback(async (prods, textoBusqueda, categoriaId) => {
@@ -57,7 +61,13 @@ export default function InventarioScreen({ navigation }) {
 
     useFocusEffect(
         React.useCallback(() => {
-            cargarDatos();
+            // Marcar que debemos restaurar el scroll cuando volvemos a la pantalla
+            shouldRestoreScroll.current = true;
+
+            // Solo cargar datos si la lista está vacía (primera vez)
+            if (productos.length === 0) {
+                cargarDatos();
+            }
 
             // Suscribirse a eventos de actualización de productos
             const unsubscribeUpdated = eventEmitter.on(EVENTS.PRODUCTO_UPDATED, (productoActualizado) => {
@@ -120,7 +130,7 @@ export default function InventarioScreen({ navigation }) {
                 unsubscribeDeleted();
                 unsubscribeBatchUpdated();
             };
-        }, [categoriaSeleccionada])
+        }, [categoriaSeleccionada, productos.length])
     );
 
     const cargarDatos = async () => {
@@ -155,41 +165,57 @@ export default function InventarioScreen({ navigation }) {
         return cat ? cat.nombre : categoriaId;
     };
 
-    const handleMenuPress = (producto, event) => {
+    const handleMenuPress = useCallback((producto, event) => {
         event.stopPropagation();
-        // Medir la posición del botón para posicionar el menú
         event.target.measure((_fx, _fy, _width, height, px, py) => {
-            setMenuPosition({ x: px - 150, y: py + height + 5 }); // +5 para un pequeño espacio
+            setMenuPosition({ x: px - 150, y: py + height + 5 });
             setProductoSeleccionado(producto);
             setMenuVisible(true);
         });
-    };
+    }, []);
 
-    const handleEditarProducto = () => {
+    const handleEditarProducto = useCallback(() => {
         setMenuVisible(false);
         if (productoSeleccionado) {
             navigation.navigate('AddProducto', { productoId: productoSeleccionado.id });
         }
-    };
+    }, [productoSeleccionado, navigation]);
 
-    const handleDesactivarProducto = async () => {
+    const handleDesactivarProducto = useCallback(async () => {
         setMenuVisible(false);
         if (!productoSeleccionado) return;
 
-        try {
-            // Importar el repositorio de productos
-            const productosRepo = await import('../../data/productosRepository');
-            await productosRepo.deleteProducto(productoSeleccionado.id);
+        Alert.alert(
+            'Desactivar Producto',
+            `¿Estás seguro de que deseas desactivar "${productoSeleccionado.nombre}"?\n\nEl producto no se eliminará, solo se marcará como inactivo.`,
+            [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Desactivar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            // Importar el repositorio de productos
+                            const productosRepo = await import('../../data/productosRepository');
+                            await productosRepo.deleteProducto(productoSeleccionado.id);
 
-            // Actualizar la lista local
-            setProductos(prev => prev.filter(p => p.id !== productoSeleccionado.id));
-            setProductosFiltrados(prev => prev.filter(p => p.id !== productoSeleccionado.id));
+                            // Actualizar la lista local
+                            setProductos(prev => prev.filter(p => p.id !== productoSeleccionado.id));
+                            setProductosFiltrados(prev => prev.filter(p => p.id !== productoSeleccionado.id));
 
-            // console.log('✅ Producto desactivado:', productoSeleccionado.nombre);
-        } catch (error) {
-            console.error('❌ Error al desactivar producto:', error);
-        }
-    };
+                            // console.log('✅ Producto desactivado:', productoSeleccionado.nombre);
+                        } catch (error) {
+                            console.error('❌ Error al desactivar producto:', error);
+                            Alert.alert('Error', 'No se pudo desactivar el producto');
+                        }
+                    }
+                }
+            ]
+        );
+    }, [productoSeleccionado]);
 
     const calcularTotales = () => {
         const cantidadProductos = productosFiltrados.length;
@@ -237,63 +263,38 @@ export default function InventarioScreen({ navigation }) {
                     </TouchableOpacity>
 
                     <View style={styles.productoInfo}>
-                        {/* Nombre completo del producto (incluye color, modelo, talla) */}
+                        {/* Primera fila: Código del producto */}
+                        <Text style={styles.idStockTexto} numberOfLines={1}>
+                            {codigosTexto}
+                        </Text>
+
+                        {/* Segunda fila: Nombre completo del producto */}
                         <Text style={styles.productoNombre} numberOfLines={2}>
                             {obtenerNombreProductoCompleto(item)}
                         </Text>
 
-                        {/* Códigos del producto (SKU / Códigos de barra) */}
-                        <Text style={styles.codigoTexto} numberOfLines={1}>
-                            {codigosTexto}
-                        </Text>
-
-                        {/* Stock con indicador visual */}
-                        <View style={styles.stockContainer}>
-                            <Ionicons
-                                name={sinStock ? "alert-circle" : stockBajo ? "warning" : "checkmark-circle"}
-                                size={14}
-                                color={sinStock ? "#FF6B6B" : stockBajo ? "#FF9800" : "#4CAF50"}
-                            />
-                            <Text style={[
-                                styles.stockTexto,
-                                sinStock && styles.stockTextoSinStock,
-                                stockBajo && styles.stockTextoBajo
-                            ]}>
-                                Stock: {item.stock} {item.unidadMedida || 'unid.'}
+                        {/* Tercera fila: Categoría y Stock */}
+                        <View style={styles.categoriaFilaContainer}>
+                            <Text style={styles.categoriaTexto}>
+                                {obtenerNombreCategoria(item.categoria)}
+                            </Text>
+                            <Text style={styles.stockTextoInline}>
+                                Stock: {item.stock}
                             </Text>
                         </View>
-
-                        {/* Categoría */}
-                        <Text style={styles.categoriaTexto}>
-                            {obtenerNombreCategoria(item.categoria)}
-                        </Text>
                     </View>
                 </View>
 
                 <View style={styles.productoRight}>
-                    <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>
-
-                    {/* Estado del producto */}
-                    {/* {item.estado && (
-                        <View style={[
-                            styles.estadoBadge,
-                            item.estado === 'Activo' ? styles.estadoBadgeActivo : styles.estadoBadgeInactivo
-                        ]}>
-                            <Text style={[
-                                styles.estadoBadgeTexto,
-                                item.estado === 'Activo' ? styles.estadoBadgeTextoActivo : styles.estadoBadgeTextoInactivo
-                            ]}>
-                                {item.estado}
-                            </Text>
-                        </View>
-                    )} */}
 
                     <TouchableOpacity
                         style={styles.menuBtn}
                         onPress={(e) => handleMenuPress(item, e)}
+                        activeOpacity={0.7}
                     >
                         <Ionicons name="ellipsis-vertical" size={20} color="#636E72" />
                     </TouchableOpacity>
+                    <Text style={styles.productoPrecio}>{formatCurrency(item.precioVenta)}</Text>
                 </View>
             </View>
         );
@@ -321,7 +322,7 @@ export default function InventarioScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <Header
-                title="Productos S/"
+                title="Lista de productos"
                 showMenu
                 rightButtons={rightButtons}
                 searchMode={modoBusqueda}
@@ -390,11 +391,32 @@ export default function InventarioScreen({ navigation }) {
                 </View>
             ) : productosFiltrados.length > 0 ? (
                 <FlatList
+                    ref={flatListRef}
                     data={productosFiltrados}
                     keyExtractor={(item) => item.id}
                     renderItem={renderProducto}
                     contentContainerStyle={styles.listContainer}
                     showsVerticalScrollIndicator={false}
+
+                    // Guarda la posición en tiempo real
+                    onScroll={(event) => {
+                        scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+                    }}
+                    scrollEventThrottle={16}
+
+                    // Restaura la posición al volver (solo una vez)
+                    onLayout={() => {
+                        if (shouldRestoreScroll.current && scrollOffsetRef.current > 0) {
+                            // Usar setTimeout para asegurar que el contenido esté renderizado
+                            setTimeout(() => {
+                                flatListRef.current?.scrollToOffset({
+                                    offset: scrollOffsetRef.current,
+                                    animated: false,
+                                });
+                                shouldRestoreScroll.current = false;
+                            }, 50);
+                        }
+                    }}
                 />
             ) : (
                 <EmptyState
@@ -403,7 +425,7 @@ export default function InventarioScreen({ navigation }) {
                 />
             )}
 
-            {/* Menú dropdown */}
+            {/* Menú dropdown del producto */}
             {menuVisible && (
                 <TouchableOpacity
                     style={styles.modalOverlay}
@@ -415,7 +437,6 @@ export default function InventarioScreen({ navigation }) {
                             style={styles.menuOption}
                             onPress={handleEditarProducto}
                         >
-                            <Ionicons name="create-outline" size={20} color={colors.text} />
                             <Text style={styles.menuOptionText}>Editar producto</Text>
                         </TouchableOpacity>
 
@@ -425,7 +446,6 @@ export default function InventarioScreen({ navigation }) {
                             style={styles.menuOption}
                             onPress={handleDesactivarProducto}
                         >
-                            <Ionicons name="close-circle-outline" size={20} color="#FF6B6B" />
                             <Text style={[styles.menuOptionText, { color: '#FF6B6B' }]}>Desactivar producto</Text>
                         </TouchableOpacity>
                     </View>
@@ -448,12 +468,12 @@ const createStyles = (colors) => StyleSheet.create({
     },
     categoriasContent: {
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 5,
         alignItems: 'center',
     },
     categoriaChip: {
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 5,
         borderRadius: 20,
         backgroundColor: colors.surfaceVariant,
         marginRight: 8,
@@ -470,7 +490,7 @@ const createStyles = (colors) => StyleSheet.create({
         fontWeight: '500',
     },
     categoriaChipTextoActive: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#2E7D32',
         fontWeight: '600',
     },
@@ -511,10 +531,10 @@ const createStyles = (colors) => StyleSheet.create({
         justifyContent: 'space-between',
         backgroundColor: colors.card,
         borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
+        padding: 10,
+        marginBottom: 10,
+        borderWidth: 0.3,
+        borderColor: "gray",
     },
     productoCardDisabled: {
         opacity: 0.5,
@@ -561,12 +581,29 @@ const createStyles = (colors) => StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
     },
+    idStockTexto: {
+        fontSize: 11,
+        color: colors.textTertiary,
+        fontWeight: '500',
+        marginBottom: 4,
+    },
     productoNombre: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: colors.text,
         lineHeight: 18,
-        marginBottom: 6,
+        marginBottom: 4,
+    },
+    categoriaFilaContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 2,
+    },
+    stockTextoInline: {
+        fontSize: 11,
+        color: colors.textSecondary,
+        fontWeight: '500',
     },
     codigoTexto: {
         fontSize: 11,
@@ -605,14 +642,13 @@ const createStyles = (colors) => StyleSheet.create({
         paddingVertical: 2,
         borderRadius: 4,
         alignSelf: 'flex-start',
-        marginTop: 2,
     },
     productoRight: {
         alignItems: 'flex-end',
         justifyContent: 'space-between',
     },
     productoPrecio: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: '700',
         color: colors.text,
     },
@@ -662,7 +698,7 @@ const createStyles = (colors) => StyleSheet.create({
         position: 'absolute',
         backgroundColor: colors.card,
         borderRadius: 8,
-        width: 180,
+        minWidth: 160,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -674,8 +710,8 @@ const createStyles = (colors) => StyleSheet.create({
     menuOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        paddingVertical: 11,
+        paddingHorizontal: 10,
     },
     menuOptionText: {
         fontSize: 14,

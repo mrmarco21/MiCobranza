@@ -13,8 +13,11 @@ import {
     debeMostrarRecordatorioExportacion,
     marcarRecordatorioExportacionMostrado
 } from '../../shared/utils/autoBackupService';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // ❌ falta este import
 
-export default function InicioScreen({ navigation }) {
+const STORE_NAME_KEY = 'store_name';
+
+export default function InicioScreen({ navigation, visible, onClose }) {
     const { colors } = useTheme();
     const styles = createStyles(colors);
     const insets = useSafeAreaInsets();
@@ -26,6 +29,13 @@ export default function InicioScreen({ navigation }) {
     const [toastVisible, setToastVisible] = useState(false);
     const backPressCount = useRef(0);
     const [showExportReminder, setShowExportReminder] = useState(false);
+    const [storeName, setStoreName] = useState('');
+
+    useFocusEffect(
+        useCallback(() => {
+            loadStoreConfig();
+        }, [])
+    );
 
     const showToast = () => {
         setToastVisible(true);
@@ -46,6 +56,15 @@ export default function InicioScreen({ navigation }) {
 
     const handleExportFromReminder = () => {
         navigation.navigate('Configuracion');
+    };
+
+    const loadStoreConfig = async () => {
+        try {
+            const name = await AsyncStorage.getItem(STORE_NAME_KEY);
+            if (name) setStoreName(name);
+        } catch (error) {
+            console.error('Error loading store config:', error);
+        }
     };
 
     // Manejar el botón de retroceso
@@ -150,7 +169,7 @@ export default function InicioScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <Header
-                title="Chest Shop"
+                title={storeName}
                 showMenu={true}
                 // leftIcon="cloud-upload-outline"
                 onLeftPress={handleBackupPress}

@@ -106,14 +106,14 @@ export default function ClientaCard({
                         ) : null}
 
                         {/* Badge de cuenta activa - solo en modo pending */}
-                        {mode === 'pending' && clienta.tieneCuentaActiva && clienta.saldoActual > 0 && (
+                        {/* {mode === 'pending' && clienta.tieneCuentaActiva && clienta.saldoActual > 0 && (
                             <View style={styles.badgeContainer}>
                                 <View style={styles.badgeActiva}>
                                     <Ionicons name="alert-circle" size={11} color="#FF6B6B" />
                                     <Text style={styles.badgeTexto}>Deuda activa</Text>
                                 </View>
                             </View>
-                        )}
+                        )} */}
                     </View>
                 </View>
 
@@ -155,13 +155,13 @@ export default function ClientaCard({
                                     <Ionicons name="cash-outline" size={16} color="#FFF" />
                                     <Text style={styles.botonCobrarTexto}>Cobrar</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity
+                                {/* <TouchableOpacity
                                     style={styles.botonHistorial}
                                     onPress={handleHistorial}
                                     activeOpacity={0.7}
                                 >
                                     <Ionicons name="time-outline" size={16} color={colors.primary} />
-                                </TouchableOpacity>
+                                </TouchableOpacity> */}
                             </View>
                         </View>
                     )}
@@ -210,8 +210,8 @@ export default function ClientaCard({
 const createStyles = (colors) => StyleSheet.create({
     container: {
         backgroundColor: colors.card,
-        marginBottom: 12,
-        padding: 16,
+        marginBottom: 10,
+        padding: 12,
         borderRadius: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -220,7 +220,7 @@ const createStyles = (colors) => StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
-        elevation: 3,
+        elevation: 2,
         borderWidth: 0,
     },
     contenidoPrincipal: {

@@ -186,16 +186,19 @@ export default function GestionCategoriasUnidades({ showToast }) {
     };
 
     return (
-        <View>
+        <View style={styles.container}>
             {/* ========== CATEGORÍAS ========== */}
             <View style={styles.seccion}>
                 <View style={styles.seccionHeader}>
-                    <Text style={styles.seccionTitulo}>Categorías de Productos</Text>
+                    <View>
+                        <Text style={styles.seccionTitulo}>Categorías de Productos</Text>
+                        <Text style={styles.seccionSubtitulo}>Organiza mejor tu inventario</Text>
+                    </View>
                     <TouchableOpacity
                         style={styles.botonAgregar}
                         onPress={() => abrirModalCategoria()}
                     >
-                        <Ionicons name="add-circle" size={20} color="#29B6F6" />
+                        <Ionicons name="add-circle" size={18} color="#29B6F6" />
                         <Text style={styles.botonAgregarTexto}>Agregar</Text>
                     </TouchableOpacity>
                 </View>
@@ -204,7 +207,9 @@ export default function GestionCategoriasUnidades({ showToast }) {
                     {categorias.map((cat) => (
                         <View key={cat.id} style={styles.item}>
                             <View style={styles.itemLeft}>
-                                <Ionicons name={cat.icono || 'pricetag-outline'} size={20} color="#45beffff" />
+                                <View style={styles.itemIcon}>
+                                    <Ionicons name={cat.icono || 'pricetag-outline'} size={18} color="#45beffff" />
+                                </View>
                                 <Text style={styles.itemNombre}>{cat.nombre}</Text>
                             </View>
                             <View style={styles.itemActions}>
@@ -229,12 +234,15 @@ export default function GestionCategoriasUnidades({ showToast }) {
             {/* ========== UNIDADES DE MEDIDA ========== */}
             <View style={styles.seccion}>
                 <View style={styles.seccionHeader}>
-                    <Text style={styles.seccionTitulo}>Unidades de Medida</Text>
+                    <View>
+                        <Text style={styles.seccionTitulo}>Unidades de Medida</Text>
+                        <Text style={styles.seccionSubtitulo}>Mantén consistencia al vender</Text>
+                    </View>
                     <TouchableOpacity
                         style={styles.botonAgregar}
                         onPress={() => abrirModalUnidad()}
                     >
-                        <Ionicons name="add-circle" size={20} color="#29B6F6" />
+                        <Ionicons name="add-circle" size={18} color="#29B6F6" />
                         <Text style={styles.botonAgregarTexto}>Agregar</Text>
                     </TouchableOpacity>
                 </View>
@@ -243,7 +251,9 @@ export default function GestionCategoriasUnidades({ showToast }) {
                     {unidades.map((unidad) => (
                         <View key={unidad.id} style={styles.item}>
                             <View style={styles.itemLeft}>
-                                <Ionicons name="cube-outline" size={20} color="#9C27B0" />
+                                <View style={styles.itemIcon}>
+                                    <Ionicons name="cube-outline" size={18} color="#9C27B0" />
+                                </View>
                                 <Text style={styles.itemNombre}>{unidad.nombre}</Text>
                             </View>
                             <View style={styles.itemActions}>
@@ -355,31 +365,44 @@ export default function GestionCategoriasUnidades({ showToast }) {
 }
 
 const createStyles = (colors) => StyleSheet.create({
+    container: {
+        gap: 12,
+    },
     seccion: {
-        marginBottom: 20,
+        backgroundColor: colors.surfaceVariant,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: 14,
     },
     seccionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: 12,
+        gap: 10,
     },
     seccionTitulo: {
-        fontSize: 15,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '700',
         color: colors.text,
+    },
+    seccionSubtitulo: {
+        fontSize: 11,
+        color: colors.textSecondary,
+        marginTop: 2,
     },
     botonAgregar: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingVertical: 7,
         backgroundColor: '#E3F2FD',
-        borderRadius: 8,
+        borderRadius: 10,
     },
     botonAgregarTexto: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
         color: '#29B6F6',
     },
@@ -390,9 +413,11 @@ const createStyles = (colors) => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.surfaceVariant,
+        backgroundColor: colors.surface,
         padding: 12,
-        borderRadius: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     itemLeft: {
         flexDirection: 'row',
@@ -400,17 +425,32 @@ const createStyles = (colors) => StyleSheet.create({
         gap: 10,
         flex: 1,
     },
+    itemIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        backgroundColor: colors.surfaceVariant,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     itemNombre: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '500',
         color: colors.text,
     },
     itemActions: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 6,
     },
     itemBoton: {
-        padding: 6,
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceVariant,
     },
 
     // Modal
@@ -423,28 +463,30 @@ const createStyles = (colors) => StyleSheet.create({
     },
     modalContenido: {
         backgroundColor: colors.card,
-        borderRadius: 16,
+        borderRadius: 18,
         width: '100%',
         maxWidth: 400,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
+        padding: 18,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
     },
     modalTitulo: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '700',
         color: colors.text,
     },
     modalBody: {
-        padding: 20,
+        padding: 18,
     },
     label: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
         color: colors.text,
         marginBottom: 8,
@@ -453,7 +495,7 @@ const createStyles = (colors) => StyleSheet.create({
         backgroundColor: colors.surfaceVariant,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: 10,
+        borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 12,
         fontSize: 14,
@@ -466,11 +508,11 @@ const createStyles = (colors) => StyleSheet.create({
         justifyContent: 'center',
         gap: 8,
         backgroundColor: '#29B6F6',
-        paddingVertical: 14,
-        borderRadius: 10,
+        paddingVertical: 12,
+        borderRadius: 12,
     },
     botonGuardarTexto: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         color: '#FFF',
     },

@@ -5,10 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KEYS } from '../../data/storage';
 import { Alert } from 'react-native';
 import JSZip from 'jszip';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 /**
- * Convierte una imagen del sistema de archivos a Base64
- * SIN límites de tamaño - incluye todas las imágenes
+ * Comprime y convierte una imagen a Base64
+ * Reduce calidad y tamaño para optimizar el backup
  */
 const imageToBase64 = async (imagePath) => {
   try {
@@ -26,13 +27,36 @@ const imageToBase64 = async (imagePath) => {
       return null;
     }
     
-    // Leer como Base64 (sin límite de tamaño)
-    const base64 = await FileSystem.readAsStringAsync(imagePath, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    // OPTIMIZACIÓN: Comprimir y redimensionar la imagen antes de convertir a Base64
+    try {
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        imagePath,
+        [
+          { resize: { width: 800 } } // Redimensionar a máximo 800px de ancho (mantiene proporción)
+        ],
+        {
+          compress: 0.6, // Comprimir al 60% de calidad (buen balance)
+          format: ImageManipulator.SaveFormat.JPEG,
+        }
+      );
+      
+      // Leer la imagen comprimida como Base64
+      const base64 = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Retornar con el prefijo data:image
+      return `data:image/jpeg;base64,${base64}`;
+      
+    } catch (manipError) {
+      // Si falla la compresión, intentar leer la imagen original
+      console.warn('No se pudo comprimir imagen, usando original:', manipError.message);
+      const base64 = await FileSystem.readAsStringAsync(imagePath, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return `data:image/jpeg;base64,${base64}`;
+    }
     
-    // Retornar con el prefijo data:image
-    return `data:image/jpeg;base64,${base64}`;
   } catch (error) {
     console.error('Error al convertir imagen a Base64:', error);
     return null;
@@ -42,11 +66,16 @@ const imageToBase64 = async (imagePath) => {
 /**
  * Exporta todos los datos de la app en MÚLTIPLES ARCHIVOS
  * Solución real para evitar OutOfMemoryError dividiendo el backup en partes
- * INCLUYE TODAS LAS IMÁGENES SIN EXCEPCIÓN
+ * INCLUYE TODAS LAS IMÁGENES (comprimidas para optimizar)
+ * 
+ * @param {Function} onProgress - Callback para reportar progreso (opcional)
  */
-export const exportData = async () => {
+export const exportData = async (onProgress = null) => {
   try {
     console.log('🚀 Iniciando exportación en múltiples partes...');
+    
+    // Reportar progreso inicial
+    if (onProgress) onProgress({ step: 'Iniciando...', progress: 0 });
     
     // Crear directorio temporal para los archivos de backup
     const date = new Date();
@@ -58,6 +87,8 @@ export const exportData = async () => {
     
     // ========== PARTE 1: DATOS PRINCIPALES (sin imágenes) ==========
     console.log('📦 Parte 1/4: Exportando datos principales...');
+    if (onProgress) onProgress({ step: 'Exportando datos principales...', progress: 10 });
+    
     const clientas = await AsyncStorage.getItem(KEYS.clientas);
     const cuentas = await AsyncStorage.getItem(KEYS.CUENTAS);
     const movimientos = await AsyncStorage.getItem(KEYS.MOVIMIENTOS);
@@ -93,6 +124,8 @@ export const exportData = async () => {
     
     // ========== PARTE 2: PRODUCTOS (sin imágenes) ==========
     console.log('📦 Parte 2/4: Exportando productos (sin imágenes)...');
+    if (onProgress) onProgress({ step: 'Exportando productos...', progress: 20 });
+    
     const productos = await AsyncStorage.getItem(KEYS.PRODUCTOS);
     const productosData = productos ? JSON.parse(productos) : [];
     
@@ -123,50 +156,66 @@ export const exportData = async () => {
     
     // ========== PARTE 3: IMÁGENES DE PRODUCTOS (en lotes) ==========
     console.log('📦 Parte 3/4: Exportando imágenes de productos...');
+    if (onProgress) onProgress({ step: 'Comprimiendo imágenes...', progress: 30 });
+    
     const productosConImagenes = productosData.filter(p => 
       p.imagen || (p.imagenes && p.imagenes.length > 0)
     );
     
     let totalImagenesExportadas = 0;
-    const PRODUCTOS_POR_ARCHIVO = 10; // 10 productos por archivo
+    const PRODUCTOS_POR_ARCHIVO = 20; // 20 productos por archivo
     const archivosImagenes = [];
+    const totalProductosConImagenes = productosConImagenes.length;
     
     for (let i = 0; i < productosConImagenes.length; i += PRODUCTOS_POR_ARCHIVO) {
       const batch = productosConImagenes.slice(i, i + PRODUCTOS_POR_ARCHIVO);
       const archivoNum = Math.floor(i / PRODUCTOS_POR_ARCHIVO) + 1;
       
+      // Calcular progreso (30% a 70% para las imágenes)
+      const progressPercent = 30 + Math.floor((i / totalProductosConImagenes) * 40);
+      if (onProgress) onProgress({ 
+        step: `Procesando imágenes ${i + 1}/${totalProductosConImagenes}...`, 
+        progress: progressPercent 
+      });
+      
       console.log(`  📸 Procesando lote ${archivoNum} (${batch.length} productos)...`);
       
       const productosConImagenesBase64 = [];
       
-      for (const producto of batch) {
-        const productoConImagenes = {
-          id: producto.id,
-          imagen: null,
-          imagenes: [],
-        };
+      // Procesar de 2 en 2 para mayor velocidad
+      for (let j = 0; j < batch.length; j += 2) {
+        const miniLote = batch.slice(j, j + 2);
         
-        // Convertir imagen principal
-        if (producto.imagen) {
-          productoConImagenes.imagen = await imageToBase64(producto.imagen);
-          if (productoConImagenes.imagen) totalImagenesExportadas++;
-        }
-        
-        // Convertir array de imágenes
-        if (producto.imagenes && Array.isArray(producto.imagenes)) {
-          for (const imagenPath of producto.imagenes) {
-            const base64 = await imageToBase64(imagenPath);
-            if (base64) {
-              productoConImagenes.imagenes.push(base64);
-              totalImagenesExportadas++;
+        const resultados = await Promise.all(
+          miniLote.map(async (producto) => {
+            const productoConImagenes = {
+              id: producto.id,
+              imagen: null,
+              imagenes: [],
+            };
+            
+            // Convertir imagen principal (comprimida)
+            if (producto.imagen) {
+              productoConImagenes.imagen = await imageToBase64(producto.imagen);
+              if (productoConImagenes.imagen) totalImagenesExportadas++;
             }
-          }
-        }
+            
+            // Convertir array de imágenes (comprimidas)
+            if (producto.imagenes && Array.isArray(producto.imagenes)) {
+              for (const imagenPath of producto.imagenes) {
+                const base64 = await imageToBase64(imagenPath);
+                if (base64) {
+                  productoConImagenes.imagenes.push(base64);
+                  totalImagenesExportadas++;
+                }
+              }
+            }
+            
+            return productoConImagenes;
+          })
+        );
         
-        productosConImagenesBase64.push(productoConImagenes);
-        
-        // Pequeña pausa para liberar memoria
-        await new Promise(resolve => setTimeout(resolve, 50));
+        productosConImagenesBase64.push(...resultados);
       }
       
       const parteImagenes = {
@@ -190,18 +239,20 @@ export const exportData = async () => {
       
       archivosImagenes.push(nombreArchivo);
       
-      console.log(`  ✅ Lote ${archivoNum} guardado`);
+      console.log(`  ✅ Lote ${archivoNum} guardado (${totalImagenesExportadas} imágenes hasta ahora)`);
     }
     
     console.log(`✅ ${totalImagenesExportadas} imágenes exportadas en ${archivosImagenes.length} archivos`);
     
     // ========== PARTE 4: CONFIGURACIÓN Y METADATOS ==========
     console.log('📦 Parte 4/4: Exportando configuración...');
+    if (onProgress) onProgress({ step: 'Guardando configuración...', progress: 75 });
+    
     const storeName = await AsyncStorage.getItem('store_name');
     const storeLogo = await AsyncStorage.getItem('store_logo');
     const lockTimeout = await AsyncStorage.getItem('lock_timeout');
     
-    // Convertir logo de la tienda
+    // Convertir logo de la tienda (comprimido)
     let storeLogoBase64 = storeLogo;
     if (storeLogo && !storeLogo.startsWith('data:image')) {
       storeLogoBase64 = await imageToBase64(storeLogo);
@@ -279,6 +330,8 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
     
     // ========== CREAR ARCHIVO ZIP ==========
     console.log('🗜️ Comprimiendo archivos en ZIP...');
+    if (onProgress) onProgress({ step: 'Creando archivo ZIP...', progress: 80 });
+    
     const zip = new JSZip();
     
     // Leer y agregar cada archivo al ZIP
@@ -290,27 +343,39 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
       'LEEME.txt'
     ];
     
-    for (const archivo of archivosParaZip) {
+    for (let i = 0; i < archivosParaZip.length; i++) {
+      const archivo = archivosParaZip[i];
       try {
         const contenido = await FileSystem.readAsStringAsync(`${backupDir}${archivo}`);
         zip.file(archivo, contenido);
-        console.log(`  ✅ ${archivo} agregado al ZIP`);
+        
+        // Actualizar progreso (80% a 90%)
+        const zipProgress = 80 + Math.floor((i / archivosParaZip.length) * 10);
+        if (onProgress) onProgress({ 
+          step: `Agregando archivos al ZIP ${i + 1}/${archivosParaZip.length}...`, 
+          progress: zipProgress 
+        });
       } catch (error) {
         console.warn(`  ⚠️ No se pudo agregar ${archivo}:`, error.message);
       }
     }
     
-    // Generar el ZIP como Base64
-    console.log('📦 Generando archivo ZIP...');
+    // Generar el ZIP con compresión mínima (más rápido)
+    console.log('📦 Generando archivo ZIP (esto puede tardar un momento)...');
+    if (onProgress) onProgress({ step: 'Comprimiendo archivo final...', progress: 90 });
+    
     const zipBase64 = await zip.generateAsync({ 
       type: 'base64',
       compression: 'DEFLATE',
-      compressionOptions: { level: 6 } // Compresión media (balance entre tamaño y velocidad)
+      compressionOptions: { level: 1 } // Compresión mínima para mayor velocidad
     });
     
     // Guardar el ZIP
     const zipFileName = `micobranza_backup_${timestamp}.zip`;
     const zipFilePath = `${FileSystem.documentDirectory}${zipFileName}`;
+    
+    console.log('💾 Guardando archivo ZIP...');
+    if (onProgress) onProgress({ step: 'Guardando archivo...', progress: 95 });
     
     await FileSystem.writeAsStringAsync(zipFilePath, zipBase64, {
       encoding: FileSystem.EncodingType.Base64,
@@ -328,6 +393,8 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
     }
     
     // Compartir el archivo ZIP
+    if (onProgress) onProgress({ step: 'Abriendo diálogo de compartir...', progress: 100 });
+    
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(zipFilePath, {
         mimeType: 'application/zip',
@@ -343,13 +410,13 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
       timestamp,
       totalParts: 4 + archivosImagenes.length,
       summary: parte4.summary,
-      message: `Backup completo creado: ${zipFileName}\n\n` +
+      message: `✅ Backup completo: ${zipFileName}\n\n` +
                `📊 Contenido:\n` +
                `• Productos: ${parte4.summary.productos}\n` +
-               `• Imágenes: ${parte4.summary.totalImagenes}\n` +
+               `• Imágenes: ${parte4.summary.totalImagenes} (comprimidas)\n` +
                `• Clientas: ${parte4.summary.clientas}\n` +
                `• Cuentas: ${parte4.summary.cuentas}\n\n` +
-               `✅ Archivo ZIP listo para compartir`,
+               `Las imágenes fueron comprimidas a 800px de ancho para optimizar el tamaño del archivo.`,
     };
   } catch (error) {
     console.error('Error al exportar datos:', error);
@@ -360,10 +427,11 @@ IMPORTANTE: No elimines ningún archivo, todos son necesarios para la importaci�
 /**
  * Importa datos desde un archivo JSON o ZIP
  * Soporta: versión antigua (2.x), multi-parte (3.0) y ZIP
+ * @param {Function} onProgress - Callback para reportar progreso (opcional)
  */
-export const importData = async () => {
+export const importData = async (onProgress = null) => {
   try {
-    // Seleccionar archivo (JSON o ZIP)
+    // Seleccionar archivo (JSON o ZIP) - SIN reportar progreso aún
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/json', 'application/zip', 'application/x-zip-compressed'],
       copyToCacheDirectory: true,
@@ -373,12 +441,22 @@ export const importData = async () => {
       return { success: false, canceled: true };
     }
 
+    // AHORA SÍ reportar progreso - el usuario ya seleccionó un archivo
+    if (onProgress) onProgress({ step: 'Iniciando lectura del archivo...', progress: 0 });
+    
+    // Pequeño delay para que el modal se renderice antes del procesamiento pesado
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const fileUri = result.assets[0].uri;
     const fileName = result.assets[0].name || '';
     
     // ========== DETECTAR SI ES ZIP ==========
     if (fileName.endsWith('.zip') || result.assets[0].mimeType?.includes('zip')) {
       console.log('📦 Detectado archivo ZIP, descomprimiendo...');
+      if (onProgress) onProgress({ step: 'Leyendo archivo ZIP...', progress: 5 });
+      
+      // Otro pequeño delay antes de la operación pesada
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       try {
         // Leer el archivo ZIP como Base64
@@ -386,11 +464,21 @@ export const importData = async () => {
           encoding: FileSystem.EncodingType.Base64,
         });
         
+        if (onProgress) onProgress({ step: 'Descomprimiendo archivo...', progress: 15 });
+        
+        // Delay para que se actualice el modal
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Descomprimir
         const zip = new JSZip();
         const zipContent = await zip.loadAsync(zipBase64, { base64: true });
         
         console.log('📂 Archivos en el ZIP:', Object.keys(zipContent.files).join(', '));
+        
+        if (onProgress) onProgress({ step: 'Verificando contenido...', progress: 25 });
+        
+        // Delay para que se actualice el modal
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Buscar el archivo de configuración (parte4)
         const configFile = zipContent.file('parte4_config.json');
@@ -414,11 +502,17 @@ export const importData = async () => {
         
         // Leer parte 1: Datos principales
         console.log('📖 Leyendo datos principales...');
+        if (onProgress) onProgress({ step: 'Leyendo datos principales...', progress: 35 });
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const parte1Content = await zipContent.file('parte1_datos.json').async('string');
         const parte1 = JSON.parse(parte1Content);
         
         // Leer parte 2: Productos
         console.log('📖 Leyendo productos...');
+        if (onProgress) onProgress({ step: 'Leyendo productos...', progress: 50 });
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const parte2Content = await zipContent.file('parte2_productos.json').async('string');
         const parte2 = JSON.parse(parte2Content);
         
@@ -427,7 +521,21 @@ export const importData = async () => {
         const imageFilesList = configData.imageFilesList || [];
         const productImages = {};
         
-        for (const imageFile of imageFilesList) {
+        for (let i = 0; i < imageFilesList.length; i++) {
+          const imageFile = imageFilesList[i];
+          
+          // Calcular progreso (50% a 85% para las imágenes)
+          const progressPercent = 50 + Math.floor((i / imageFilesList.length) * 35);
+          if (onProgress) onProgress({ 
+            step: `Leyendo imágenes ${i + 1}/${imageFilesList.length}...`, 
+            progress: progressPercent 
+          });
+          
+          // Delay cada 3 archivos para actualizar UI
+          if (i % 3 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+          
           try {
             const imageFileContent = await zipContent.file(imageFile).async('string');
             const imagePart = JSON.parse(imageFileContent);
@@ -445,6 +553,9 @@ export const importData = async () => {
             console.warn(`  ⚠️ No se pudo leer ${imageFile}:`, imgError.message);
           }
         }
+        
+        if (onProgress) onProgress({ step: 'Procesando datos...', progress: 90 });
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Combinar productos con sus imágenes
         const productosCompletos = parte2.data.productos.map(producto => {
@@ -466,6 +577,7 @@ export const importData = async () => {
         };
         
         console.log('✅ ZIP descomprimido y datos leídos correctamente');
+        if (onProgress) onProgress({ step: 'Archivo procesado correctamente', progress: 100 });
         
         return {
           success: true,
@@ -498,9 +610,17 @@ export const importData = async () => {
     
     // ========== ARCHIVO JSON (versiones antiguas) ==========
     console.log('📄 Detectado archivo JSON');
+    if (onProgress) onProgress({ step: 'Leyendo archivo JSON...', progress: 5 });
+    
+    // Pequeño delay antes de la operación pesada
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     // Leer archivo
     const fileContent = await FileSystem.readAsStringAsync(fileUri);
+    if (onProgress) onProgress({ step: 'Procesando datos...', progress: 20 });
+    
+    // Otro delay antes de parsear JSON (puede ser pesado)
+    await new Promise(resolve => setTimeout(resolve, 50));
     const backupData = JSON.parse(fileContent);
 
     // Validar estructura
@@ -514,6 +634,7 @@ export const importData = async () => {
     // ========== BACKUP MULTI-PARTE (Versión 3.0) SIN ZIP ==========
     if (backupData.version === '3.0') {
       console.log('📦 Detectado backup multi-parte versión 3.0 (sin ZIP)');
+      if (onProgress) onProgress({ step: 'Verificando backup multi-parte...', progress: 30 });
       
       // Verificar que sea el archivo de configuración (parte 4)
       if (backupData.type !== 'config') {
@@ -532,11 +653,17 @@ export const importData = async () => {
       try {
         // Parte 1: Datos principales
         console.log('📖 Leyendo parte 1: Datos principales...');
+        if (onProgress) onProgress({ step: 'Leyendo datos principales...', progress: 40 });
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const parte1Content = await FileSystem.readAsStringAsync(`${dirPath}parte1_datos.json`);
         const parte1 = JSON.parse(parte1Content);
         
         // Parte 2: Productos
         console.log('📖 Leyendo parte 2: Productos...');
+        if (onProgress) onProgress({ step: 'Leyendo productos...', progress: 55 });
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const parte2Content = await FileSystem.readAsStringAsync(`${dirPath}parte2_productos.json`);
         const parte2 = JSON.parse(parte2Content);
         
@@ -545,7 +672,21 @@ export const importData = async () => {
         const imageFilesList = backupData.imageFilesList || [];
         const productImages = {};
         
-        for (const imageFile of imageFilesList) {
+        for (let i = 0; i < imageFilesList.length; i++) {
+          const imageFile = imageFilesList[i];
+          
+          // Calcular progreso (55% a 85% para las imágenes)
+          const progressPercent = 55 + Math.floor((i / imageFilesList.length) * 30);
+          if (onProgress) onProgress({ 
+            step: `Leyendo imágenes ${i + 1}/${imageFilesList.length}...`, 
+            progress: progressPercent 
+          });
+          
+          // Delay cada 3 archivos para actualizar UI
+          if (i % 3 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+          
           try {
             const imageContent = await FileSystem.readAsStringAsync(`${dirPath}${imageFile}`);
             const imagePart = JSON.parse(imageContent);
@@ -563,6 +704,9 @@ export const importData = async () => {
             console.warn(`  ⚠️ No se pudo leer ${imageFile}:`, imgError.message);
           }
         }
+        
+        if (onProgress) onProgress({ step: 'Procesando datos...', progress: 90 });
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Combinar productos con sus imágenes
         const productosCompletos = parte2.data.productos.map(producto => {
@@ -584,6 +728,7 @@ export const importData = async () => {
         };
         
         console.log('✅ Todas las partes leídas correctamente');
+        if (onProgress) onProgress({ step: 'Archivo procesado correctamente', progress: 100 });
         
         return {
           success: true,
@@ -615,6 +760,9 @@ export const importData = async () => {
     }
     
     // ========== BACKUP ANTIGUO (Versión 2.x) ==========
+    if (onProgress) onProgress({ step: 'Validando estructura...', progress: 60 });
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     if (!backupData.data) {
       return {
         success: false,
@@ -635,6 +783,9 @@ export const importData = async () => {
         error: 'Estructura de datos inválida en el archivo.',
       };
     }
+
+    if (onProgress) onProgress({ step: 'Archivo procesado correctamente', progress: 100 });
+    await new Promise(resolve => setTimeout(resolve, 50));
 
     return {
       success: true,
@@ -704,8 +855,10 @@ const base64ToImage = async (base64Data, productId) => {
 
 /**
  * Aplica los datos importados (sobrescribe los actuales)
+ * @param {Object} importedData - Datos a importar
+ * @param {Function} onProgress - Callback para reportar progreso (opcional)
  */
-export const applyImportedData = async (importedData) => {
+export const applyImportedData = async (importedData, onProgress = null) => {
   try {
     const { 
       clientas, cuentas, movimientos,
@@ -714,13 +867,18 @@ export const applyImportedData = async (importedData) => {
     } = importedData;
 
     // Guardar datos principales
+    if (onProgress) onProgress({ step: 'Guardando clientes...', progress: 10 });
     await AsyncStorage.setItem(KEYS.clientas, JSON.stringify(clientas || []));
+    
+    if (onProgress) onProgress({ step: 'Guardando cuentas...', progress: 20 });
     await AsyncStorage.setItem(KEYS.CUENTAS, JSON.stringify(cuentas || []));
+    
+    if (onProgress) onProgress({ step: 'Guardando movimientos...', progress: 30 });
     await AsyncStorage.setItem(KEYS.MOVIMIENTOS, JSON.stringify(movimientos || []));
     
     // Procesar productos para restaurar imágenes desde Base64
     if (productos && productos.length > 0) {
-      // console.log('📸 Restaurando imágenes de productos...');
+      if (onProgress) onProgress({ step: 'Restaurando imágenes de productos...', progress: 40 });
       let totalImagenes = 0;
       
       const productosConImagenesRestauradas = await Promise.all(
@@ -762,16 +920,19 @@ export const applyImportedData = async (importedData) => {
         })
       );
       
+      if (onProgress) onProgress({ step: 'Guardando productos...', progress: 60 });
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productosConImagenesRestauradas));
       // console.log(`✅ ${totalImagenes} imágenes restauradas de ${productosConImagenesRestauradas.length} productos`);
     } else if (productos) {
       await AsyncStorage.setItem(KEYS.PRODUCTOS, JSON.stringify(productos));
     }
     
+    if (onProgress) onProgress({ step: 'Guardando ventas...', progress: 70 });
     if (ventas) await AsyncStorage.setItem(KEYS.VENTAS, JSON.stringify(ventas));
     if (categorias) await AsyncStorage.setItem(KEYS.CATEGORIAS, JSON.stringify(categorias));
     
     // Guardar gastos y pedidos
+    if (onProgress) onProgress({ step: 'Guardando gastos y pedidos...', progress: 80 });
     if (gastos) await AsyncStorage.setItem(KEYS.GASTOS, JSON.stringify(gastos));
     if (pedidos) await AsyncStorage.setItem(KEYS.PEDIDOS, JSON.stringify(pedidos));
     
@@ -779,6 +940,7 @@ export const applyImportedData = async (importedData) => {
     if (borradores) await AsyncStorage.setItem('@borradores_punto_venta', JSON.stringify(borradores));
 
     // Guardar configuración
+    if (onProgress) onProgress({ step: 'Guardando configuración...', progress: 90 });
     if (storeName) {
       await AsyncStorage.setItem('store_name', storeName);
     }
@@ -797,6 +959,8 @@ export const applyImportedData = async (importedData) => {
       await AsyncStorage.setItem('lock_timeout', lockTimeout);
     }
 
+    if (onProgress) onProgress({ step: 'Importación completada', progress: 100 });
+
     return { success: true };
   } catch (error) {
     console.error('Error al aplicar datos importados:', error);
@@ -806,8 +970,10 @@ export const applyImportedData = async (importedData) => {
 
 /**
  * Fusiona los datos importados con los existentes (no sobrescribe)
+ * @param {Object} importedData - Datos a fusionar
+ * @param {Function} onProgress - Callback para reportar progreso (opcional)
  */
-export const mergeImportedData = async (importedData) => {
+export const mergeImportedData = async (importedData, onProgress = null) => {
   try {
     const { 
       clientas, cuentas, movimientos,
@@ -815,6 +981,7 @@ export const mergeImportedData = async (importedData) => {
     } = importedData;
 
     // Obtener datos actuales principales
+    if (onProgress) onProgress({ step: 'Cargando datos actuales...', progress: 5 });
     const currentclientas = await AsyncStorage.getItem(KEYS.clientas);
     const currentCuentas = await AsyncStorage.getItem(KEYS.CUENTAS);
     const currentMovimientos = await AsyncStorage.getItem(KEYS.MOVIMIENTOS);
@@ -824,6 +991,7 @@ export const mergeImportedData = async (importedData) => {
     const existingMovimientos = currentMovimientos ? JSON.parse(currentMovimientos) : [];
 
     // Fusionar datos principales (evitar duplicados por ID)
+    if (onProgress) onProgress({ step: 'Fusionando clientes...', progress: 15 });
     const mergedclientas = [...existingclientas];
     (clientas || []).forEach((newItem) => {
       if (!mergedclientas.find((item) => item.id === newItem.id)) {
@@ -831,6 +999,7 @@ export const mergeImportedData = async (importedData) => {
       }
     });
 
+    if (onProgress) onProgress({ step: 'Fusionando cuentas...', progress: 25 });
     const mergedCuentas = [...existingCuentas];
     (cuentas || []).forEach((newItem) => {
       if (!mergedCuentas.find((item) => item.id === newItem.id)) {
@@ -838,6 +1007,7 @@ export const mergeImportedData = async (importedData) => {
       }
     });
 
+    if (onProgress) onProgress({ step: 'Fusionando movimientos...', progress: 35 });
     const mergedMovimientos = [...existingMovimientos];
     (movimientos || []).forEach((newItem) => {
       if (!mergedMovimientos.find((item) => item.id === newItem.id)) {
@@ -864,7 +1034,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar productos
     if (productos && productos.length > 0) {
-      // console.log('📸 Restaurando imágenes de productos (fusión)...');
+      if (onProgress) onProgress({ step: 'Fusionando productos...', progress: 45 });
       const currentProductos = await AsyncStorage.getItem(KEYS.PRODUCTOS);
       const existingProductos = currentProductos ? JSON.parse(currentProductos) : [];
       const mergedProductos = [...existingProductos];
@@ -916,6 +1086,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar ventas
     if (ventas && ventas.length > 0) {
+      if (onProgress) onProgress({ step: 'Fusionando ventas...', progress: 60 });
       const currentVentas = await AsyncStorage.getItem(KEYS.VENTAS);
       const existingVentas = currentVentas ? JSON.parse(currentVentas) : [];
       const mergedVentas = [...existingVentas];
@@ -932,6 +1103,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar gastos
     if (gastos && gastos.length > 0) {
+      if (onProgress) onProgress({ step: 'Fusionando gastos...', progress: 70 });
       const currentGastos = await AsyncStorage.getItem(KEYS.GASTOS);
       const existingGastos = currentGastos ? JSON.parse(currentGastos) : [];
       const mergedGastos = [...existingGastos];
@@ -948,6 +1120,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar pedidos
     if (pedidos && pedidos.length > 0) {
+      if (onProgress) onProgress({ step: 'Fusionando pedidos...', progress: 80 });
       const currentPedidos = await AsyncStorage.getItem(KEYS.PEDIDOS);
       const existingPedidos = currentPedidos ? JSON.parse(currentPedidos) : [];
       const mergedPedidos = [...existingPedidos];
@@ -964,6 +1137,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar categorías
     if (categorias && categorias.length > 0) {
+      if (onProgress) onProgress({ step: 'Fusionando categorías...', progress: 90 });
       const currentCategorias = await AsyncStorage.getItem(KEYS.CATEGORIAS);
       const existingCategorias = currentCategorias ? JSON.parse(currentCategorias) : [];
       const mergedCategorias = [...existingCategorias];
@@ -980,6 +1154,7 @@ export const mergeImportedData = async (importedData) => {
 
     // Fusionar borradores
     if (borradores && borradores.length > 0) {
+      if (onProgress) onProgress({ step: 'Fusionando borradores...', progress: 95 });
       const currentBorradores = await AsyncStorage.getItem('@borradores_punto_venta');
       const existingBorradores = currentBorradores ? JSON.parse(currentBorradores) : [];
       const mergedBorradores = [...existingBorradores];
@@ -993,6 +1168,8 @@ export const mergeImportedData = async (importedData) => {
       await AsyncStorage.setItem('@borradores_punto_venta', JSON.stringify(mergedBorradores));
       added.borradores = mergedBorradores.length - existingBorradores.length;
     }
+
+    if (onProgress) onProgress({ step: 'Fusión completada', progress: 100 });
 
     return {
       success: true,

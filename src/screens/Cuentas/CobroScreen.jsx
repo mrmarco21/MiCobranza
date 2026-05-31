@@ -368,9 +368,9 @@ export default function CobroScreen({ route, navigation }) {
                         <View style={styles.resumenRow}>
                             {/* Cobrar */}
                             <View style={styles.resumenBlock}>
-                                <View style={[styles.resumenIcon, { backgroundColor: '#E8F5E9' }]}>
+                                {/* <View style={[styles.resumenIcon, { backgroundColor: '#E8F5E9' }]}>
                                     <Ionicons name="cash-outline" size={18} color="#43A047" />
-                                </View>
+                                </View> */}
                                 <Text style={styles.resumenBlockLabel}>A cobrar</Text>
                                 <Text style={[styles.resumenBlockMonto, { color: '#43A047' }]}>{formatCurrency(totalCobro)}</Text>
                             </View>
@@ -379,9 +379,9 @@ export default function CobroScreen({ route, navigation }) {
 
                             {/* Pendiente */}
                             <View style={styles.resumenBlock}>
-                                <View style={[styles.resumenIcon, { backgroundColor: '#FFF3E0' }]}>
+                                {/* <View style={[styles.resumenIcon, { backgroundColor: '#FFF3E0' }]}>
                                     <Ionicons name="hourglass-outline" size={18} color="#FB8C00" />
-                                </View>
+                                </View> */}
                                 <Text style={styles.resumenBlockLabel}>Pendiente</Text>
                                 <Text style={[styles.resumenBlockMonto, { color: '#FB8C00' }]}>{formatCurrency(saldoRestante)}</Text>
                             </View>
@@ -393,7 +393,7 @@ export default function CobroScreen({ route, navigation }) {
                     {/* ── CUENTAS ACTIVAS ── */}
                     <View style={styles.seccion}>
                         <View style={styles.seccionTituloRow}>
-                            <Ionicons name="card-outline" size={15} color={colors.primary} />
+                            {/* <Ionicons name="card-outline" size={15} color={colors.primary} /> */}
                             <Text style={styles.seccionTitulo}>Cuentas activas</Text>
                             <TouchableOpacity style={styles.limpiarBtn} onPress={limpiarMontos} activeOpacity={0.7}>
                                 <Ionicons name="refresh-outline" size={13} color={colors.textSecondary} />
@@ -413,7 +413,7 @@ export default function CobroScreen({ route, navigation }) {
                                     {/* Cabecera cuenta */}
                                     <View style={styles.cuentaCabecera}>
                                         <View style={[styles.cuentaTag, { backgroundColor: palette.light, borderColor: palette.accent }]}>
-                                            <Ionicons name="receipt-outline" size={12} color={palette.tag} />
+                                            {/* <Ionicons name="receipt-outline" size={12} color={palette.tag} /> */}
                                             <Text style={[styles.cuentaTagText, { color: palette.tag }]}>Cuenta #{numeroCuenta}</Text>
                                         </View>
                                         <View style={styles.cuentaFechaWrapper}>
@@ -439,9 +439,9 @@ export default function CobroScreen({ route, navigation }) {
                                     {/* Input cobro */}
                                     <View style={styles.cuentaInputRow}>
                                         <View style={[styles.cuentaInputWrapper, { borderColor: montoNum > 0 ? palette.accent : colors.border }]}>
-                                            <View style={styles.cuentaInputIconBg}>
+                                            {/* <View style={styles.cuentaInputIconBg}>
                                                 <Ionicons name="cash" size={16} color={montoNum > 0 ? palette.accent : colors.textSecondary} />
-                                            </View>
+                                            </View> */}
                                             <Text style={[styles.cuentaInputCurrency, { color: montoNum > 0 ? palette.accent : colors.textSecondary }]}>S/</Text>
                                             <TextInput
                                                 style={[styles.cuentaInput, { color: montoNum > 0 ? colors.text : colors.textSecondary }]}
@@ -470,7 +470,7 @@ export default function CobroScreen({ route, navigation }) {
                     <View style={styles.seccion}>
                         <View style={styles.seccionHeader}>
                             <View style={styles.seccionTituloRow}>
-                                <Ionicons name="wallet-outline" size={16} color={colors.primary} />
+                                {/* <Ionicons name="wallet-outline" size={16} color={colors.primary} /> */}
                                 <Text style={styles.seccionTitulo}>Métodos de pago</Text>
                             </View>
                             <Text style={styles.seccionSubtitulo}>Especifica cómo se realizó el pago</Text>

@@ -193,9 +193,9 @@ export default function ResumenScreen({ navigation }) {
                             activeOpacity={0.7}
                         >
                             <View style={styles.botonContenido}>
-                                <View style={[styles.botonIconoWrapper, { backgroundColor: '#E8F5E9' }]}>
+                                {/* <View style={[styles.botonIconoWrapper, { backgroundColor: '#E8F5E9' }]}>
                                     <Ionicons name="wallet" size={22} color="#4CAF50" />
-                                </View>
+                                </View> */}
                                 <View style={styles.botonTextos}>
                                     <Text style={styles.botonTitulo}>Movimientos del día</Text>
                                     <Text style={styles.botonSubtitulo}>Ver ingresos y egresos</Text>
@@ -212,9 +212,9 @@ export default function ResumenScreen({ navigation }) {
                             activeOpacity={0.7}
                         >
                             <View style={styles.botonContenido}>
-                                <View style={[styles.botonIconoWrapper, { backgroundColor: '#FFF3E0' }]}>
+                                {/* <View style={[styles.botonIconoWrapper, { backgroundColor: '#FFF3E0' }]}>
                                     <Ionicons name="cube" size={22} color="#FF9800" />
-                                </View>
+                                </View> */}
                                 <View style={styles.botonTextos}>
                                     <Text style={styles.botonTitulo}>Productos vendidos</Text>
                                     <Text style={styles.botonSubtitulo}>Ver por categoría</Text>
@@ -232,13 +232,13 @@ export default function ResumenScreen({ navigation }) {
                             activeOpacity={0.7}
                         >
                             <View style={styles.botonContenido}>
-                                <View style={styles.botonIconoWrapper}>
+                                {/* <View style={styles.botonIconoWrapper}>
                                     {exportando ? (
                                         <ActivityIndicator size="small" color="#29B6F6" />
                                     ) : (
                                         <Ionicons name="download" size={22} color="#29B6F6" />
                                     )}
-                                </View>
+                                </View> */}
                                 <View style={styles.botonTextos}>
                                     <Text style={styles.botonTitulo}>Exportar semana actual</Text>
                                     <Text style={styles.botonSubtitulo}>Descargar como CSV</Text>
@@ -255,9 +255,9 @@ export default function ResumenScreen({ navigation }) {
                             activeOpacity={0.7}
                         >
                             <View style={styles.botonContenido}>
-                                <View style={styles.botonIconoWrapperGuardar}>
+                                {/* <View style={styles.botonIconoWrapperGuardar}>
                                     <Ionicons name="save" size={22} color="#4CAF50" />
-                                </View>
+                                </View> */}
                                 <View style={styles.botonTextos}>
                                     <Text style={styles.botonTituloGuardar}>Guardar reporte</Text>
                                     <Text style={styles.botonSubtitulo}>Semana actual</Text>

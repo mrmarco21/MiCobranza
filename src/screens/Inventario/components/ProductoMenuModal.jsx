@@ -1,20 +1,14 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../../shared/hooks/useTheme';
 
-export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBorradores, onActualizar, anchorPosition }) {
-    const { colors } = useTheme();
-    const styles = createStyles(colors);
-
-    if (!visible) return null;
-
+export default function ProductoMenuModal({ visible, onClose, onEditar, onDesactivar, anchorPosition }) {
     return (
         <Modal
             visible={visible}
             transparent
             animationType="none"
             onRequestClose={onClose}
+            statusBarTranslucent
         >
             <TouchableWithoutFeedback onPress={onClose}>
                 <View style={styles.overlay}>
@@ -25,12 +19,11 @@ export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBor
                                 style={styles.menuItem}
                                 onPress={() => {
                                     onClose();
-                                    onLimpiar();
+                                    onEditar();
                                 }}
                                 activeOpacity={0.7}
                             >
-                                {/* <Ionicons name="trash-outline" size={20} color="#FF6B6B" /> */}
-                                <Text style={styles.menuItemText}>Limpiar</Text>
+                                <Text style={styles.menuItemText}>Editar producto</Text>
                             </TouchableOpacity>
 
                             <View style={styles.separator} />
@@ -39,28 +32,13 @@ export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBor
                                 style={styles.menuItem}
                                 onPress={() => {
                                     onClose();
-                                    onBorradores();
+                                    onDesactivar();
                                 }}
                                 activeOpacity={0.7}
                             >
-                                {/* <Ionicons name="document-text-outline" size={20} color="#2C3E50" /> */}
-                                <Text style={styles.menuItemText}>Borradores</Text>
-                                <Ionicons name="chevron-forward" size={18} color="#95A5A6" style={styles.chevron} />
+                                <Text style={[styles.menuItemText, { color: '#FF6B6B' }]}>Desactivar producto</Text>
                             </TouchableOpacity>
-                            
-                            <View style={styles.separator} />
 
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => {
-                                    onClose();
-                                    onActualizar();
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                {/* <Ionicons name="refresh-outline" size={20} color="#29B6F6" /> */}
-                                <Text style={styles.menuItemText}>Actualizar</Text>
-                            </TouchableOpacity>
                         </View>
                     </TouchableWithoutFeedback>
                 </View>
@@ -69,7 +47,7 @@ export default function PuntoVentaMenuModal({ visible, onClose, onLimpiar, onBor
     );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const styles = StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'transparent',
@@ -100,9 +78,6 @@ const createStyles = (colors) => StyleSheet.create({
         color: '#2C3E50',
         fontWeight: '500',
         flex: 1,
-    },
-    chevron: {
-        marginLeft: 'auto',
     },
     separator: {
         height: 1,
