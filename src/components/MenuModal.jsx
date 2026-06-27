@@ -12,7 +12,7 @@ export default function MenuModal({ visible, onClose, navigation }) {
     const { colors } = useTheme();
     const styles = createStyles(colors);
     const insets = useSafeAreaInsets();
-    const slideAnim = useRef(new Animated.Value(-280)).current;
+    const slideAnim = useRef(new Animated.Value(-300)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [modalVisible, setModalVisible] = useState(false);
     const [storeName, setStoreName] = useState('Mi Negocio');
@@ -24,36 +24,34 @@ export default function MenuModal({ visible, onClose, navigation }) {
 
     useEffect(() => {
         if (visible) {
-            loadStoreConfig(); // Recargar al abrir el modal
+            loadStoreConfig();
             setModalVisible(true);
             Animated.parallel([
                 Animated.spring(slideAnim, {
                     toValue: 0,
                     useNativeDriver: true,
-                    tension: 65,
-                    friction: 11,
+                    tension: 70,
+                    friction: 12,
                 }),
                 Animated.timing(fadeAnim, {
                     toValue: 1,
-                    duration: 300,
+                    duration: 280,
                     useNativeDriver: true,
                 })
             ]).start();
         } else {
             Animated.parallel([
                 Animated.timing(slideAnim, {
-                    toValue: -280,
-                    duration: 250,
+                    toValue: -300,
+                    duration: 240,
                     useNativeDriver: true,
                 }),
                 Animated.timing(fadeAnim, {
                     toValue: 0,
-                    duration: 250,
+                    duration: 240,
                     useNativeDriver: true,
                 })
-            ]).start(() => {
-                setModalVisible(false);
-            });
+            ]).start(() => setModalVisible(false));
         }
     }, [visible]);
 
@@ -61,91 +59,47 @@ export default function MenuModal({ visible, onClose, navigation }) {
         try {
             const name = await AsyncStorage.getItem(STORE_NAME_KEY);
             const logo = await AsyncStorage.getItem(STORE_LOGO_KEY);
-
             if (name) setStoreName(name);
             if (logo) setStoreLogo(logo);
-        } catch (error) {
-            console.error('Error loading store config:', error);
-        }
+        } catch { }
     };
 
-    const menuItems = [
+    // Agrupados en secciones
+    const sections = [
         {
-            label: 'Inicio',
-            icon: 'home-outline',
-            screen: 'Inicio',
-            description: 'Pantalla principal'
+            label: 'Principal',
+            items: [
+                { label: 'Inicio', icon: 'home-outline', screen: 'Inicio' },
+                { label: 'Cuentas Pendientes', icon: 'wallet-outline', screen: 'CuentasPendientes' },
+                { label: 'Todos los clientes', icon: 'people-outline', screen: 'clientas' },
+                { label: 'Deudas Canceladas', icon: 'checkmark-done-outline', screen: 'CuentasCanceladas' },
+            ]
         },
         {
-            label: 'Cuentas Pendientes',
-            icon: 'wallet-outline',
-            screen: 'CuentasPendientes',
-            description: 'Ver deudas activas'
+            label: 'Reportes',
+            items: [
+                { label: 'Movimientos del Día', icon: 'swap-vertical-outline', screen: 'MovimientosDiarios' },
+                { label: 'Resumen de Cobros', icon: 'stats-chart-outline', screen: 'Resumen' },
+                { label: 'Productos Vendidos', icon: 'pricetags-outline', screen: 'ProductosVendidos' },
+                { label: 'Informes', icon: 'bar-chart-outline', screen: 'Informes' },
+            ]
         },
         {
-            label: 'Gestionar clientas',
-            icon: 'people-outline',
-            screen: 'clientas',
-            description: 'Administrar clientas'
-        },
-        {
-            label: 'Deudas Canceladas',
-            icon: 'checkmark-done-outline',
-            screen: 'CuentasCanceladas',
-            description: 'Historial de pagos'
-        },
-        {
-            label: 'Gestión de Gastos',
-            icon: 'receipt-outline',
-            screen: 'Gastos',
-            description: 'Control de inversiones'
-        },
-        {
-            label: 'Resumen',
-            icon: 'stats-chart-outline',
-            screen: 'Resumen',
-            description: 'Estadísticas generales'
-        },
-        {
-            label: 'Informes',
-            icon: 'bar-chart-outline',
-            screen: 'Informes',
-            description: 'Reportes y gráficos'
-        },
-        {
-            label: 'Productos Vendidos',
-            icon: 'cart-outline',
-            screen: 'ProductosVendidos',
-            description: 'Historial de ventas'
-        },
-        {
-            label: 'Configuración',
-            icon: 'settings-outline',
-            screen: 'Configuracion',
-            description: 'Ajustes de la app'
-        },
+            label: 'Herramientas',
+            items: [
+                { label: 'Gestión de Gastos', icon: 'receipt-outline', screen: 'Gastos' },
+                { label: 'Configuración', icon: 'settings-outline', screen: 'Configuracion' },
+            ]
+        }
     ];
 
-    const handleNavigate = (screen) => {
-        // Iniciar la animación de cierre más lenta
+    const handleNavigate = (screen, params) => {
         Animated.parallel([
-            Animated.timing(slideAnim, {
-                toValue: -280,
-                duration: 400,
-                useNativeDriver: true,
-            }),
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 400,
-                useNativeDriver: true,
-            })
-        ]).start(() => {
-            setModalVisible(false);
-        });
-
-        // Navegar inmediatamente mientras se cierra el modal
+            Animated.timing(slideAnim, { toValue: -300, duration: 220, useNativeDriver: true }),
+            Animated.timing(fadeAnim, { toValue: 0, duration: 220, useNativeDriver: true })
+        ]).start(() => setModalVisible(false));
         onClose();
-        navigation.navigate(screen);
+        navigation.navigate(screen, params);
     };
 
     return (
@@ -156,64 +110,62 @@ export default function MenuModal({ visible, onClose, navigation }) {
             onRequestClose={onClose}
         >
             <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-                <TouchableOpacity
-                    style={StyleSheet.absoluteFill}
-                    activeOpacity={1}
-                    onPress={onClose}
-                />
+                <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+
                 <Animated.View
                     style={[
-                        styles.menuContainer,
-                        { paddingTop: insets.top },
+                        styles.drawer,
+                        { paddingTop: insets.top + 8 },
                         { transform: [{ translateX: slideAnim }] }
                     ]}
                 >
-                    {/* Header del menú */}
-                    <View style={styles.header}>
-                        <View style={styles.headerIcon}>
+                    {/* ── Perfil ──────────────────────────────────── */}
+                    <View style={styles.perfil}>
+                        <View style={styles.perfilAvatar}>
                             {storeLogo ? (
-                                <Image source={{ uri: storeLogo }} style={styles.logoImage} />
+                                <Image source={{ uri: storeLogo }} style={styles.perfilAvatarImg} />
                             ) : (
-                                <Image
-                                    source={require('../../assets/icon_app.jpg')}
-                                    style={styles.logoImage}
-                                />
+                                <Image source={require('../../assets/icon_app.jpg')} style={styles.perfilAvatarImg} />
                             )}
                         </View>
-                        <Text style={styles.headerTitle}>{storeName}</Text>
-                        <Text style={styles.headerSubtitle}>Todo al día.</Text>
-                        <TouchableOpacity
-                            style={styles.closeButton}
-                            onPress={onClose}
-                        >
-                            <Ionicons name="close" size={28} color={colors.textSecondary} />
+                        <View style={styles.perfilTextos}>
+                            <Text style={styles.perfilNombre} numberOfLines={1}>{storeName}</Text>
+                            <Text style={styles.perfilSub}>TODO AL DÍA</Text>
+                        </View>
+                        <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                            <Ionicons name="close" size={22} color={colors.textTertiary} />
                         </TouchableOpacity>
                     </View>
 
-                    {/* Menú items */}
-                    <ScrollView style={styles.scrollView}>
-                        {menuItems.map((item, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.menuItem}
-                                onPress={() => handleNavigate(item.screen)}
-                                activeOpacity={0.7}
-                            >
-                                <View style={styles.menuIconContainer}>
-                                    <Ionicons name={item.icon} size={22} color={colors.primary} />
-                                </View>
-                                <View style={styles.menuTextContainer}>
-                                    <Text style={styles.menuLabel}>{item.label}</Text>
-                                    <Text style={styles.menuDescription}>{item.description}</Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-                            </TouchableOpacity>
+                    <View style={styles.divider} />
+
+                    {/* ── Secciones ───────────────────────────────── */}
+                    <ScrollView
+                        style={styles.scroll}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 16 }}
+                    >
+                        {sections.map((sec, sIdx) => (
+                            <View key={sIdx} style={styles.section}>
+                                <Text style={styles.sectionLabel}>{sec.label.toUpperCase()}</Text>
+                                {sec.items.map((item, iIdx) => (
+                                    <TouchableOpacity
+                                        key={iIdx}
+                                        style={styles.item}
+                                        onPress={() => handleNavigate(item.screen, item.params)}
+                                        activeOpacity={0.6}
+                                    >
+                                        <Ionicons name={item.icon} size={19} color={colors.textSecondary} />
+                                        <Text style={styles.itemLabel}>{item.label}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
                         ))}
                     </ScrollView>
 
-                    {/* Footer */}
-                    <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-                        <Text style={styles.footerText}>Versión 1.2.0</Text>
+                    {/* ── Footer ──────────────────────────────────── */}
+                    <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + 12, 16) }]}>
+                        <Text style={styles.footerTexto}>v1.2.0 · Mi Cobranza</Text>
                     </View>
                 </Animated.View>
             </Animated.View>
@@ -224,101 +176,115 @@ export default function MenuModal({ visible, onClose, navigation }) {
 const createStyles = (colors) => StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-start',
+        backgroundColor: 'rgba(0,0,0,0.45)',
     },
-    menuContainer: {
-        width: 280,
-        height: '100%',
+    drawer: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 285,
         backgroundColor: colors.card,
         shadowColor: '#000',
-        shadowOffset: { width: 2, height: 0 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowOffset: { width: 3, height: 0 },
+        shadowOpacity: 0.18,
+        shadowRadius: 12,
+        elevation: 10,
     },
-    header: {
-        padding: 24,
-        backgroundColor: colors.surfaceVariant,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        alignItems: 'center',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerIcon: {
-        width: 66,
-        height: 66,
-        borderRadius: 32,
-        backgroundColor: colors.primaryLight,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-        overflow: 'hidden',
-    },
-    logoImage: {
-        width: '90%',
-        height: '90%',
-        borderRadius: 32,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: colors.text,
-        marginBottom: 4,
-    },
-    headerSubtitle: {
-        fontSize: 13,
-        color: colors.textSecondary,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    menuItem: {
+
+    // Perfil
+    perfil: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
         paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        paddingVertical: 14,
+        gap: 12,
     },
-    menuIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
+    perfilAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        overflow: 'hidden',
         backgroundColor: colors.primaryLight,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
+        flexShrink: 0,
     },
-    menuTextContainer: {
+    perfilAvatarImg: {
+        width: '100%',
+        height: '100%',
+    },
+    perfilTextos: {
         flex: 1,
     },
-    menuLabel: {
-        fontSize: 15,
-        fontWeight: '600',
+    perfilNombre: {
+        fontSize: 16,
+        fontWeight: '700',
         color: colors.text,
         marginBottom: 2,
     },
-    menuDescription: {
+    perfilSub: {
         fontSize: 12,
-        color: colors.textSecondary,
+        color: colors.textTertiary,
+        fontWeight: '500',
     },
+    closeBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: colors.surfaceVariant,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    divider: {
+        height: 1,
+        backgroundColor: colors.border,
+        marginHorizontal: 20,
+        marginBottom: 8,
+    },
+
+    scroll: {
+        flex: 1,
+    },
+
+    // Secciones
+    section: {
+        paddingHorizontal: 14,
+        marginBottom: 4,
+    },
+    sectionLabel: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: colors.textTertiary,
+        letterSpacing: 1,
+        marginTop: 14,
+        marginBottom: 4,
+        paddingHorizontal: 8,
+    },
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        paddingVertical: 11,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+    },
+    itemLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: colors.text,
+    },
+
+    // Footer
     footer: {
-        padding: 20,
+        paddingHorizontal: 20,
+        paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: colors.border,
         alignItems: 'center',
     },
-    footerText: {
-        fontSize: 12,
-        color: colors.textSecondary,
+    footerTexto: {
+        fontSize: 11,
+        color: colors.textTertiary,
+        fontWeight: '500',
     },
 });

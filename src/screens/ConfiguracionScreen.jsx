@@ -38,10 +38,11 @@ const TIMEOUT_OPTIONS = [
     { label: 'Nunca', value: -1, description: 'Solo pide PIN al abrir la app' },
 ];
 
-export default function ConfiguracionScreen({ navigation }) {
+export default function ConfiguracionScreen({ route, navigation }) {
     const insets = useSafeAreaInsets();
     const { colors, isDark, toggleTheme } = useTheme();
     const styles = createStyles(colors);
+    const openBackup = route?.params?.openBackup || false;
     const [selectedTimeout, setSelectedTimeout] = useState(60000);
     const [hasPin, setHasPin] = useState(false);
     const [pinEnabled, setPinEnabled] = useState(true);
@@ -555,7 +556,7 @@ export default function ConfiguracionScreen({ navigation }) {
                     description="Exporta o importa tus datos"
                     icon="cloud-upload-outline"
                     iconColor="#45beffff"
-                    defaultExpanded={false}
+                    defaultExpanded={openBackup}
                 >
                     <Text style={styles.sectionDescription}>
                         Protege tus datos exportándolos o restaura desde un respaldo anterior
