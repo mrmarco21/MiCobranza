@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { obtenerResumenPorCategoria, obtenerMovimientosPorCategoria } from '../logic/reportesService';
 import * as categoriasRepo from '../data/categoriasRepository';
@@ -35,10 +36,14 @@ export default function ProductosVendidosScreen({ navigation }) {
 
     const styles = useMemo(() => createStyles(colors), [colors]);
 
-    useEffect(() => {
-        cargarCategorias();
-        cargarDatos();
-    }, [rangoFecha, mesSeleccionado, anioSeleccionado, fechaInicio, fechaFin]);
+    // Recargar cada vez que la pantalla recibe foco (refleja ediciones hechas en
+    // Detalle del movimiento / Nuevo Cargo) y cuando cambian los filtros.
+    useFocusEffect(
+        useCallback(() => {
+            cargarCategorias();
+            cargarDatos();
+        }, [rangoFecha, mesSeleccionado, anioSeleccionado, fechaInicio, fechaFin])
+    );
 
     const cargarCategorias = async () => {
         const cats = await categoriasRepo.getCategorias();

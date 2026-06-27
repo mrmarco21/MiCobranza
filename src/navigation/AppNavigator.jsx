@@ -13,6 +13,7 @@ import CuentasCanceladasScreen from '../screens/CuentasCanceladasScreen';
 import ResumenScreen from '../screens/ResumenScreen';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen';
 import ProductosVendidosScreen from '../screens/ProductosVendidosScreen';
+import MovimientosDiariosScreen from '../screens/MovimientosDiariosScreen';
 import GastosScreen from '../screens/GastosScreen';
 import AddGastoScreen from '../screens/AddGastoScreen';
 import InformesScreen from '../screens/InformesScreen';
@@ -40,6 +41,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Resumen" component={ResumenScreen} />
             <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
             <Stack.Screen name="ProductosVendidos" component={ProductosVendidosScreen} />
+            <Stack.Screen name="MovimientosDiarios" component={MovimientosDiariosScreen} />
             <Stack.Screen name="Gastos" component={GastosScreen} />
             <Stack.Screen name="AddGasto" component={AddGastoScreen} />
             <Stack.Screen name="Informes" component={InformesScreen} />

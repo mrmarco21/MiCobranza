@@ -7,7 +7,7 @@ import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { obtenerClientaConSaldo } from '../logic/clientasService';
 import { obtenerCuentasActivas, obtenerCuentasCerradas } from '../logic/cuentasService';
-import { obtenerMovimientosDeCuenta } from '../logic/movimientosService';
+import { obtenerMovimientosDeCuenta, eliminarMovimiento } from '../logic/movimientosService';
 import * as categoriasRepo from '../data/categoriasRepository';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { useTheme } from '../hooks/useTheme';
@@ -100,42 +100,74 @@ export default function ClientaDetailScreen({ route, navigation }) {
         });
     };
 
+    const handleEliminarMovimiento = () => {
+        if (!movimientoSeleccionado) return;
+        Alert.alert(
+            'Eliminar movimiento',
+            `¿Seguro que deseas eliminar este ${movimientoSeleccionado.tipo === 'CARGO' ? 'cargo' : 'abono'} de ${formatCurrency(movimientoSeleccionado.monto)}? El saldo de la cuenta se recalculará. Esta acción no se puede deshacer.`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await eliminarMovimiento(movimientoSeleccionado.id);
+                            setModalDetalleVisible(false);
+                            setMovimientoSeleccionado(null);
+                            await cargarDatos();
+                        } catch (error) {
+                            Alert.alert('Error', error.message || 'No se pudo eliminar el movimiento');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     // Parsear prendas
     const parsearPrendas = (comentario) => {
         if (!comentario) return [];
         const partes = comentario.split(' | ');
         return partes.map(parte => {
-            // Formato nuevo con categoría ID: "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 1 [01/01/2026] {ropa-otros}"
+            // El "x <cantidad>" es opcional para compatibilidad con datos anteriores
+            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchCompleto) {
+                const cantidad = matchCompleto[3] ? parseInt(matchCompleto[3]) : 1;
                 return {
                     descripcion: matchCompleto[1].trim(),
-                    monto: parseFloat(matchCompleto[2]),
-                    fecha: matchCompleto[3],
-                    categoria: matchCompleto[4]
+                    monto: parseFloat(matchCompleto[2]) * cantidad,
+                    cantidad,
+                    fecha: matchCompleto[4],
+                    categoria: matchCompleto[5]
                 };
             }
-            // Formato con fecha pero sin categoría (datos antiguos)
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            // Formato con fecha (y cantidad opcional) pero sin categoría (datos antiguos)
+            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
+                const cantidad = matchConFecha[3] ? parseInt(matchConFecha[3]) : 1;
                 return {
                     descripcion: matchConFecha[1].trim(),
-                    monto: parseFloat(matchConFecha[2]),
-                    fecha: matchConFecha[3],
+                    monto: parseFloat(matchConFecha[2]) * cantidad,
+                    cantidad,
+                    fecha: matchConFecha[4],
                     categoria: null
                 };
             }
-            // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            // Formato sin fecha: "tajadores (S/20.00)" (cantidad opcional)
+            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?$/);
             if (matchSinFecha) {
+                const cantidad = matchSinFecha[3] ? parseInt(matchSinFecha[3]) : 1;
                 return {
                     descripcion: matchSinFecha[1].trim(),
-                    monto: parseFloat(matchSinFecha[2]),
+                    monto: parseFloat(matchSinFecha[2]) * cantidad,
+                    cantidad,
                     fecha: null,
                     categoria: null
                 };
             }
-            return { descripcion: parte, monto: null, fecha: null, categoria: null };
+            return { descripcion: parte, monto: null, cantidad: 1, fecha: null, categoria: null };
         });
     };
 
@@ -148,6 +180,16 @@ export default function ClientaDetailScreen({ route, navigation }) {
     const extraerDescripcionAbono = (comentario) => {
         if (!comentario) return '';
         return comentario.replace(/\s*\[\d{2}\/\d{2}\/\d{4}\]$/, '').trim();
+    };
+
+    // Obtener el nombre legible de una categoría a partir de su id
+    const obtenerNombreCategoria = (categoriaId) => {
+        if (!categoriaId) return 'Ropa/Otros';
+        const cat = categorias.find(c => c.id === categoriaId);
+        if (cat) return cat.nombre;
+        // Fallback: formatear el id (ej: "perfume-1779..." -> "Perfume", "calzado" -> "Calzado")
+        const base = categoriaId.split('-')[0];
+        return base.charAt(0).toUpperCase() + base.slice(1);
     };
 
     // Extraer descripción limpia para mostrar en la lista
@@ -529,6 +571,15 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                                     </View>
                                                     <View style={styles.prendaTextos}>
                                                         <Text style={styles.prendaDescripcion}>{prenda.descripcion}</Text>
+                                                        <View style={styles.prendaMetaRow}>
+                                                            <View style={styles.prendaCategoriaContainer}>
+                                                                <Ionicons name="pricetag-outline" size={12} color="#29B6F6" />
+                                                                <Text style={styles.prendaCategoria}>{obtenerNombreCategoria(prenda.categoria)}</Text>
+                                                            </View>
+                                                            {prenda.cantidad > 1 && (
+                                                                <Text style={styles.prendaCantidad}>x{prenda.cantidad}</Text>
+                                                            )}
+                                                        </View>
                                                         {prenda.fecha && (
                                                             <View style={styles.prendaFechaContainer}>
                                                                 <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
@@ -571,6 +622,15 @@ export default function ClientaDetailScreen({ route, navigation }) {
 
                         <View style={[styles.modalDetalleAcciones, { paddingBottom: Math.max(insets.bottom + 8, 12) }]}>
                             <TouchableOpacity
+                                style={styles.botonEliminar}
+                                onPress={handleEliminarMovimiento}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+                                <Text style={styles.botonEliminarTexto}>Eliminar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
                                 style={styles.botonEditar}
                                 onPress={handleEditarMovimiento}
                                 activeOpacity={0.7}
@@ -579,13 +639,13 @@ export default function ClientaDetailScreen({ route, navigation }) {
                                 <Text style={styles.botonEditarTexto}>Editar</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
+                            {/* <TouchableOpacity
                                 style={styles.modalDetalleCerrar}
                                 onPress={() => setModalDetalleVisible(false)}
                                 activeOpacity={0.7}
                             >
                                 <Text style={styles.modalDetalleCerrarTexto}>Cerrar</Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
                     </View>
                 </View>
@@ -943,6 +1003,10 @@ const createStyles = (colors) => StyleSheet.create({
     prendaNumeroTexto: { fontSize: 12, fontWeight: '700', color: '#FFFFFF' },
     prendaTextos: { flex: 1 },
     prendaDescripcion: { fontSize: 14, color: colors.text, marginBottom: 2 },
+    prendaMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+    prendaCategoriaContainer: { flexDirection: 'row', alignItems: 'center' },
+    prendaCategoria: { fontSize: 12, color: '#29B6F6', marginLeft: 4, fontWeight: '500' },
+    prendaCantidad: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
     prendaFechaContainer: { flexDirection: 'row', alignItems: 'center' },
     prendaFecha: { fontSize: 12, color: colors.textSecondary, marginLeft: 4 },
     prendaMonto: { fontSize: 14, fontWeight: '600', color: colors.text },
@@ -958,8 +1022,9 @@ const createStyles = (colors) => StyleSheet.create({
     modalDetalleAcciones: { flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 12 },
     botonEditar: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryLight, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.primary },
     botonEditarTexto: { fontSize: 16, fontWeight: '600', color: colors.primary, marginLeft: 6 },
-    modalDetalleCerrar: { flex: 1, backgroundColor: colors.surfaceVariant, paddingVertical: 14, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-    modalDetalleCerrarTexto: { fontSize: 16, fontWeight: '600', color: colors.text },
+    botonEliminar: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.errorLight, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.error },
+    botonEliminarTexto: { fontSize: 15, fontWeight: '600', color: colors.error, marginLeft: 6 },
+    modalDetalleCerrar: { flex: 1, backgroundColor: colors.surfaceVariant, paddingVertical: 14, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border }, modalDetalleCerrarTexto: { fontSize: 16, fontWeight: '600', color: colors.text },
     modalCaptura: {
         position: 'absolute',
         left: -10000,

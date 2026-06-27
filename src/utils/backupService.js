@@ -117,12 +117,17 @@ export const importData = async () => {
  */
 export const applyImportedData = async (importedData) => {
   try {
-    const { clientas, cuentas, movimientos, storeName, storeLogo } = importedData;
+    const { clientas, cuentas, movimientos, categorias, storeName, storeLogo } = importedData;
 
     // Guardar datos
     await AsyncStorage.setItem(KEYS.clientas, JSON.stringify(clientas));
     await AsyncStorage.setItem(KEYS.CUENTAS, JSON.stringify(cuentas));
     await AsyncStorage.setItem(KEYS.MOVIMIENTOS, JSON.stringify(movimientos));
+
+    // Restaurar categorías si vienen en el respaldo
+    if (Array.isArray(categorias) && categorias.length > 0) {
+      await AsyncStorage.setItem(KEYS.CATEGORIAS, JSON.stringify(categorias));
+    }
 
     if (storeName) {
       await AsyncStorage.setItem('store_name', storeName);
@@ -144,16 +149,18 @@ export const applyImportedData = async (importedData) => {
  */
 export const mergeImportedData = async (importedData) => {
   try {
-    const { clientas, cuentas, movimientos } = importedData;
+    const { clientas, cuentas, movimientos, categorias } = importedData;
 
     // Obtener datos actuales
     const currentclientas = await AsyncStorage.getItem(KEYS.clientas);
     const currentCuentas = await AsyncStorage.getItem(KEYS.CUENTAS);
     const currentMovimientos = await AsyncStorage.getItem(KEYS.MOVIMIENTOS);
+    const currentCategorias = await AsyncStorage.getItem(KEYS.CATEGORIAS);
 
     const existingclientas = currentclientas ? JSON.parse(currentclientas) : [];
     const existingCuentas = currentCuentas ? JSON.parse(currentCuentas) : [];
     const existingMovimientos = currentMovimientos ? JSON.parse(currentMovimientos) : [];
+    const existingCategorias = currentCategorias ? JSON.parse(currentCategorias) : [];
 
     // Fusionar datos (evitar duplicados por ID)
     const mergedclientas = [...existingclientas];
@@ -177,10 +184,23 @@ export const mergeImportedData = async (importedData) => {
       }
     });
 
+    // Fusionar categorías si vienen en el respaldo
+    const mergedCategorias = [...existingCategorias];
+    if (Array.isArray(categorias)) {
+      categorias.forEach((newItem) => {
+        if (!mergedCategorias.find((item) => item.id === newItem.id)) {
+          mergedCategorias.push(newItem);
+        }
+      });
+    }
+
     // Guardar datos fusionados
     await AsyncStorage.setItem(KEYS.clientas, JSON.stringify(mergedclientas));
     await AsyncStorage.setItem(KEYS.CUENTAS, JSON.stringify(mergedCuentas));
     await AsyncStorage.setItem(KEYS.MOVIMIENTOS, JSON.stringify(mergedMovimientos));
+    if (mergedCategorias.length > 0) {
+      await AsyncStorage.setItem(KEYS.CATEGORIAS, JSON.stringify(mergedCategorias));
+    }
 
     return {
       success: true,

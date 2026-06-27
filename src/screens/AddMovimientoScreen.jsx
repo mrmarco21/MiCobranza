@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { registrarMovimiento, editarMovimiento, obtenerMovimientoPorId } from '../logic/movimientosService';
 import { abrirNuevaCuenta } from '../logic/cuentasService';
 import * as cuentasRepo from '../data/cuentasRepository';
@@ -26,6 +27,12 @@ export default function AddMovimientoScreen({ route, navigation }) {
     const [saldoCuenta, setSaldoCuenta] = useState(0);
     const [categorias, setCategorias] = useState([]);
 
+    // Método de pago (abono)
+    const [metodoPago, setMetodoPago] = useState('efectivo'); // 'efectivo' | 'yape' | 'transferencia' | 'mixto'
+    const [mixtoEfectivo, setMixtoEfectivo] = useState('');
+    const [mixtoYape, setMixtoYape] = useState('');
+    const [mixtoTransferencia, setMixtoTransferencia] = useState('');
+
     // Modal para agregar categoría
     const [modalAgregarCategoriaVisible, setModalAgregarCategoriaVisible] = useState(false);
     const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState('');
@@ -43,7 +50,10 @@ export default function AddMovimientoScreen({ route, navigation }) {
     // Refs para los inputs de monto
     const montoInputRefs = useRef([]);
 
-    // Estado para el date picker
+    // Date picker nativo para abono
+    const [showDatePickerAbono, setShowDatePickerAbono] = useState(false);
+
+    // Date picker manual (solo para prendas en cargos)
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [datePickerIndex, setDatePickerIndex] = useState(0);
     const [datePickerForAbono, setDatePickerForAbono] = useState(false);
@@ -128,36 +138,40 @@ export default function AddMovimientoScreen({ route, navigation }) {
 
         const partes = comentario.split(' | ');
         const prendasParseadas = partes.map(parte => {
-            // Formato nuevo con categoría ID: "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 1 [01/01/2026] {ropa-otros}"
+            // El "x <cantidad>" es opcional; se multiplica por el precio para preservar el total
+            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchCompleto) {
-                const [dia, mes, anio] = matchCompleto[3].split('/');
+                const [dia, mes, anio] = matchCompleto[4].split('/');
+                const cantidad = matchCompleto[3] ? parseInt(matchCompleto[3]) : 1;
                 return {
                     descripcion: matchCompleto[1].trim(),
-                    monto: matchCompleto[2],
+                    monto: String(parseFloat(matchCompleto[2]) * cantidad),
                     fecha: new Date(anio, mes - 1, dia),
-                    categoria: matchCompleto[4]
+                    categoria: matchCompleto[5]
                 };
             }
 
-            // Formato con fecha pero sin categoría (datos antiguos)
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            // Formato con fecha (y cantidad opcional) pero sin categoría (datos antiguos)
+            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
-                const [dia, mes, anio] = matchConFecha[3].split('/');
+                const [dia, mes, anio] = matchConFecha[4].split('/');
+                const cantidad = matchConFecha[3] ? parseInt(matchConFecha[3]) : 1;
                 return {
                     descripcion: matchConFecha[1].trim(),
-                    monto: matchConFecha[2],
+                    monto: String(parseFloat(matchConFecha[2]) * cantidad),
                     fecha: new Date(anio, mes - 1, dia),
                     categoria: defaultCategoria
                 };
             }
 
-            // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            // Formato sin fecha: "tajadores (S/20.00)" (cantidad opcional)
+            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?$/);
             if (matchSinFecha) {
+                const cantidad = matchSinFecha[3] ? parseInt(matchSinFecha[3]) : 1;
                 return {
                     descripcion: matchSinFecha[1].trim(),
-                    monto: matchSinFecha[2],
+                    monto: String(parseFloat(matchSinFecha[2]) * cantidad),
                     fecha: new Date(fechaMovimiento),
                     categoria: defaultCategoria
                 };
@@ -201,7 +215,21 @@ export default function AddMovimientoScreen({ route, navigation }) {
                 setPrendas(prendasParseadas);
             } else {
                 setComentario(extraerDescripcionSinFecha(mov.comentario));
-                setFechaAbono(parsearFechaAbono(mov.comentario, mov.fecha));
+                // La fecha real del movimiento (no la del comentario)
+                setFechaAbono(new Date(mov.fecha));
+                // Cargar método de pago existente
+                if (mov.metodosPago) {
+                    const mp = mov.metodosPago;
+                    const activos = Object.entries(mp).filter(([, v]) => v > 0);
+                    if (activos.length > 1) {
+                        setMetodoPago('mixto');
+                        setMixtoEfectivo(mp.efectivo > 0 ? mp.efectivo.toString() : '');
+                        setMixtoYape(mp.yape > 0 ? mp.yape.toString() : '');
+                        setMixtoTransferencia(mp.transferencia > 0 ? mp.transferencia.toString() : '');
+                    } else if (activos.length === 1) {
+                        setMetodoPago(activos[0][0]); // 'efectivo' | 'yape' | 'transferencia'
+                    }
+                }
             }
         }
     };
@@ -256,13 +284,29 @@ export default function AddMovimientoScreen({ route, navigation }) {
     };
 
     const abrirDatePicker = (index, forAbono = false) => {
-        const fecha = forAbono ? fechaAbono : prendas[index].fecha;
+        if (forAbono) {
+            // Para abono: usar el DateTimePicker nativo
+            setShowDatePickerAbono(true);
+            return;
+        }
+        // Para prendas de cargo: usar el modal manual
+        const fecha = prendas[index].fecha;
         setTempDay(fecha.getDate().toString());
         setTempMonth((fecha.getMonth() + 1).toString());
         setTempYear(fecha.getFullYear().toString());
         setDatePickerIndex(index);
-        setDatePickerForAbono(forAbono);
+        setDatePickerForAbono(false);
         setShowDatePicker(true);
+    };
+
+    // Cambio en el DateTimePicker nativo (abono)
+    const onChangeFechaAbono = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowDatePickerAbono(false);
+        }
+        if (selectedDate) {
+            setFechaAbono(selectedDate);
+        }
     };
 
     const confirmarFecha = () => {
@@ -306,8 +350,47 @@ export default function AddMovimientoScreen({ route, navigation }) {
 
     const generarDescripcionAbono = () => {
         const desc = comentario.trim();
-        const fechaStr = `[${formatearFecha(fechaAbono)}]`;
-        return desc ? `${desc} ${fechaStr}` : fechaStr;
+        return desc || 'Abono'; // Por defecto 'Abono' si no hay descripción
+    };
+
+    // Construye el objeto metodosPago según la selección actual (sin transferencia)
+    const construirMetodosPago = (montoTotal) => {
+        if (metodoPago === 'mixto') {
+            return {
+                efectivo: parseFloat(mixtoEfectivo) || 0,
+                yape: parseFloat(mixtoYape) || 0,
+                transferencia: 0, // eliminado de la UI, siempre 0
+            };
+        }
+        return {
+            efectivo: metodoPago === 'efectivo' ? montoTotal : 0,
+            yape: metodoPago === 'yape' ? montoTotal : 0,
+            transferencia: 0,
+        };
+    };
+
+    // Valida que en modo mixto la suma coincida con el monto
+    const validarMixto = (montoTotal) => {
+        if (metodoPago !== 'mixto') return true;
+        const suma = (parseFloat(mixtoEfectivo) || 0) + (parseFloat(mixtoYape) || 0);
+        return Math.abs(suma - montoTotal) < 0.01;
+    };
+
+    // Autocompleta el otro campo mixto cuando el usuario edita uno
+    const handleMixtoEfectivoChange = (valor) => {
+        setMixtoEfectivo(valor);
+        const montoNum = parseFloat(monto) || 0;
+        const efectivoNum = parseFloat(valor) || 0;
+        const resto = montoNum - efectivoNum;
+        setMixtoYape(resto > 0 ? resto.toFixed(2) : '');
+    };
+
+    const handleMixtoYapeChange = (valor) => {
+        setMixtoYape(valor);
+        const montoNum = parseFloat(monto) || 0;
+        const yapeNum = parseFloat(valor) || 0;
+        const resto = montoNum - yapeNum;
+        setMixtoEfectivo(resto > 0 ? resto.toFixed(2) : '');
     };
 
     const handleGuardar = async () => {
@@ -348,12 +431,29 @@ export default function AddMovimientoScreen({ route, navigation }) {
                 });
                 return;
             }
+
+            // Validar modo mixto
+            if (!validarMixto(montoNum)) {
+                const suma = (parseFloat(mixtoEfectivo) || 0) + (parseFloat(mixtoYape) || 0);
+                showModal({
+                    type: 'error',
+                    title: 'Monto mixto incorrecto',
+                    message: `La suma efectivo + yape (S/. ${suma.toFixed(2)}) debe ser igual al monto total (S/. ${montoNum.toFixed(2)})`,
+                });
+                return;
+            }
         }
 
         setLoading(true);
         try {
             if (esEdicion) {
-                await editarMovimiento(movimientoId, montoNum, descripcionFinal);
+                if (!esCargo) {
+                    // Para abonos: pasar la fecha real y los métodos de pago
+                    const metodosPago = construirMetodosPago(montoNum);
+                    await editarMovimiento(movimientoId, montoNum, descripcionFinal, fechaAbono, metodosPago);
+                } else {
+                    await editarMovimiento(movimientoId, montoNum, descripcionFinal);
+                }
                 showToast('Movimiento actualizado correctamente');
             } else {
                 let idCuenta = cuentaId;
@@ -363,7 +463,13 @@ export default function AddMovimientoScreen({ route, navigation }) {
                     idCuenta = cuenta.id;
                 }
 
-                await registrarMovimiento(idCuenta, tipo, montoNum, descripcionFinal);
+                if (!esCargo) {
+                    const metodosPago = construirMetodosPago(montoNum);
+                    // Pasar la fecha elegida por el usuario para que m.fecha quede en el día correcto
+                    await registrarMovimiento(idCuenta, tipo, montoNum, descripcionFinal, metodosPago, fechaAbono);
+                } else {
+                    await registrarMovimiento(idCuenta, tipo, montoNum, descripcionFinal);
+                }
                 showToast(esCargo ? 'Cargo registrado correctamente' : 'Abono registrado correctamente');
             }
             setTimeout(() => navigation.goBack(), 1500);
@@ -508,42 +614,192 @@ export default function AddMovimientoScreen({ route, navigation }) {
         </View >
     );
 
-    // Formulario para abonos
-    const renderFormularioAbono = () => (
-        <View style={styles.formulario}>
-            {/* Monto grande */}
-            <View style={styles.montoAbonoContainer}>
-                <Text style={styles.monedaGrande}>S/</Text>
-                <TextInput
-                    style={styles.inputMontoGrande}
-                    value={monto}
-                    onChangeText={setMonto}
-                    placeholder="0.00"
-                    placeholderTextColor="#A0A0A0"
-                    keyboardType="decimal-pad"
-                />
-            </View>
+    // Formulario para abonos — rediseño profesional con DateTimePicker nativo
+    const renderFormularioAbono = () => {
+        const montoNum = parseFloat(monto) || 0;
+        const sumaMixto = (parseFloat(mixtoEfectivo) || 0) + (parseFloat(mixtoYape) || 0);
+        const faltaMixto = montoNum - sumaMixto;
+        const mixtoValido = metodoPago !== 'mixto' || Math.abs(faltaMixto) < 0.01;
 
-            {/* Fecha y descripción en fila */}
-            <View style={styles.abonoDetalles}>
-                <TouchableOpacity
-                    style={styles.fechaAbonoBtn}
-                    onPress={() => abrirDatePicker(0, true)}
-                >
-                    <Ionicons name="calendar-outline" size={18} color="#29B6F6" />
-                    <Text style={styles.fechaAbonoTexto}>{formatearFecha(fechaAbono)}</Text>
-                </TouchableOpacity>
-            </View>
+        const METODOS = [
+            { id: 'efectivo', label: 'Efectivo', icon: 'cash-outline', color: '#10B981' },
+            { id: 'yape', label: 'Yape', icon: 'phone-portrait-outline', color: '#9333EA' },
+            { id: 'mixto', label: 'Mixto', icon: 'layers-outline', color: '#F97316' },
+        ];
 
-            <TextInput
-                style={styles.inputComentarioAbono}
-                value={comentario}
-                onChangeText={setComentario}
-                placeholder="Nota opcional (ej: Pago parcial)"
-                placeholderTextColor="#A0A0A0"
-            />
-        </View>
-    );
+        const esHoy = (() => {
+            const hoy = new Date();
+            return (
+                fechaAbono.getDate() === hoy.getDate() &&
+                fechaAbono.getMonth() === hoy.getMonth() &&
+                fechaAbono.getFullYear() === hoy.getFullYear()
+            );
+        })();
+
+        return (
+            <View style={styles.abonoWrapper}>
+                {/* ── Monto ─────────────────────────────────────── */}
+                <View style={styles.abonoMontoCard}>
+                    <Text style={styles.abonoMontoEtiqueta}>MONTO DEL ABONO</Text>
+                    <View style={styles.abonoMontoRow}>
+                        <Text style={styles.abonoMontoSol}>S/</Text>
+                        <TextInput
+                            style={styles.abonoMontoInput}
+                            value={monto}
+                            onChangeText={setMonto}
+                            placeholder="0.00"
+                            placeholderTextColor="rgba(255,255,255,0.5)"
+                            keyboardType="decimal-pad"
+                        />
+                    </View>
+                </View>
+
+                {/* ── Fecha con DateTimePicker nativo ───────────── */}
+                <View style={styles.abonoSeccion}>
+                    <Text style={styles.abonoSeccionLabel}>FECHA</Text>
+                    <TouchableOpacity
+                        style={styles.abonoFechaBtn}
+                        onPress={() => abrirDatePicker(0, true)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.abonoFechaBtnIzq}>
+                            <View style={styles.abonoFechaIconoWrap}>
+                                <Ionicons name="calendar" size={20} color="#0EA5E9" />
+                            </View>
+                            <View>
+                                <Text style={styles.abonoFechaTextoNuevo}>{formatearFecha(fechaAbono)}</Text>
+                                <Text style={styles.abonoFechaSubtexto}>
+                                    {esHoy ? 'Hoy' : fechaAbono.toLocaleDateString('es-PE', { weekday: 'long' })}
+                                </Text>
+                            </View>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                    </TouchableOpacity>
+
+                    {showDatePickerAbono && (
+                        <DateTimePicker
+                            value={fechaAbono}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={onChangeFechaAbono}
+                            maximumDate={new Date()}
+                        />
+                    )}
+                </View>
+
+                {/* ── Método de pago ──────────────────────────── */}
+                <View style={styles.abonoSeccion}>
+                    <Text style={styles.abonoSeccionLabel}>MÉTODO DE PAGO</Text>
+                    <View style={styles.metodoPagoGrid}>
+                        {METODOS.map(m => {
+                            const activo = metodoPago === m.id;
+                            return (
+                                <TouchableOpacity
+                                    key={m.id}
+                                    style={[
+                                        styles.metodoPagoChip,
+                                        activo && { backgroundColor: m.color, borderColor: m.color }
+                                    ]}
+                                    onPress={() => setMetodoPago(m.id)}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons
+                                        name={m.icon}
+                                        size={16}
+                                        color={activo ? '#FFFFFF' : m.color}
+                                    />
+                                    <Text style={[
+                                        styles.metodoPagoChipTexto,
+                                        activo && { color: '#FFFFFF' }
+                                    ]}>
+                                        {m.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+
+                    {/* Inputs mixto: solo Efectivo y Yape. El segundo se autocompleta */}
+                    {metodoPago === 'mixto' && (
+                        <View style={styles.mixtoContainer}>
+                            {/* Efectivo */}
+                            <View style={styles.mixtoRow}>
+                                <View style={[styles.mixtoIcono, { backgroundColor: '#D1FAE5' }]}>
+                                    <Ionicons name="cash" size={16} color="#10B981" />
+                                </View>
+                                <Text style={styles.mixtoNombreTexto}>Efectivo</Text>
+                                <View style={styles.mixtoInputWrap}>
+                                    <Text style={styles.mixtoPrefix}>S/</Text>
+                                    <TextInput
+                                        style={styles.mixtoInput}
+                                        value={mixtoEfectivo}
+                                        onChangeText={handleMixtoEfectivoChange}
+                                        placeholder="0.00"
+                                        placeholderTextColor="#A0A0A0"
+                                        keyboardType="decimal-pad"
+                                    />
+                                </View>
+                            </View>
+
+                            {/* Yape */}
+                            <View style={styles.mixtoRow}>
+                                <View style={[styles.mixtoIcono, { backgroundColor: '#EDE9FE' }]}>
+                                    <Ionicons name="phone-portrait" size={16} color="#9333EA" />
+                                </View>
+                                <Text style={styles.mixtoNombreTexto}>Yape</Text>
+                                <View style={styles.mixtoInputWrap}>
+                                    <Text style={styles.mixtoPrefix}>S/</Text>
+                                    <TextInput
+                                        style={styles.mixtoInput}
+                                        value={mixtoYape}
+                                        onChangeText={handleMixtoYapeChange}
+                                        placeholder="0.00"
+                                        placeholderTextColor="#A0A0A0"
+                                        keyboardType="decimal-pad"
+                                    />
+                                </View>
+                            </View>
+
+                            {/* Barra de estado: falta / completo */}
+                            {montoNum > 0 && (
+                                <View style={[
+                                    styles.mixtoSuma,
+                                    {
+                                        borderColor: mixtoValido ? '#10B981' : '#F97316',
+                                        backgroundColor: mixtoValido ? '#F0FFF4' : '#FFF7ED'
+                                    }
+                                ]}>
+                                    {mixtoValido ? (
+                                        <Text style={[styles.mixtoSumaTexto, { color: '#10B981' }]}>
+                                            ✓ Total cubierto: S/ {sumaMixto.toFixed(2)}
+                                        </Text>
+                                    ) : (
+                                        <Text style={[styles.mixtoSumaTexto, { color: '#F97316' }]}>
+                                            Falta S/ {faltaMixto.toFixed(2)}  (suma actual: S/ {sumaMixto.toFixed(2)})
+                                        </Text>
+                                    )}
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </View>
+
+                {/* Nota opcional — si está vacía se guarda 'Abono' por defecto */}
+                <View style={styles.abonoSeccion}>
+                    <Text style={styles.abonoSeccionLabel}>NOTA (opcional)</Text>
+                    <TextInput
+                        style={styles.abonoNotaInput}
+                        value={comentario}
+                        onChangeText={setComentario}
+                        placeholder="Por defecto: Abono"
+                        placeholderTextColor="#A0A0A0"
+                        multiline
+                        numberOfLines={2}
+                    />
+                </View>
+            </View>
+        );
+    };
 
     const styles = createStyles(colors);
 
@@ -1009,6 +1265,210 @@ const createStyles = (colors) => StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.border,
     },
+
+    // ── Abono rediseño ───────────────────────────────────────────
+    abonoWrapper: {
+        padding: 16,
+        gap: 15,
+    },
+    abonoMontoCard: {
+        backgroundColor: '#10B981',
+        borderRadius: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 2,
+    },
+    abonoMontoEtiqueta: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: 'rgba(255, 255, 255, 0.89)',
+        letterSpacing: 1.5,
+        marginBottom: 5,
+    },
+    abonoMontoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    abonoMontoSol: {
+        fontSize: 25,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.8)',
+        marginRight: 6,
+        alignSelf: 'center',
+    },
+    abonoMontoInput: {
+        fontSize: 45,
+        fontWeight: '800',
+        color: '#FFFFFF',
+        minWidth: 140,
+        textAlign: 'center',
+        letterSpacing: -1,
+    },
+    abonoSeccion: {
+        gap: 8,
+    },
+    abonoSeccionLabel: {
+        fontSize: 11,
+        fontWeight: '800',
+        color: colors.textTertiary,
+        letterSpacing: 1.2,
+    },
+    abonoFechaBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: colors.card,
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    abonoFechaBtnIzq: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    abonoFechaIconoWrap: {
+        width: 38,
+        height: 38,
+        borderRadius: 11,
+        backgroundColor: '#EFF6FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    abonoFechaTextoNuevo: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: colors.text,
+        marginBottom: 2,
+    },
+    abonoFechaSubtexto: {
+        fontSize: 12,
+        color: colors.textSecondary,
+        fontWeight: '500',
+        textTransform: 'capitalize',
+    },
+    abonoNotaInput: {
+        backgroundColor: colors.card,
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        fontSize: 15,
+        color: colors.text,
+        borderWidth: 1,
+        borderColor: colors.border,
+        minHeight: 52,
+        textAlignVertical: 'top',
+    },
+
+    // ── Método de pago ────────────────────────────────────────────
+    metodoPagoSection: {
+        marginBottom: 12,
+    },
+    metodoPagoLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: colors.textSecondary,
+        marginBottom: 10,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+    metodoPagoGrid: {
+        flexDirection: 'row',
+        gap: 8,
+        flexWrap: 'wrap',
+    },
+    metodoPagoChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        borderRadius: 12,
+        borderWidth: 1.5,
+        borderColor: colors.border,
+        backgroundColor: colors.surfaceVariant,
+    },
+    metodoPagoChipTexto: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.textSecondary,
+    },
+    // Inputs mixto
+    mixtoContainer: {
+        marginTop: 12,
+        backgroundColor: colors.surfaceVariant,
+        borderRadius: 14,
+        padding: 14,
+        gap: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    mixtoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    mixtoIcono: {
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    mixtoNombreTexto: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.text,
+        width: 90,
+    },
+    mixtoInputWrap: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.card,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+    },
+    mixtoPrefix: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: colors.textSecondary,
+        marginRight: 4,
+    },
+    mixtoInput: {
+        flex: 1,
+        fontSize: 15,
+        fontWeight: '600',
+        color: colors.text,
+        padding: 0,
+    },
+    mixtoSuma: {
+        borderRadius: 10,
+        borderWidth: 1.5,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        alignItems: 'center',
+    },
+    mixtoSumaTexto: {
+        fontSize: 13,
+        fontWeight: '700',
+    },
+
     // Footer
     footerContainer: {
         backgroundColor: colors.card,

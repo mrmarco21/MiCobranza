@@ -69,7 +69,7 @@ export default function InicioScreen({ navigation }) {
     const menuOptions = [
         {
             title: 'Cuentas Pendientes',
-            subtitle: `${estadisticas.cuentasPendientes} cuentas activas`,
+            subtitle: `${estadisticas.cuentasPendientes} deudor${estadisticas.cuentasPendientes !== 1 ? 'es' : ''}`,
             icon: 'wallet-outline',
             color: '#FF6B6B',
             bgColor: '#FFE5E5',
@@ -132,7 +132,7 @@ export default function InicioScreen({ navigation }) {
                             <View style={styles.statPrimaryFooter}>
                                 <Ionicons name="people" size={14} color="rgba(255,255,255,0.75)" />
                                 <Text style={styles.statPrimaryFooterText}>
-                                    {estadisticas.clientasActivas} clientes activos
+                                    {estadisticas.clientasActivas} {estadisticas.clientasActivas === 1 ? 'deudor' : 'deudores'} con saldo
                                 </Text>
                             </View>
                         </View>

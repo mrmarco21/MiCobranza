@@ -27,115 +27,135 @@ export default function EstadoCuentaImagen({
         .filter(m => m.tipo === 'ABONO')
         .reduce((sum, m) => sum + m.monto, 0);
 
+    const acento = esCerrada ? '#16A34A' : '#0EA5E9';
+
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <View style={[styles.header, esCerrada && styles.headerCerrada]}>
+            {/* ===== Encabezado ===== */}
+            <View style={[styles.header, { backgroundColor: acento }]}>
                 <View style={styles.headerTop}>
-                    <View>
-                        <Text style={styles.titulo}>ESTADO DE CUENTA</Text>
-                        {esCerrada && (
-                            <View style={styles.cuentaCerradaBadge}>
-                                <Text style={styles.cuentaCerradaTexto}>CUENTA PAGADA</Text>
-                            </View>
-                        )}
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.tituloPequeno}>ESTADO DE CUENTA</Text>
+                        <Text style={styles.clienteNombre}>{clientaNombre}</Text>
                     </View>
-                    <View style={[styles.numeroBadge, esCerrada && styles.numeroBadgeCerrada]}>
+                    <View style={styles.numeroBadge}>
+                        <Text style={styles.numeroLabel}>CUENTA</Text>
                         <Text style={styles.numeroTexto}>#{numeroCuenta}</Text>
                     </View>
                 </View>
-                <View style={[styles.divider, esCerrada && styles.dividerCerrada]} />
-                <View style={styles.infoCliente}>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Cliente:</Text>
-                        <Text style={styles.infoValor}>{clientaNombre}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Fecha apertura:</Text>
-                        <Text style={styles.infoValor}>{formatDate(fechaCreacion)}</Text>
+
+                <View style={styles.headerChips}>
+                    <View style={styles.chip}>
+                        <Text style={styles.chipLabel}>Apertura</Text>
+                        <Text style={styles.chipValor}>{formatDate(fechaCreacion)}</Text>
                     </View>
                     {fechaCierre && (
-                        <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Fecha cierre:</Text>
-                            <Text style={[styles.infoValor, styles.infoValorCerrada]}>{formatDate(fechaCierre)}</Text>
+                        <View style={styles.chip}>
+                            <Text style={styles.chipLabel}>Cierre</Text>
+                            <Text style={styles.chipValor}>{formatDate(fechaCierre)}</Text>
+                        </View>
+                    )}
+                    {esCerrada && (
+                        <View style={[styles.chip, styles.chipPagada]}>
+                            <Text style={styles.chipPagadaTexto}>✓ PAGADA</Text>
                         </View>
                     )}
                 </View>
             </View>
 
-            {/* Saldo actual */}
-            <View style={[styles.saldoContainer, esCerrada && styles.saldoContainerCerrada]}>
-                <Text style={styles.saldoLabel}>{esCerrada ? 'SALDO FINAL' : 'SALDO ACTUAL'}</Text>
-                <Text style={[styles.saldoMonto, esCerrada && styles.saldoMontoCerrada]}>{formatCurrency(saldo)}</Text>
+            {/* ===== Saldo ===== */}
+            <View style={[
+                styles.saldoContainer,
+                { borderColor: esCerrada ? '#16A34A' : '#FF6B6B', backgroundColor: esCerrada ? '#F0FDF4' : '#FFF5F5' }
+            ]}>
+                <Text style={styles.saldoLabel}>{esCerrada ? 'SALDO FINAL' : 'SALDO PENDIENTE'}</Text>
+                <Text style={[styles.saldoMonto, { color: esCerrada ? '#16A34A' : '#FF6B6B' }]}>
+                    {formatCurrency(saldo)}
+                </Text>
                 {esCerrada && saldo === 0 && (
-                    <Text style={styles.saldoPagadoTexto}>✓ Totalmente pagado</Text>
+                    <Text style={styles.saldoPagadoTexto}>Totalmente pagado</Text>
                 )}
             </View>
 
-            {/* Movimientos */}
+            {/* ===== Movimientos ===== */}
             {movimientos.length > 0 && (
                 <View style={styles.movimientosContainer}>
                     <Text style={styles.seccionTitulo}>HISTORIAL DE MOVIMIENTOS</Text>
-                    <View style={styles.dividerSeccion} />
 
-                    {movsOrdenados.map((mov, index) => {
-                        const prendas = mov.tipo === 'CARGO' ? parsearPrendas(mov.comentario) : [];
+                    {movsOrdenados.map((mov) => {
+                        const esCargo = mov.tipo === 'CARGO';
+                        const fechaMov = formatDate(mov.fecha);
+                        const prendas = esCargo ? parsearPrendas(mov.comentario) : [];
                         const tienePrendas = prendas.length > 0 && prendas.some(p => p.monto !== null);
-                        const descripcionAbono = mov.tipo === 'ABONO' ? extraerDescripcionAbono(mov.comentario) : '';
-                        const fechaAbono = mov.tipo === 'ABONO' ? parsearFechaAbono(mov.comentario) : null;
+                        const descripcionAbono = !esCargo ? extraerDescripcionAbono(mov.comentario) : '';
 
                         return (
-                            <View key={mov.id} style={styles.movimientoItem}>
+                            <View
+                                key={mov.id}
+                                style={[
+                                    styles.movimientoCard,
+                                    { borderLeftColor: esCargo ? '#FF6B6B' : '#16A34A' }
+                                ]}
+                            >
+                                {/* Cabecera del movimiento: tipo + fecha (una sola vez) y monto */}
                                 <View style={styles.movimientoHeader}>
-                                    <View style={styles.movimientoTipo}>
+                                    <View style={styles.movimientoTipoWrap}>
                                         <View style={[
-                                            styles.tipoIndicador,
-                                            mov.tipo === 'CARGO' ? styles.indicadorCargo : styles.indicadorAbono
-                                        ]} />
-                                        <Text style={styles.tipoTexto}>{mov.tipo}</Text>
+                                            styles.tipoBadge,
+                                            { backgroundColor: esCargo ? '#FFE5E5' : '#DCFCE7' }
+                                        ]}>
+                                            <Text style={[
+                                                styles.tipoTexto,
+                                                { color: esCargo ? '#DC2626' : '#16A34A' }
+                                            ]}>
+                                                {esCargo ? 'CARGO' : 'ABONO'}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.movimientoFecha}>{fechaMov}</Text>
                                     </View>
                                     <Text style={[
                                         styles.movimientoMonto,
-                                        mov.tipo === 'CARGO' ? styles.montoCargo : styles.montoAbono
+                                        { color: esCargo ? '#DC2626' : '#16A34A' }
                                     ]}>
-                                        {mov.tipo === 'CARGO' ? '+' : '-'}{formatCurrency(mov.monto)}
+                                        {esCargo ? '+' : '−'} {formatCurrency(mov.monto)}
                                     </Text>
                                 </View>
-                                <Text style={styles.movimientoFecha}>{formatDate(mov.fecha)}</Text>
 
-                                {mov.tipo === 'CARGO' && tienePrendas && (
+                                {/* Detalle de prendas (CARGO) */}
+                                {esCargo && tienePrendas && (
                                     <View style={styles.prendasDetalle}>
                                         {prendas.map((prenda, i) => {
                                             const categoria = prenda.categoria
                                                 ? categorias.find(c => c.id === prenda.categoria)
                                                 : null;
+                                            // Mostrar la fecha de la prenda SOLO si es distinta a la del movimiento
+                                            const mostrarFechaPrenda = prenda.fecha && prenda.fecha !== fechaMov;
 
                                             return (
                                                 <View key={i} style={styles.prendaItem}>
-                                                    <Text style={styles.prendaNumero}>{i + 1}.</Text>
+                                                    <Text style={styles.prendaNumero}>{i + 1}</Text>
                                                     <View style={styles.prendaInfo}>
-                                                        <View style={styles.prendaDescRow}>
-                                                            <Text style={styles.prendaDesc}>{prenda.descripcion}</Text>
-                                                            {categoria && (
+                                                        <Text style={styles.prendaDesc}>
+                                                            {prenda.descripcion}
+                                                            {prenda.cantidad > 1 && (
+                                                                <Text style={styles.prendaCantidad}>  ×{prenda.cantidad}</Text>
+                                                            )}
+                                                        </Text>
+                                                        <View style={styles.prendaMetaRow}>
+                                                            {/* {categoria && (
                                                                 <View style={[
                                                                     styles.categoriaBadge,
-                                                                    {
-                                                                        backgroundColor: categoria.color + '20',
-                                                                        borderColor: categoria.color
-                                                                    }
+                                                                    { backgroundColor: categoria.color + '1A', borderColor: categoria.color + '55' }
                                                                 ]}>
-                                                                    <Text style={[
-                                                                        styles.categoriaTexto,
-                                                                        { color: categoria.color }
-                                                                    ]}>
+                                                                    <Text style={[styles.categoriaTexto, { color: categoria.color }]}>
                                                                         {categoria.nombre}
                                                                     </Text>
                                                                 </View>
                                                             )}
+                                                            {mostrarFechaPrenda && (
+                                                                <Text style={styles.prendaFecha}>{prenda.fecha}</Text>
+                                                            )} */}
                                                         </View>
-                                                        {prenda.fecha && (
-                                                            <Text style={styles.prendaFecha}>{prenda.fecha}</Text>
-                                                        )}
                                                     </View>
                                                     {prenda.monto !== null && (
                                                         <Text style={styles.prendaMonto}>{formatCurrency(prenda.monto)}</Text>
@@ -146,47 +166,40 @@ export default function EstadoCuentaImagen({
                                     </View>
                                 )}
 
-                                {mov.tipo === 'ABONO' && (descripcionAbono || fechaAbono) && (
+                                {/* Nota del abono (sin repetir la fecha) */}
+                                {!esCargo && descripcionAbono ? (
                                     <View style={styles.abonoDetalle}>
-                                        {descripcionAbono && (
-                                            <Text style={styles.abonoDesc}>{descripcionAbono}</Text>
-                                        )}
-                                        {fechaAbono && (
-                                            <Text style={styles.abonoFecha}>Fecha: {fechaAbono}</Text>
-                                        )}
+                                        <Text style={styles.abonoDesc}>{descripcionAbono}</Text>
                                     </View>
-                                )}
-
-                                {index < movsOrdenados.length - 1 && <View style={styles.movimientoDivider} />}
+                                ) : null}
                             </View>
                         );
                     })}
                 </View>
             )}
 
-            {/* Resumen */}
+            {/* ===== Resumen ===== */}
             <View style={styles.resumenContainer}>
                 <Text style={styles.resumenTitulo}>RESUMEN</Text>
-                <View style={styles.dividerSeccion} />
                 <View style={styles.resumenRow}>
-                    <Text style={styles.resumenLabel}>Total cargos:</Text>
+                    <Text style={styles.resumenLabel}>Total cargos</Text>
                     <Text style={styles.resumenValorCargo}>{formatCurrency(totalCargos)}</Text>
                 </View>
                 <View style={styles.resumenRow}>
-                    <Text style={styles.resumenLabel}>Total abonos:</Text>
-                    <Text style={styles.resumenValorAbono}>{formatCurrency(totalAbonos)}</Text>
+                    <Text style={styles.resumenLabel}>Total abonos</Text>
+                    <Text style={styles.resumenValorAbono}>− {formatCurrency(totalAbonos)}</Text>
                 </View>
                 <View style={[styles.resumenRow, styles.resumenTotal]}>
-                    <Text style={styles.resumenLabelTotal}>Saldo pendiente:</Text>
-                    <Text style={styles.resumenValorTotal}>{formatCurrency(saldo)}</Text>
+                    <Text style={styles.resumenLabelTotal}>Saldo pendiente</Text>
+                    <Text style={[styles.resumenValorTotal, { color: esCerrada ? '#16A34A' : '#FF6B6B' }]}>
+                        {formatCurrency(saldo)}
+                    </Text>
                 </View>
             </View>
 
-            {/* Footer */}
+            {/* ===== Footer ===== */}
             <View style={styles.footer}>
-                <Text style={styles.footerTexto}>
-                    Generado el {formatDate(new Date().toISOString())}
-                </Text>
+                <Text style={styles.footerTexto}>Generado el {formatDate(new Date().toISOString())}</Text>
             </View>
         </View>
     );
@@ -195,311 +208,299 @@ export default function EstadoCuentaImagen({
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#FFFFFF',
-        padding: 24,
+        padding: 22,
         width: 600,
     },
+
+    // Header
     header: {
-        marginBottom: 20,
-    },
-    headerCerrada: {
-        backgroundColor: '#F0FFF4',
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#4CAF50',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
     },
     headerTop: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: 12,
     },
-    titulo: {
+    tituloPequeno: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.85)',
+        letterSpacing: 2,
+        marginBottom: 4,
+    },
+    clienteNombre: {
         fontSize: 24,
-        fontWeight: '700',
-        color: '#2D3436',
-        letterSpacing: 1,
-    },
-    cuentaCerradaBadge: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 6,
-        marginTop: 6,
-        alignSelf: 'flex-start',
-    },
-    cuentaCerradaTexto: {
-        fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         color: '#FFFFFF',
-        letterSpacing: 0.5,
     },
     numeroBadge: {
-        backgroundColor: '#29B6F6',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 10,
+        alignItems: 'center',
     },
-    numeroBadgeCerrada: {
-        backgroundColor: '#4CAF50',
+    numeroLabel: {
+        fontSize: 9,
+        fontWeight: '700',
+        color: 'rgba(255,255,255,0.85)',
+        letterSpacing: 1,
     },
     numeroTexto: {
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '800',
         color: '#FFFFFF',
     },
-    divider: {
-        height: 2,
-        backgroundColor: '#2D3436',
-        marginBottom: 12,
-    },
-    dividerCerrada: {
-        backgroundColor: '#4CAF50',
-    },
-    dividerSeccion: {
-        height: 1,
-        backgroundColor: '#E0E0E0',
-        marginBottom: 12,
-    },
-    infoCliente: {
-        gap: 6,
-    },
-    infoRow: {
+    headerChips: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        gap: 8,
+        marginTop: 16,
+        flexWrap: 'wrap',
     },
-    infoLabel: {
-        fontSize: 14,
-        color: '#636E72',
-        fontWeight: '500',
+    chip: {
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
-    infoValor: {
-        fontSize: 14,
-        color: '#2D3436',
+    chipLabel: {
+        fontSize: 9,
+        color: 'rgba(255,255,255,0.8)',
         fontWeight: '600',
+        letterSpacing: 0.5,
     },
-    infoValorCerrada: {
-        color: '#4CAF50',
+    chipValor: {
+        fontSize: 13,
+        color: '#FFFFFF',
+        fontWeight: '700',
     },
+    chipPagada: {
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+    },
+    chipPagadaTexto: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: '#16A34A',
+        letterSpacing: 0.5,
+    },
+
+    // Saldo
     saldoContainer: {
-        backgroundColor: '#FFF5F5',
-        padding: 16,
-        borderRadius: 12,
+        padding: 18,
+        borderRadius: 14,
         alignItems: 'center',
         marginBottom: 20,
-        borderWidth: 2,
-        borderColor: '#FF6B6B',
-    },
-    saldoContainerCerrada: {
-        backgroundColor: '#F0FFF4',
-        borderColor: '#4CAF50',
+        borderWidth: 1.5,
     },
     saldoLabel: {
-        fontSize: 12,
-        color: '#636E72',
-        fontWeight: '600',
+        fontSize: 11,
+        color: '#64748B',
+        fontWeight: '700',
         marginBottom: 4,
-        letterSpacing: 1,
+        letterSpacing: 1.5,
     },
     saldoMonto: {
-        fontSize: 32,
-        fontWeight: '700',
-        color: '#FF6B6B',
-    },
-    saldoMontoCerrada: {
-        color: '#4CAF50',
+        fontSize: 36,
+        fontWeight: '800',
     },
     saldoPagadoTexto: {
         fontSize: 13,
-        color: '#4CAF50',
-        fontWeight: '600',
+        color: '#16A34A',
+        fontWeight: '700',
         marginTop: 4,
     },
+
+    // Movimientos
     movimientosContainer: {
         marginBottom: 20,
     },
     seccionTitulo: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: 8,
-        letterSpacing: 0.5,
-    },
-    movimientoItem: {
+        fontSize: 12,
+        fontWeight: '800',
+        color: '#94A3B8',
         marginBottom: 12,
+        letterSpacing: 1,
+    },
+    movimientoCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#EDF1F5',
+        borderLeftWidth: 4,
+        padding: 14,
+        marginBottom: 10,
     },
     movimientoHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
     },
-    movimientoTipo: {
+    movimientoTipoWrap: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 10,
     },
-    tipoIndicador: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    indicadorCargo: {
-        backgroundColor: '#FF6B6B',
-    },
-    indicadorAbono: {
-        backgroundColor: '#4CAF50',
+    tipoBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 6,
     },
     tipoTexto: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#2D3436',
-    },
-    movimientoMonto: {
-        fontSize: 16,
-        fontWeight: '700',
-    },
-    montoCargo: {
-        color: '#FF6B6B',
-    },
-    montoAbono: {
-        color: '#4CAF50',
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     movimientoFecha: {
-        fontSize: 12,
-        color: '#636E72',
-        marginBottom: 6,
+        fontSize: 13,
+        color: '#64748B',
+        fontWeight: '600',
+    },
+    movimientoMonto: {
+        fontSize: 17,
+        fontWeight: '800',
     },
     prendasDetalle: {
-        backgroundColor: '#F8F9FA',
+        backgroundColor: '#F8FAFC',
         padding: 12,
-        borderRadius: 8,
-        marginTop: 6,
+        borderRadius: 10,
+        marginTop: 12,
+        gap: 8,
     },
     prendaItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: 6,
     },
     prendaNumero: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#636E72',
-        marginRight: 8,
-        width: 20,
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        backgroundColor: '#CBD5E1',
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        textAlign: 'center',
+        lineHeight: 18,
+        marginRight: 10,
+        overflow: 'hidden',
     },
     prendaInfo: {
         flex: 1,
     },
-    prendaDescRow: {
+    prendaDesc: {
+        fontSize: 13,
+        color: '#1E293B',
+        fontWeight: '500',
+    },
+    prendaCantidad: {
+        fontSize: 12,
+        color: '#64748B',
+        fontWeight: '700',
+    },
+    prendaMetaRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        marginTop: 3,
         flexWrap: 'wrap',
     },
-    prendaDesc: {
-        fontSize: 12,
-        color: '#2D3436',
-        flex: 1,
-    },
     categoriaBadge: {
-        paddingHorizontal: 6,
+        paddingHorizontal: 7,
         paddingVertical: 2,
-        borderRadius: 3,
+        borderRadius: 4,
         borderWidth: 1,
     },
     categoriaTexto: {
-        fontSize: 8,
+        fontSize: 9,
         fontWeight: '700',
         textTransform: 'uppercase',
         letterSpacing: 0.3,
     },
     prendaFecha: {
         fontSize: 10,
-        color: '#636E72',
-        marginTop: 2,
+        color: '#94A3B8',
+        fontWeight: '600',
     },
     prendaMonto: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#2D3436',
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#1E293B',
+        marginLeft: 8,
     },
     abonoDetalle: {
-        backgroundColor: '#F8F9FA',
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 6,
+        backgroundColor: '#F8FAFC',
+        padding: 10,
+        borderRadius: 10,
+        marginTop: 10,
     },
     abonoDesc: {
         fontSize: 12,
-        color: '#2D3436',
-        marginBottom: 4,
+        color: '#475569',
+        fontStyle: 'italic',
     },
-    abonoFecha: {
-        fontSize: 11,
-        color: '#636E72',
-    },
-    movimientoDivider: {
-        height: 1,
-        backgroundColor: '#F0F0F0',
-        marginTop: 12,
-    },
+
+    // Resumen
     resumenContainer: {
-        backgroundColor: '#F8F9FA',
-        padding: 16,
-        borderRadius: 12,
+        backgroundColor: '#F8FAFC',
+        padding: 18,
+        borderRadius: 14,
         marginBottom: 16,
     },
     resumenTitulo: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#2D3436',
-        marginBottom: 8,
-        letterSpacing: 0.5,
+        fontSize: 12,
+        fontWeight: '800',
+        color: '#94A3B8',
+        marginBottom: 12,
+        letterSpacing: 1,
     },
     resumenRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     resumenLabel: {
         fontSize: 13,
-        color: '#636E72',
+        color: '#64748B',
+        fontWeight: '500',
     },
     resumenValorCargo: {
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '700',
         color: '#FF6B6B',
     },
     resumenValorAbono: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#4CAF50',
-    },
-    resumenTotal: {
-        marginTop: 8,
-        paddingTop: 12,
-        borderTopWidth: 2,
-        borderTopColor: '#E0E0E0',
-    },
-    resumenLabelTotal: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#2D3436',
+        color: '#16A34A',
+    },
+    resumenTotal: {
+        marginTop: 4,
+        marginBottom: 0,
+        paddingTop: 12,
+        borderTopWidth: 1.5,
+        borderTopColor: '#E2E8F0',
+    },
+    resumenLabelTotal: {
+        fontSize: 15,
+        fontWeight: '800',
+        color: '#1E293B',
     },
     resumenValorTotal: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#FF6B6B',
+        fontSize: 18,
+        fontWeight: '800',
     },
+
+    // Footer
     footer: {
         alignItems: 'center',
-        paddingTop: 12,
+        paddingTop: 14,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: '#EDF1F5',
     },
     footerTexto: {
         fontSize: 11,
-        color: '#95A5A6',
+        color: '#94A3B8',
     },
 });

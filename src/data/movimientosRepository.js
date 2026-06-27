@@ -39,3 +39,10 @@ export const getAbonosPorRango = async (fechaInicio, fechaFin) => {
     return m.tipo === 'ABONO' && fecha >= fechaInicio && fecha <= fechaFin;
   });
 };
+
+export const remove = async (id) => {
+  const movimientos = await getAll();
+  const filtrados = movimientos.filter(m => m.id !== id);
+  await setData(KEYS.MOVIMIENTOS, filtrados);
+  return true;
+};

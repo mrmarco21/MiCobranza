@@ -51,37 +51,44 @@ export default function DetalleCuentaScreen({ route }) {
         if (!comentario) return [];
         const partes = comentario.split(' | ');
         return partes.map(parte => {
-            // Formato nuevo con categoría ID: "Blusa roja (S/25.00) [01/01/2026] {ropa-otros}"
-            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+            // Formato nuevo con cantidad y categoría ID: "Blusa roja (S/25.00) x 1 [01/01/2026] {ropa-otros}"
+            // El "x <cantidad>" es opcional para compatibilidad con datos anteriores
+            const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
             if (matchCompleto) {
+                const cantidad = matchCompleto[3] ? parseInt(matchCompleto[3]) : 1;
                 return {
                     descripcion: matchCompleto[1].trim(),
-                    monto: parseFloat(matchCompleto[2]),
-                    fecha: matchCompleto[3],
-                    categoria: matchCompleto[4]
+                    monto: parseFloat(matchCompleto[2]) * cantidad,
+                    cantidad,
+                    fecha: matchCompleto[4],
+                    categoria: matchCompleto[5]
                 };
             }
-            // Formato con fecha pero sin categoría (datos antiguos)
-            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+            // Formato con fecha (y cantidad opcional) pero sin categoría (datos antiguos)
+            const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
             if (matchConFecha) {
+                const cantidad = matchConFecha[3] ? parseInt(matchConFecha[3]) : 1;
                 return {
                     descripcion: matchConFecha[1].trim(),
-                    monto: parseFloat(matchConFecha[2]),
-                    fecha: matchConFecha[3],
+                    monto: parseFloat(matchConFecha[2]) * cantidad,
+                    cantidad,
+                    fecha: matchConFecha[4],
                     categoria: null
                 };
             }
-            // Formato sin fecha: "tajadores (S/20.00)"
-            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+            // Formato sin fecha: "tajadores (S/20.00)" (cantidad opcional)
+            const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?$/);
             if (matchSinFecha) {
+                const cantidad = matchSinFecha[3] ? parseInt(matchSinFecha[3]) : 1;
                 return {
                     descripcion: matchSinFecha[1].trim(),
-                    monto: parseFloat(matchSinFecha[2]),
+                    monto: parseFloat(matchSinFecha[2]) * cantidad,
+                    cantidad,
                     fecha: null,
                     categoria: null
                 };
             }
-            return { descripcion: parte, monto: null, fecha: null, categoria: null };
+            return { descripcion: parte, monto: null, cantidad: 1, fecha: null, categoria: null };
         });
     };
 
@@ -94,6 +101,16 @@ export default function DetalleCuentaScreen({ route }) {
     const extraerDescripcionAbono = (comentario) => {
         if (!comentario) return '';
         return comentario.replace(/\s*\[\d{2}\/\d{2}\/\d{4}\]$/, '').trim();
+    };
+
+    // Obtener el nombre legible de una categoría a partir de su id
+    const obtenerNombreCategoria = (categoriaId) => {
+        if (!categoriaId) return 'Ropa/Otros';
+        const cat = categorias.find(c => c.id === categoriaId);
+        if (cat) return cat.nombre;
+        // Fallback: formatear el id (ej: "perfume-1779..." -> "Perfume", "calzado" -> "Calzado")
+        const base = categoriaId.split('-')[0];
+        return base.charAt(0).toUpperCase() + base.slice(1);
     };
 
     const compartirCuenta = async () => {
@@ -297,6 +314,15 @@ export default function DetalleCuentaScreen({ route }) {
                                                     </View>
                                                     <View style={styles.prendaTextos}>
                                                         <Text style={styles.prendaDescripcion}>{prenda.descripcion}</Text>
+                                                        <View style={styles.prendaMetaRow}>
+                                                            <View style={styles.prendaCategoriaContainer}>
+                                                                <Ionicons name="pricetag-outline" size={12} color="#29B6F6" />
+                                                                <Text style={styles.prendaCategoria}>{obtenerNombreCategoria(prenda.categoria)}</Text>
+                                                            </View>
+                                                            {prenda.cantidad > 1 && (
+                                                                <Text style={styles.prendaCantidad}>x{prenda.cantidad}</Text>
+                                                            )}
+                                                        </View>
                                                         {prenda.fecha && (
                                                             <View style={styles.prendaFechaContainer}>
                                                                 <Ionicons name="calendar-outline" size={12} color="#636E72" />
@@ -666,6 +692,27 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 15,
         color: colors.text,
         marginBottom: 4,
+    },
+    prendaMetaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 4,
+    },
+    prendaCategoriaContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    prendaCategoria: {
+        fontSize: 12,
+        color: '#29B6F6',
+        marginLeft: 4,
+        fontWeight: '500',
+    },
+    prendaCantidad: {
+        fontSize: 12,
+        color: colors.textSecondary,
+        fontWeight: '600',
     },
     prendaFechaContainer: {
         flexDirection: 'row',

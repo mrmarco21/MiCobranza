@@ -208,6 +208,25 @@ export default function ResumenScreen({ navigation }) {
 
                         <TouchableOpacity
                             style={styles.botonExportar}
+                            onPress={() => navigation.navigate('MovimientosDiarios')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.botonContenido}>
+                                <View style={styles.botonIconoWrapperMovimientos}>
+                                    <Ionicons name="swap-vertical" size={22} color="#10B981" />
+                                </View>
+                                <View style={styles.botonTextos}>
+                                    <Text style={styles.botonTitulo}>Movimientos del día</Text>
+                                    <Text style={styles.botonSubtitulo}>Cobros, ventas y gastos</Text>
+                                </View>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color="#B0B0B0" />
+                        </TouchableOpacity>
+
+                        <View style={styles.divisor} />
+
+                        <TouchableOpacity
+                            style={styles.botonExportar}
                             onPress={handleExportarSemanaActual}
                             disabled={exportando}
                             activeOpacity={0.7}
@@ -516,6 +535,15 @@ const createStyles = (colors) => StyleSheet.create({
         marginRight: 12,
     },
     botonIconoWrapperGuardar: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: '#E8F5E9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    botonIconoWrapperMovimientos: {
         width: 44,
         height: 44,
         borderRadius: 12,

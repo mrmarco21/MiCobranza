@@ -47,43 +47,50 @@ const generarIdSemana = (fecha) => {
 // Parsear prendas desde el comentario del cargo
 const parsearPrendas = (comentario) => {
     if (!comentario) return [];
-    
+
     const partes = comentario.split(' | ');
     return partes.map(parte => {
-        // Formato nuevo con categoría: "Blusa roja (S/25.00) [01/01/2026] {categoria-id}"
-        const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
+        // Formato nuevo con cantidad y categoría: "Blusa roja (S/25.00) x 1 [01/01/2026] {categoria-id}"
+        // El "x <cantidad>" es opcional para mantener compatibilidad con datos anteriores
+        const matchCompleto = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]\s*\{(.+?)\}$/);
         if (matchCompleto) {
+            const cantidad = matchCompleto[3] ? parseInt(matchCompleto[3]) : 1;
             return {
                 descripcion: matchCompleto[1].trim(),
-                monto: parseFloat(matchCompleto[2]),
-                fecha: matchCompleto[3],
-                categoria: matchCompleto[4].toLowerCase() // Normalizar a minúsculas
+                monto: parseFloat(matchCompleto[2]) * cantidad, // Total de la línea (precio unitario × cantidad)
+                cantidad,
+                fecha: matchCompleto[4],
+                categoria: matchCompleto[5].toLowerCase() // Normalizar a minúsculas
             };
         }
-        
-        // Formato con fecha pero sin categoría (datos antiguos)
-        const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
+
+        // Formato con fecha (y cantidad opcional) pero sin categoría (datos antiguos)
+        const matchConFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?\s*\[(\d{2}\/\d{2}\/\d{4})\]$/);
         if (matchConFecha) {
+            const cantidad = matchConFecha[3] ? parseInt(matchConFecha[3]) : 1;
             return {
                 descripcion: matchConFecha[1].trim(),
-                monto: parseFloat(matchConFecha[2]),
-                fecha: matchConFecha[3],
+                monto: parseFloat(matchConFecha[2]) * cantidad,
+                cantidad,
+                fecha: matchConFecha[4],
                 categoria: 'ropa-otros' // Categoría por defecto para datos antiguos
             };
         }
-        
-        // Formato antiguo sin fecha
-        const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)$/);
+
+        // Formato antiguo sin fecha (cantidad opcional)
+        const matchSinFecha = parte.match(/^(.+?)\s*\(S\/(\d+\.?\d*)\)\s*(?:x\s*(\d+))?$/);
         if (matchSinFecha) {
+            const cantidad = matchSinFecha[3] ? parseInt(matchSinFecha[3]) : 1;
             return {
                 descripcion: matchSinFecha[1].trim(),
-                monto: parseFloat(matchSinFecha[2]),
+                monto: parseFloat(matchSinFecha[2]) * cantidad,
+                cantidad,
                 fecha: null,
                 categoria: 'ropa-otros' // Categoría por defecto para datos antiguos
             };
         }
-        
-        return { descripcion: parte, monto: null, fecha: null, categoria: 'ropa-otros' };
+
+        return { descripcion: parte, monto: null, cantidad: 1, fecha: null, categoria: 'ropa-otros' };
     }).filter(p => p.descripcion);
 };
 
@@ -104,7 +111,7 @@ const extraerDescripcionSinFecha = (comentario) => {
 export const obtenerMovimientosSemana = async (fecha = new Date()) => {
     const { inicio, fin } = obtenerRangoSemana(fecha);
     const movimientos = await movimientosRepo.getAll();
-    
+
     return movimientos.filter(m => {
         const fechaMov = new Date(m.fecha);
         return fechaMov >= inicio && fechaMov <= fin;
@@ -123,18 +130,18 @@ export const generarDatosReporte = async (fecha = new Date()) => {
         movimientos.map(async (mov) => {
             const cuenta = cuentas.find(c => c.id === mov.cuentaId);
             const clienta = cuenta ? clientas.find(cl => cl.id === cuenta.clientaId) : null;
-            
+
             let prendas = [];
             let fechaMovimiento = null;
             let descripcionLimpia = mov.comentario || '';
-            
+
             if (mov.tipo === 'CARGO') {
                 prendas = parsearPrendas(mov.comentario);
             } else {
                 fechaMovimiento = parsearFechaAbono(mov.comentario);
                 descripcionLimpia = extraerDescripcionSinFecha(mov.comentario);
             }
-            
+
             return {
                 ...mov,
                 clientaNombre: clienta?.nombre || 'Desconocido',
@@ -148,7 +155,7 @@ export const generarDatosReporte = async (fecha = new Date()) => {
     const totalCargos = movimientos
         .filter(m => m.tipo === 'CARGO')
         .reduce((sum, m) => sum + m.monto, 0);
-    
+
     const totalAbonos = movimientos
         .filter(m => m.tipo === 'ABONO')
         .reduce((sum, m) => sum + m.monto, 0);
@@ -174,14 +181,14 @@ export const generarDatosReporte = async (fecha = new Date()) => {
 // Guardar reporte semanal
 export const guardarReporteSemanal = async (fecha = new Date()) => {
     const reporte = await generarDatosReporte(fecha);
-    
+
     // No guardar si no hay movimientos
     if (reporte.movimientos.length === 0) {
         return null;
     }
-    
+
     const reportes = await getReportesData();
-    
+
     // Verificar si ya existe el reporte de esta semana
     const index = reportes.findIndex(r => r.id === reporte.id);
     if (index !== -1) {
@@ -189,7 +196,7 @@ export const guardarReporteSemanal = async (fecha = new Date()) => {
     } else {
         reportes.push(reporte);
     }
-    
+
     await setReportesData(reportes);
     return reporte;
 };
@@ -206,11 +213,11 @@ export const obtenerReportesGuardados = async () => {
 const generarHTML = (reporte) => {
     const fechaInicioStr = formatDate(reporte.fechaInicio);
     const fechaFinStr = formatDate(reporte.fechaFin);
-    
+
     // Separar cargos y abonos
     const cargos = reporte.movimientos.filter(m => m.tipo === 'CARGO');
     const abonos = reporte.movimientos.filter(m => m.tipo === 'ABONO');
-    
+
     // Generar HTML para cargos con detalle de prendas
     let cargosHTML = '';
     cargos.forEach(mov => {
@@ -242,7 +249,7 @@ const generarHTML = (reporte) => {
             `;
         }
     });
-    
+
     // Generar HTML para abonos
     let abonosHTML = '';
     abonos.forEach(mov => {
@@ -435,9 +442,9 @@ const generarHTML = (reporte) => {
 export const exportarReporteCSV = async (reporte) => {
     try {
         const html = generarHTML(reporte);
-        
+
         const { uri } = await Print.printToFileAsync({ html });
-        
+
         const canShare = await Sharing.isAvailableAsync();
         if (canShare) {
             await Sharing.shareAsync(uri, {
@@ -445,7 +452,7 @@ export const exportarReporteCSV = async (reporte) => {
                 dialogTitle: 'Exportar Reporte Semanal',
             });
         }
-        
+
         return uri;
     } catch (error) {
         console.log('Error exportando:', error);
@@ -466,14 +473,14 @@ export const exportarReporteSemanaActual = async () => {
 export const verificarYGuardarReporteAutomatico = async () => {
     const reportes = await obtenerReportesGuardados();
     const idSemanaAnterior = generarIdSemana(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-    
+
     // Si no existe reporte de la semana anterior, intentar guardarlo
     const existeAnterior = reportes.some(r => r.id === idSemanaAnterior);
     if (!existeAnterior) {
         const fechaAnterior = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         await guardarReporteSemanal(fechaAnterior);
     }
-    
+
     return reportes;
 };
 
@@ -481,7 +488,7 @@ export const verificarYGuardarReporteAutomatico = async () => {
 // Obtener resumen de ventas por categoría
 export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
     const movimientos = await movimientosRepo.getAll();
-    
+
     // Obtener TODOS los movimientos de tipo CARGO, sin filtrar por fecha del movimiento
     const cargos = movimientos.filter(m => m.tipo === 'CARGO');
 
@@ -489,19 +496,19 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
 
     cargos.forEach(cargo => {
         const prendas = parsearPrendas(cargo.comentario);
-        
+
         prendas.forEach(prenda => {
             // Si la prenda tiene fecha en el comentario, verificar que esté en el rango
             if (prenda.fecha) {
                 const [dia, mes, anio] = prenda.fecha.split('/');
                 const fechaPrenda = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
                 fechaPrenda.setHours(0, 0, 0, 0);
-                
+
                 const inicioNormalizado = new Date(fechaInicio);
                 inicioNormalizado.setHours(0, 0, 0, 0);
                 const finNormalizado = new Date(fechaFin);
                 finNormalizado.setHours(23, 59, 59, 999);
-                
+
                 // Solo incluir si la fecha de la prenda está en el rango
                 if (fechaPrenda < inicioNormalizado || fechaPrenda > finNormalizado) {
                     return; // Saltar esta prenda
@@ -513,14 +520,14 @@ export const obtenerResumenPorCategoria = async (fechaInicio, fechaFin) => {
                     return; // Saltar esta prenda
                 }
             }
-            
+
             const categoria = prenda.categoria || 'ropa-otros';
-            
+
             if (!resumen[categoria]) {
                 resumen[categoria] = { cantidad: 0, total: 0, articulos: [] };
             }
-            
-            resumen[categoria].cantidad += 1;
+
+            resumen[categoria].cantidad += prenda.cantidad || 1;
             resumen[categoria].total += prenda.monto || 0;
             resumen[categoria].articulos.push(prenda);
         });
@@ -546,18 +553,18 @@ export const obtenerMovimientosPorCategoria = async (categoria, fechaInicio, fec
                 if ((p.categoria || 'ropa-otros') !== categoria) {
                     return false;
                 }
-                
+
                 // Si la prenda tiene fecha en el comentario, verificar que esté en el rango
                 if (p.fecha) {
                     const [dia, mes, anio] = p.fecha.split('/');
                     const fechaPrenda = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
                     fechaPrenda.setHours(0, 0, 0, 0);
-                    
+
                     const inicioNormalizado = new Date(fechaInicio);
                     inicioNormalizado.setHours(0, 0, 0, 0);
                     const finNormalizado = new Date(fechaFin);
                     finNormalizado.setHours(23, 59, 59, 999);
-                    
+
                     // Solo incluir si la fecha de la prenda está en el rango
                     if (fechaPrenda < inicioNormalizado || fechaPrenda > finNormalizado) {
                         return false;
@@ -569,14 +576,14 @@ export const obtenerMovimientosPorCategoria = async (categoria, fechaInicio, fec
                         return false;
                     }
                 }
-                
+
                 return true;
             });
-            
+
             if (prendasCategoria.length > 0) {
                 const cuenta = cuentas.find(c => c.id === m.cuentaId);
                 const clienta = cuenta ? clientas.find(cl => cl.id === cuenta.clientaId) : null;
-                
+
                 movimientosFiltrados.push({
                     ...m,
                     clientaNombre: clienta?.nombre || 'Desconocido',

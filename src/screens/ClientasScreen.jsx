@@ -108,10 +108,6 @@ export default function clientasScreen({ navigation }) {
                     {
                         icon: showSearchBar ? 'close' : 'search',
                         onPress: toggleSearch
-                    },
-                    {
-                        icon: 'ellipsis-vertical',
-                        onPress: () => setShowSortModal(true)
                     }
                 ]}
             />
@@ -147,20 +143,40 @@ export default function clientasScreen({ navigation }) {
                 </View>
             )}
 
-            {/* Barra de búsqueda SIMPLIFICADA */}
-            {busqueda.length > 0 && (
-                <View style={styles.resultadosInfo}>
-                    <Ionicons name="filter" size={16} color="#29B6F6" />
-                    <Text style={styles.resultadosTexto}>
-                        {clientasFiltradas.length} {clientasFiltradas.length === 1 ? 'resultado' : 'resultados'}
-                    </Text>
-                </View>
-            )}
-
-            {/* Título de sección con contador - se oculta cuando el teclado está visible */}
+            {/* ─── Encabezado de lista ───────────────────────────── */}
             {!keyboardVisible && (
-                <View style={styles.seccionHeader}>
-                    <Text style={styles.seccionTitulo}>Todos los clientes</Text>
+                <View style={styles.listaEncabezado}>
+                    <View style={styles.listaEncabezadoIzq}>
+                        <Text style={styles.listaEncabezadoTitulo}>
+                            {busqueda
+                                ? `${clientasFiltradas.length} resultado${clientasFiltradas.length !== 1 ? 's' : ''}`
+                                : filterType !== 'all'
+                                    ? `${clientasFiltradas.length} cliente${clientasFiltradas.length !== 1 ? 's' : ''}`
+                                    : 'Todos los clientes'
+                            }
+                        </Text>
+                        {filterType !== 'all' && (
+                            <View style={styles.filtroActivoBadge}>
+                                <Text style={styles.filtroActivoTexto}>
+                                    {filterType === 'pending' ? 'Con deuda' : 'Sin cuenta'}
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setFilterType('all')}
+                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                    <Ionicons name="close-circle" size={14} color={colors.primary} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                    <TouchableOpacity
+                        style={styles.ordenarBtn}
+                        onPress={() => setShowSortModal(true)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="options-outline" size={16} color={colors.textSecondary} />
+                        <Text style={styles.ordenarBtnTexto}>Filtrar / Ordenar</Text>
+                    </TouchableOpacity>
                 </View>
             )}
 
@@ -172,6 +188,7 @@ export default function clientasScreen({ navigation }) {
                     <ClientaCard
                         clienta={item}
                         onPress={() => navigation.navigate('ClientaDetail', { clientaId: item.id })}
+                        modo="todos"
                     />
                 )}
                 ListEmptyComponent={
@@ -294,6 +311,58 @@ const createStyles = (colors) => StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: colors.text,
+    },
+    // ── Encabezado de lista ─────────────────────────────────────
+    listaEncabezado: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: 8,
+    },
+    listaEncabezadoIzq: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginRight: 8,
+        flexWrap: 'wrap',
+    },
+    listaEncabezadoTitulo: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: colors.text,
+    },
+    filtroActivoBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: colors.primaryLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    filtroActivoTexto: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.primary,
+    },
+    ordenarBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        backgroundColor: colors.surfaceVariant,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    ordenarBtnTexto: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.textSecondary,
     },
     listaContainer: {
         paddingHorizontal: 16,

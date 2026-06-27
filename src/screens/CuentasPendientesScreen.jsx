@@ -47,7 +47,6 @@ export default function CuentasPendientesScreen({ navigation }) {
         const conDeuda = data.filter(c => c.tieneCuentaActiva && c.saldoActual > 0);
         setclientasConDeuda(conDeuda);
     };
-
     const clientasFiltradas = clientasConDeuda
         .filter(c => c.nombre.toLowerCase().includes(busqueda.toLowerCase()))
         .sort((a, b) => {
@@ -70,6 +69,7 @@ export default function CuentasPendientesScreen({ navigation }) {
         });
 
     const totalPorCobrar = clientasConDeuda.reduce((sum, c) => sum + c.saldoActual, 0);
+    const totalCuentasActivas = clientasConDeuda.reduce((sum, c) => sum + (c.numeroCuentasActivas || 1), 0);
 
     const handleSortApply = ({ sort }) => {
         setSortOrder(sort);
@@ -90,70 +90,78 @@ export default function CuentasPendientesScreen({ navigation }) {
                 searchMode={showSearchBar}
                 searchValue={busqueda}
                 onSearchChange={setBusqueda}
-                searchPlaceholder="Buscar clienta..."
+                searchPlaceholder="Buscar deudor..."
                 rightButtons={[
                     {
                         icon: showSearchBar ? 'close' : 'search',
                         onPress: toggleSearch
                     },
-                    {
-                        icon: 'ellipsis-vertical',
-                        onPress: () => setShowSortModal(true)
-                    }
+                    // {
+                    //     icon: 'options-outline',
+                    //     onPress: () => setShowSortModal(true)
+                    // }
                 ]}
             />
 
-            {/* Header con estadísticas */}
+            {/* ─── Resumen ejecutivo ─────────────────────────────── */}
             {!keyboardVisible && (
-                <View style={styles.header}>
-                    <View style={styles.estadisticasGrid}>
-                        <View style={styles.estadisticaCard}>
-                            <View style={styles.estadisticaIcono}>
-                                <Ionicons name="people" size={22} color="#29B6F6" />
-                            </View>
-                            <Text style={styles.estadisticaValor}>{clientasConDeuda.length}</Text>
-                            <Text style={styles.estadisticaLabel}>clientes activos</Text>
-                        </View>
+                <View style={styles.resumenBanner}>
+                    {/* Total por cobrar — protagonista */}
+                    <View style={styles.bannerTotal}>
+                        <Text style={styles.bannerTotalLabel}>TOTAL POR COBRAR</Text>
+                        <Text style={styles.bannerTotalMonto}>{formatCurrency(totalPorCobrar)}</Text>
+                    </View>
 
-                        <View style={styles.estadisticaCardDestacado}>
-                            <View style={styles.estadisticaIconoDestacado}>
-                                <Ionicons name="cash" size={22} color="#FF6B6B" />
+                    <View style={styles.bannerDivisor} />
+
+                    {/* Dos métricas secundarias */}
+                    <View style={styles.bannerMetricas}>
+                        <View style={styles.bannerMetrica}>
+                            <View style={styles.bannerMetricaIcono}>
+                                <Ionicons name="people" size={16} color="#0EA5E9" />
                             </View>
-                            <Text style={styles.estadisticaValorDestacado}>
-                                {formatCurrency(totalPorCobrar)}
+                            <Text style={styles.bannerMetricaValor}>{clientasConDeuda.length}</Text>
+                            <Text style={styles.bannerMetricaLabel}>
+                                {clientasConDeuda.length === 1 ? 'Deudor' : 'Deudores'}
                             </Text>
-                            <Text style={styles.estadisticaLabelDestacado}>Total por cobrar</Text>
+                        </View>
+
+                        <View style={styles.bannerMetricaSep} />
+
+                        <View style={styles.bannerMetrica}>
+                            <View style={[styles.bannerMetricaIcono, { backgroundColor: '#FFF7ED' }]}>
+                                <Ionicons name="wallet" size={16} color="#F97316" />
+                            </View>
+                            <Text style={styles.bannerMetricaValor}>{totalCuentasActivas}</Text>
+                            <Text style={styles.bannerMetricaLabel}>
+                                {totalCuentasActivas === 1 ? 'Cuenta activa' : 'Cuentas activas'}
+                            </Text>
                         </View>
                     </View>
                 </View>
             )}
 
-            {/* Barra de búsqueda */}
-            {busqueda.length > 0 && (
-                <View style={styles.resultadosInfo}>
-                    <Ionicons name="filter" size={16} color={colors.primary} />
-                    <Text style={styles.resultadosTexto}>
-                        {clientasFiltradas.length} {clientasFiltradas.length === 1 ? 'resultado' : 'resultados'}
-                    </Text>
-                </View>
-            )}
-
-            {/* Título de sección */}
+            {/* ─── Encabezado de lista ───────────────────────────── */}
             {!keyboardVisible && (
-                <View style={styles.seccionHeader}>
-                    <View style={styles.seccionTituloWrapper}>
-                        <Ionicons name="wallet-outline" size={20} color={colors.text} />
-                        <Text style={styles.seccionTitulo}>Cuentas con deuda</Text>
-                    </View>
-                    <View style={styles.seccionContador}>
-                        <Text style={styles.seccionContadorTexto}>
-                            {clientasFiltradas.length}
-                        </Text>
-                    </View>
+                <View style={styles.listaEncabezado}>
+                    <Text style={styles.listaEncabezadoTitulo}>
+                        {busqueda
+                            ? `${clientasFiltradas.length} resultado${clientasFiltradas.length !== 1 ? 's' : ''}`
+                            : 'Lista de deudores'
+                        }
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.ordenarBtn}
+                        onPress={() => setShowSortModal(true)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="options-outline" size={16} color={colors.textSecondary} />
+                        <Text style={styles.ordenarBtnTexto}>Filtrar / Ordenar</Text>
+                    </TouchableOpacity>
                 </View>
             )}
 
-            {/* Lista de clientes */}
+            {/* ─── Lista de deudores ─────────────────────────────── */}
             <FlatList
                 data={clientasFiltradas}
                 keyExtractor={(item) => item.id}
@@ -161,6 +169,7 @@ export default function CuentasPendientesScreen({ navigation }) {
                     <ClientaCard
                         clienta={item}
                         onPress={() => navigation.navigate('ClientaDetail', { clientaId: item.id })}
+                        modo="deudores"
                     />
                 )}
                 ListEmptyComponent={
@@ -169,11 +178,14 @@ export default function CuentasPendientesScreen({ navigation }) {
                         iconName={busqueda ? "search-outline" : "checkmark-done-circle-outline"}
                     />
                 }
-                contentContainerStyle={clientasFiltradas.length === 0 ? styles.emptyContainer : styles.listaContainer}
+                contentContainerStyle={
+                    clientasFiltradas.length === 0
+                        ? styles.emptyContainer
+                        : styles.listaContainer
+                }
                 showsVerticalScrollIndicator={false}
             />
 
-            {/* Modal de ordenamiento */}
             <SortFilterModal
                 visible={showSortModal}
                 onClose={() => setShowSortModal(false)}
@@ -188,139 +200,119 @@ export default function CuentasPendientesScreen({ navigation }) {
 const createStyles = (colors) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background
+        backgroundColor: colors.background,
     },
-    header: {
+
+    // ── Resumen banner ──────────────────────────────────────────
+    resumenBanner: {
         backgroundColor: colors.card,
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-    },
-    estadisticasGrid: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    estadisticaCard: {
-        flex: 1,
-        backgroundColor: colors.surfaceVariant,
-        borderRadius: 12,
-        padding: 5,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-    },
-    estadisticaCardDestacado: {
-        flex: 1,
-        backgroundColor: '#FFF5F5',
-        borderRadius: 12,
-        padding: 10,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#FFE5E5',
-    },
-    estadisticaIcono: {
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        backgroundColor: colors.primaryLight,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    estadisticaIconoDestacado: {
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        backgroundColor: '#FFE5E5',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    estadisticaValor: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: colors.text,
-        marginBottom: 2,
-        letterSpacing: -0.5,
-    },
-    estadisticaValorDestacado: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#FF6B6B',
-        marginBottom: 2,
-        letterSpacing: -0.5,
-    },
-    estadisticaLabel: {
-        fontSize: 10,
-        color: colors.textSecondary,
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    estadisticaLabelDestacado: {
-        fontSize: 10,
-        color: colors.textSecondary,
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    busquedaContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 8,
-    },
-    resultadosInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 8,
         marginHorizontal: 16,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        backgroundColor: colors.primaryLight,
-        borderRadius: 20,
-        alignSelf: 'center',
-        gap: 6,
+        marginTop: 14,
+        marginBottom: 4,
+        borderRadius: 18,
+        padding: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
-    resultadosTexto: {
-        fontSize: 13,
-        color: colors.primary,
+    bannerTotal: {
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    bannerTotalLabel: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: colors.textTertiary,
+        letterSpacing: 1.5,
+        marginBottom: 1,
+    },
+    bannerTotalMonto: {
+        fontSize: 30,
+        fontWeight: '800',
+        color: '#FF6B6B',
+        letterSpacing: -1,
+    },
+    bannerDivisor: {
+        height: 1,
+        backgroundColor: colors.border,
+        marginBottom: 10,
+    },
+    bannerMetricas: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+    },
+    bannerMetrica: {
+        flex: 1,
+        alignItems: 'center',
+        gap: 2,
+    },
+    bannerMetricaIcono: {
+        width: 22,
+        height: 22,
+        borderRadius: 10,
+        backgroundColor: '#EFF6FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 2,
+    },
+    bannerMetricaValor: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: colors.text,
+        letterSpacing: -0.5,
+    },
+    bannerMetricaLabel: {
+        fontSize: 10,
+        color: colors.textSecondary,
         fontWeight: '600',
     },
-    seccionHeader: {
+    bannerMetricaSep: {
+        width: 1,
+        height: 48,
+        backgroundColor: colors.border,
+        marginHorizontal: 12,
+    },
+
+    // ── Encabezado de lista ──────────────────────────────────────
+    listaEncabezado: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 10,
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: 8,
     },
-    seccionTituloWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    seccionTitulo: {
-        fontSize: 16,
+    listaEncabezadoTitulo: {
+        fontSize: 15,
         fontWeight: '700',
         color: colors.text,
     },
-    seccionContador: {
-        backgroundColor: colors.primaryLight,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-        minWidth: 32,
+    ordenarBtn: {
+        flexDirection: 'row',
         alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        backgroundColor: colors.surfaceVariant,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
-    seccionContadorTexto: {
-        fontSize: 13,
-        fontWeight: '700',
-        color: colors.primary,
+    ordenarBtnTexto: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.textSecondary,
     },
+
+    // ── Lista ────────────────────────────────────────────────────
     listaContainer: {
         paddingHorizontal: 16,
-        paddingBottom: 20,
+        paddingBottom: 24,
     },
     emptyContainer: {
         flex: 1,

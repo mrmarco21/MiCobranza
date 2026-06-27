@@ -9,25 +9,36 @@ export const obtenerclientas = async () => {
 export const obtenerClientaConSaldo = async (clientaId) => {
   const clienta = await clientasRepo.getById(clientaId);
   if (!clienta) return null;
-  
-  const cuentaActiva = await cuentasRepo.getActiva(clientaId);
+
+  // Sumar el saldo de TODAS las cuentas activas (una clienta puede tener varias)
+  const cuentas = await cuentasRepo.getByClienta(clientaId);
+  const cuentasActivas = cuentas.filter(c => c.estado === 'ACTIVA' && c.saldo > 0);
+  const saldoTotal = cuentasActivas.reduce((sum, c) => sum + (c.saldo || 0), 0);
+
   return {
     ...clienta,
-    saldoActual: cuentaActiva ? cuentaActiva.saldo : 0,
-    tieneCuentaActiva: !!cuentaActiva,
+    saldoActual: saldoTotal,
+    tieneCuentaActiva: cuentasActivas.length > 0,
+    numeroCuentasActivas: cuentasActivas.length,
   };
 };
 
 export const obtenerclientasConSaldo = async () => {
   const clientas = await clientasRepo.getAll();
-  return Promise.all(clientas.map(async (clienta) => {
-    const cuentaActiva = await cuentasRepo.getActiva(clienta.id);
+  const todasLasCuentas = await cuentasRepo.getAll();
+  return clientas.map((clienta) => {
+    // Sumar el saldo de TODAS las cuentas activas de la clienta
+    const cuentasActivas = todasLasCuentas.filter(
+      c => c.clientaId === clienta.id && c.estado === 'ACTIVA' && c.saldo > 0
+    );
+    const saldoTotal = cuentasActivas.reduce((sum, c) => sum + (c.saldo || 0), 0);
     return {
       ...clienta,
-      saldoActual: cuentaActiva ? cuentaActiva.saldo : 0,
-      tieneCuentaActiva: !!cuentaActiva,
+      saldoActual: saldoTotal,
+      tieneCuentaActiva: cuentasActivas.length > 0,
+      numeroCuentasActivas: cuentasActivas.length,
     };
-  }));
+  });
 };
 
 export const registrarClienta = async (datos) => {
